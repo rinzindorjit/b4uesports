@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
   const gameLogoUrl = pkg.game === 'PUBG' ? GAME_LOGOS.PUBG : GAME_LOGOS.MLBB;
   const gameName = pkg.game === 'PUBG' ? 'PUBG Mobile' : 'Mobile Legends';
 
-  useState(() => {
+  useEffect(() => {
     if (user && isOpen) {
       if (pkg.game === 'PUBG' && user.gameAccounts?.pubg) {
         setEditableGameAccount(user.gameAccounts.pubg);

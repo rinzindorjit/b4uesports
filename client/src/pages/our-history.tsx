@@ -190,7 +190,8 @@ export default function OurHistory() {
                 
                 <div className="bg-muted p-4 rounded-lg" data-testid="innovation-security">
                   <h4 className="text-lg font-semibold mb-2 text-gaming-red">
-                    <i className="fas fa-shield-alt mr-2"></i>Advanced Security Framework</                 </h4>
+                    <i className="fas fa-shield-alt mr-2"></i>Advanced Security Framework
+                  </h4>
                   <p>
                     Implemented multi-layered security measures including blockchain verification, encrypted data storage, and secure payment processing to protect user transactions.
                   </p>
