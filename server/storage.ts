@@ -100,7 +100,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPackage(insertPackage: InsertPackage): Promise<Package> {
-    const [pkg] = await db.insert(packages).values(insertPackage).returning();
+    const [pkg] = await db.insert(packages).values([insertPackage]).returning();
     return pkg;
   }
 
@@ -180,7 +180,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createAdmin(insertAdmin: InsertAdmin): Promise<Admin> {
-    const [admin] = await db.insert(admins).values(insertAdmin).returning();
+    const [admin] = await db.insert(admins).values([insertAdmin]).returning();
     return admin;
   }
 
@@ -194,7 +194,7 @@ export class DatabaseStorage implements IStorage {
   async savePiPrice(price: number): Promise<PiPriceHistory> {
     const [priceRecord] = await db
       .insert(piPriceHistory)
-      .values({ price: price.toString() })
+      .values([{ price: price.toString() }])
       .returning();
     return priceRecord;
   }
