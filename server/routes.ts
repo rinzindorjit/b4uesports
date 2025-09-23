@@ -178,19 +178,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Process text fields
         Object.keys(req.body).forEach(key => {
           try {
+            // Try to parse as JSON first (for objects like gameAccounts)
             updateData[key] = JSON.parse(req.body[key]);
           } catch (e) {
-            // If parsing fails, use as string
+            // If parsing fails, use as string (for primitive values)
             updateData[key] = req.body[key];
           }
         });
         
-        // Handle profile image upload (placeholder - in a real app you'd save to storage)
+        // Handle profile image upload
         if ((req as any).files && (req as any).files.length > 0) {
           const file = (req as any).files[0];
           // In a real implementation, you would upload to cloud storage and save the URL
           // For now, we'll just generate a placeholder URL
-          updateData.profileImageUrl = `/uploads/profile-${userId}-${Date.now()}.jpg`;
+          updateData.profileImageUrl = `/uploads/profile-${userId}-${Date.now()}.${file.originalname.split('.').pop()}`;
+          
+          // Move the file to the uploads directory with the new name
+          const fs = require('fs');
+          const path = require('path');
+          const uploadPath = path.join(__dirname, '../uploads', `profile-${userId}-${Date.now()}.${file.originalname.split('.').pop()}`);
+          fs.renameSync(file.path, uploadPath);
         }
       } else {
         // For JSON data
@@ -294,6 +301,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!completed) {
         await storage.updateTransaction(transaction.id, { status: 'failed' });
         return res.status(500).json({ message: 'Payment completion failed' });
+      }
+
+      // Get payment details to extract wallet address
+      const paymentDetails = await piNetworkService.getPayment(paymentId);
+      let walletAddress = '';
+      if (paymentDetails && paymentDetails.from_address) {
+        walletAddress = paymentDetails.from_address;
+      }
+
+      // Update user's wallet address if it's not already set
+      if (walletAddress) {
+        const user = await storage.getUser(transaction.userId);
+        if (user && !user.walletAddress) {
+          await storage.updateUser(transaction.userId, { walletAddress });
+        }
       }
 
       // Update transaction with txid and completed status

@@ -1,0 +1,174 @@
+// Simple preview server that serves the client without requiring a database
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const PORT = process.env.PORT || 3002;
+
+// Serve static files from the client build directory
+app.use(express.static(path.join(__dirname, 'dist/public')));
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// API endpoints that return mock data for preview
+app.get('/api/metadata', (req, res) => {
+  const metadata = {
+    // Application metadata
+    application: {
+      name: "B4U Esports",
+      description: "Pi Network Integrated Marketplace for Gaming Currency",
+      version: "1.0.0",
+      platform: "Pi Network",
+      category: "Gaming"
+    },
+    
+    // Payment metadata
+    payment: {
+      currency: "Pi",
+      supported_operations: [
+        "buy_gaming_currency",
+        "deposit",
+        "withdrawal"
+      ],
+      min_amount: 0.1,
+      max_amount: 10000,
+      fee_structure: {
+        deposit_fee: 0,
+        withdrawal_fee: 0,
+        transaction_fee: 0
+      }
+    },
+    
+    // Security metadata
+    security: {
+      encryption: "AES-256",
+      authentication: "Pi Network OAuth",
+      data_protection: "GDPR Compliant",
+      ssl_required: true
+    },
+    
+    // API endpoints
+    endpoints: {
+      authentication: "/api/auth/pi",
+      payment_create: "/api/payment/create",
+      payment_approve: "/api/payment/approve",
+      payment_complete: "/api/payment/complete",
+      user_profile: "/api/profile",
+      packages: "/api/packages",
+      transactions: "/api/transactions"
+    },
+    
+    // Supported games
+    supported_games: [
+      {
+        id: "pubg",
+        name: "PUBG Mobile",
+        currency: "UC (Unknown Cash)",
+        description: "Popular battle royale game"
+      },
+      {
+        id: "mlbb",
+        name: "Mobile Legends: Bang Bang",
+        currency: "Diamonds",
+        description: "MOBA game developed by Moonton"
+      }
+    ],
+    
+    // Contact information
+    contact: {
+      support_email: "info@b4uesports.com",
+      website: "https://b4uesports.com",
+      phone: "+975 17875099"
+    },
+    
+    // Legal information
+    legal: {
+      terms_of_service: "/terms-of-service",
+      privacy_policy: "/privacy-policy",
+      refund_policy: "/refund-policy"
+    },
+    
+    // Timestamp
+    last_updated: new Date().toISOString()
+  };
+  
+  res.json(metadata);
+});
+
+app.get('/api/packages', (req, res) => {
+  const mockPackages = [
+    // PUBG Packages
+    { id: 'pubg-1', game: 'PUBG', name: '60 UC', inGameAmount: 60, usdtValue: '1.5000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 150.0 },
+    { id: 'pubg-2', game: 'PUBG', name: '325 UC', inGameAmount: 325, usdtValue: '6.5000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 650.0 },
+    { id: 'pubg-3', game: 'PUBG', name: '660 UC', inGameAmount: 660, usdtValue: '12.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 1200.0 },
+    { id: 'pubg-4', game: 'PUBG', name: '1800 UC', inGameAmount: 1800, usdtValue: '25.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 2500.0 },
+    { id: 'pubg-5', game: 'PUBG', name: '3850 UC', inGameAmount: 3850, usdtValue: '49.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 4900.0 },
+    { id: 'pubg-6', game: 'PUBG', name: '8100 UC', inGameAmount: 8100, usdtValue: '96.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 9600.0 },
+    { id: 'pubg-7', game: 'PUBG', name: '16200 UC', inGameAmount: 16200, usdtValue: '186.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 18600.0 },
+    { id: 'pubg-8', game: 'PUBG', name: '24300 UC', inGameAmount: 24300, usdtValue: '278.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 27800.0 },
+    { id: 'pubg-9', game: 'PUBG', name: '32400 UC', inGameAmount: 32400, usdtValue: '369.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 36900.0 },
+    { id: 'pubg-10', game: 'PUBG', name: '40500 UC', inGameAmount: 40500, usdtValue: '459.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 45900.0 },
+    
+    // MLBB Packages
+    { id: 'mlbb-1', game: 'MLBB', name: '56 Diamonds', inGameAmount: 56, usdtValue: '3.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 300.0 },
+    { id: 'mlbb-2', game: 'MLBB', name: '278 Diamonds', inGameAmount: 278, usdtValue: '6.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 600.0 },
+    { id: 'mlbb-3', game: 'MLBB', name: '571 Diamonds', inGameAmount: 571, usdtValue: '11.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 1100.0 },
+    { id: 'mlbb-4', game: 'MLBB', name: '1783 Diamonds', inGameAmount: 1783, usdtValue: '33.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 3300.0 },
+    { id: 'mlbb-5', game: 'MLBB', name: '3005 Diamonds', inGameAmount: 3005, usdtValue: '52.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 5200.0 },
+    { id: 'mlbb-6', game: 'MLBB', name: '6012 Diamonds', inGameAmount: 6012, usdtValue: '99.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 9900.0 },
+    { id: 'mlbb-7', game: 'MLBB', name: '12000 Diamonds', inGameAmount: 12000, usdtValue: '200.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 20000.0 }
+  ];
+  
+  res.json(mockPackages);
+});
+
+app.get('/api/transactions', (req, res) => {
+  const mockTransactions = [
+    {
+      id: '1',
+      userId: 'preview-user',
+      packageId: 'pubg-1',
+      paymentId: 'payment-1',
+      piAmount: '150.0',
+      usdAmount: '1.5',
+      piPriceAtTime: '0.01',
+      status: 'completed',
+      gameAccount: { ign: 'PreviewPlayer', uid: '123456789' },
+      emailSent: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: '2',
+      userId: 'preview-user',
+      packageId: 'mlbb-1',
+      paymentId: 'payment-2',
+      piAmount: '300.0',
+      usdAmount: '3.0',
+      piPriceAtTime: '0.01',
+      status: 'completed',
+      gameAccount: { userId: '987654321', zoneId: '1234' },
+      emailSent: true,
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      updatedAt: new Date(Date.now() - 86400000).toISOString()
+    }
+  ];
+  
+  res.json(mockTransactions);
+});
+
+// All other routes serve the client app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist/public/index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Preview server running on http://localhost:${PORT}`);
+  console.log('Note: This is a preview mode without database connectivity.');
+  console.log('Some features like profile updates and real payments are simulated.');
+});

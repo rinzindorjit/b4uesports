@@ -99,10 +99,16 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       // Create FormData for file upload if profile image is selected
       const formDataToSend = new FormData();
       
-      // Append text data
+      // Append text data as JSON strings
       Object.keys(data).forEach(key => {
         if (key !== 'profileImage') {
-          formDataToSend.append(key, JSON.stringify(data[key]));
+          // For nested objects like gameAccounts, send as JSON string
+          if (typeof data[key] === 'object' && data[key] !== null) {
+            formDataToSend.append(key, JSON.stringify(data[key]));
+          } else {
+            // For primitive values, send as string
+            formDataToSend.append(key, String(data[key]));
+          }
         }
       });
       

@@ -1,10 +1,21 @@
 import express, { type Request, Response, NextFunction } from "express";
 import multer from "multer";
+import path from "path";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
+  }
+})
+
+const upload = multer({ storage: storage });
+
 const app = express();
-const upload = multer({ dest: 'uploads/' });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -42,6 +53,9 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+
+  // Serve uploaded files
+  app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
