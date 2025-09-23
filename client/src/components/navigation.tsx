@@ -1,4 +1,4 @@
-import { BRAND_LOGOS, SOCIAL_LINKS } from '@/lib/constants';
+import { BRAND_LOGOS } from '@/lib/constants';
 
 interface NavigationProps {
   isTestnet?: boolean;
@@ -16,7 +16,7 @@ export default function Navigation({ isTestnet = true }: NavigationProps) {
               className="h-10 w-auto"
               data-testid="brand-logo"
             />
-            <h1 className="text-xl font-bold text-foreground">B4U Esports</h1>
+            {/* Brand name removed as requested */}
           </div>
           
           {isTestnet && (
@@ -25,48 +25,7 @@ export default function Navigation({ isTestnet = true }: NavigationProps) {
             </div>
           )}
 
-          <div className="hidden md:flex items-center space-x-4" data-testid="social-links">
-            <a 
-              href={SOCIAL_LINKS.FACEBOOK} 
-              className="social-icon text-muted-foreground hover:text-blue-500 transition-colors"
-              data-testid="social-facebook"
-              aria-label="Facebook"
-            >
-              <i className="fab fa-facebook text-xl"></i>
-            </a>
-            <a 
-              href={SOCIAL_LINKS.YOUTUBE} 
-              className="social-icon text-muted-foreground hover:text-red-500 transition-colors"
-              data-testid="social-youtube"
-              aria-label="YouTube"
-            >
-              <i className="fab fa-youtube text-xl"></i>
-            </a>
-            <a 
-              href={SOCIAL_LINKS.TIKTOK} 
-              className="social-icon text-muted-foreground hover:text-pink-500 transition-colors"
-              data-testid="social-tiktok"
-              aria-label="TikTok"
-            >
-              <i className="fab fa-tiktok text-xl"></i>
-            </a>
-            <a 
-              href={SOCIAL_LINKS.INSTAGRAM} 
-              className="social-icon text-muted-foreground hover:text-purple-500 transition-colors"
-              data-testid="social-instagram"
-              aria-label="Instagram"
-            >
-              <i className="fab fa-instagram text-xl"></i>
-            </a>
-            <a 
-              href={SOCIAL_LINKS.LINKEDIN} 
-              className="social-icon text-muted-foreground hover:text-blue-600 transition-colors"
-              data-testid="social-linkedin"
-              aria-label="LinkedIn"
-            >
-              <i className="fab fa-linkedin text-xl"></i>
-            </a>
-          </div>
+          {/* Social media links removed as requested */}
         </div>
       </div>
     </nav>

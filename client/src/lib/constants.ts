@@ -53,8 +53,10 @@ export const LANGUAGES = [
 ];
 
 export const PACKAGE_IMAGES = {
-  PUBG: "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.midasbuy.com%2Fboku%2Fph%2Fshop%2Fpubgm&psig=AOvVaw1LeenLUb25CISM-DEUCAqL&ust=1758274765315000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCNCuwoiC4o8DFQAAAAAdAAAAABAE",
-  MLBB: "https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png"
+  // Using transparent UC image for PUBG packages
+  UC: "https://static.wikia.nocookie.net/pubg/images/3/33/UC.png",
+  // Using transparent diamond image for MLBB packages
+  DIAMOND: "https://static.wikia.nocookie.net/mobile-legends/images/7/72/Diamond.png"
 };
 
 export const DEFAULT_PACKAGES = {

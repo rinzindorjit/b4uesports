@@ -6,17 +6,61 @@ import ParticleBackground from '@/components/particle-background';
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
-import { BRAND_LOGOS, GAME_LOGOS } from '@/lib/constants';
+import { BRAND_LOGOS, GAME_LOGOS, DEFAULT_PACKAGES } from '@/lib/constants';
 import type { Package } from '@/types/pi-network';
+import { useMemo } from 'react';
 
 export default function Landing() {
   const { authenticate, isAuthenticated, isLoading: piLoading } = usePiNetwork();
   const { data: piPrice } = usePiPrice();
   const [, setLocation] = useLocation();
 
-  const { data: packages, isLoading: packagesLoading } = useQuery<Package[]>({
-    queryKey: ['/api/packages'],
-  });
+  // Simulate authentication for preview purposes
+  const simulateAuth = () => {
+    // In a real app, this would trigger Pi Network authentication
+    // For preview, we'll just show an alert and redirect to dashboard
+    alert("In the full application, this would connect to Pi Network. For preview purposes, you'll be redirected to the dashboard.");
+    setLocation('/dashboard');
+  };
+
+  // Create mock packages for preview
+  const mockPackages = useMemo(() => {
+    if (!piPrice) return [];
+    
+    // PUBG Packages
+    const pubgPackages: Package[] = DEFAULT_PACKAGES.PUBG.map((pkg, index) => ({
+      id: `pubg-${index}`,
+      game: 'PUBG',
+      name: `${pkg.amount} UC`,
+      inGameAmount: pkg.amount,
+      usdtValue: pkg.usdtValue.toString(),
+      image: GAME_LOGOS.PUBG,
+      isActive: true,
+      piPrice: pkg.usdtValue / piPrice.price,
+      currentPiPrice: piPrice.price
+    }));
+    
+    // MLBB Packages
+    const mlbbPackages: Package[] = DEFAULT_PACKAGES.MLBB.map((pkg, index) => ({
+      id: `mlbb-${index}`,
+      game: 'MLBB',
+      name: `${pkg.amount} Diamonds`,
+      inGameAmount: pkg.amount,
+      usdtValue: pkg.usdtValue.toString(),
+      image: GAME_LOGOS.MLBB,
+      isActive: true,
+      piPrice: pkg.usdtValue / piPrice.price,
+      currentPiPrice: piPrice.price
+    }));
+    
+    return [...pubgPackages, ...mlbbPackages];
+  }, [piPrice]);
+
+  // Use mock data for preview instead of API
+  const { data: packages, isLoading: packagesLoading } = {
+    data: mockPackages,
+    isLoading: !piPrice
+  } as { data: Package[]; isLoading: boolean };
 
   // Redirect to dashboard if already authenticated
   if (isAuthenticated) {
@@ -26,7 +70,12 @@ export default function Landing() {
 
   const handlePiLogin = async () => {
     try {
-      await authenticate();
+      // For preview, use simulated authentication
+      if (import.meta.env.MODE === 'production') {
+        await authenticate();
+      } else {
+        simulateAuth();
+      }
     } catch (error) {
       console.error('Login failed:', error);
     }
@@ -59,17 +108,17 @@ export default function Landing() {
               <Button
                 onClick={handlePiLogin}
                 disabled={piLoading}
-                className="gradient-border inline-block p-0 h-auto bg-transparent hover:bg-transparent"
+                className="gradient-border inline-block p-0 h-auto bg-transparent hover:bg-transparent transform hover:scale-105 transition-transform duration-300"
                 data-testid="pi-login-button"
               >
-                <div className="gradient-border-content px-12 py-4 flex items-center space-x-4">
+                <div className="gradient-border-content px-12 py-6 flex items-center space-x-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-lg hover:shadow-xl">
                   <img 
                     src={BRAND_LOGOS.PI} 
                     alt="Pi Network Logo" 
-                    className="w-8 h-8 rounded-full"
+                    className="w-12 h-12 rounded-full border-2 border-white"
                     data-testid="pi-logo-button"
                   />
-                  <span className="text-xl font-semibold">
+                  <span className="text-2xl font-bold text-white">
                     {piLoading ? 'Connecting...' : 'Sign In with Pi Network'}
                   </span>
                 </div>
@@ -110,9 +159,9 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Featured Packages */}
-          <div className="text-center mb-12" data-testid="featured-packages">
-            <h3 className="text-3xl font-bold mb-8">Featured Packages</h3>
+          {/* Available Games Section */}
+          <div className="text-center mb-12" data-testid="available-games">
+            <h3 className="text-3xl font-bold mb-8">Available Games</h3>
             
             {/* Live Pi Price Display */}
             {piPrice && (
@@ -128,8 +177,8 @@ export default function Landing() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* PUBG Package */}
-              <div className="game-card p-8 rounded-xl" data-testid="featured-pubg">
+              {/* PUBG Description */}
+              <div className="game-card p-8 rounded-xl" data-testid="pubg-description">
                 <div className="flex items-center justify-center mb-6">
                   <img 
                     src={GAME_LOGOS.PUBG} 
@@ -139,23 +188,22 @@ export default function Landing() {
                   />
                   <h4 className="text-2xl font-bold">PUBG Mobile</h4>
                 </div>
-                <div className="space-y-4">
-                  {featuredPubgPackages.map((pkg, index) => (
-                    <div key={pkg.id} className="flex justify-between items-center p-3 bg-muted rounded-lg" data-testid={`pubg-package-${index}`}>
-                      <span>{pkg.name}</span>
-                      <span className="font-mono text-green-400">
-                        {pkg.piPrice ? `${pkg.piPrice.toFixed(1)} π` : 'Loading...'}
-                      </span>
-                    </div>
-                  ))}
-                  {packagesLoading && (
-                    <div className="text-muted-foreground" data-testid="loading-packages">Loading packages...</div>
-                  )}
+                <div className="text-left space-y-4">
+                  <p className="text-muted-foreground">
+                    Purchase UC (Unknown Cash) for PUBG Mobile directly with Pi coins. 
+                    Get the best deals on in-game currency to enhance your battle royale experience.
+                  </p>
+                  <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                    <li>Instant delivery to your game account</li>
+                    <li>Competitive Pi pricing</li>
+                    <li>Secure Pi Network transactions</li>
+                    <li>24/7 customer support</li>
+                  </ul>
                 </div>
               </div>
 
-              {/* MLBB Package */}
-              <div className="game-card p-8 rounded-xl" data-testid="featured-mlbb">
+              {/* MLBB Description */}
+              <div className="game-card p-8 rounded-xl" data-testid="mlbb-description">
                 <div className="flex items-center justify-center mb-6">
                   <img 
                     src={GAME_LOGOS.MLBB} 
@@ -165,18 +213,17 @@ export default function Landing() {
                   />
                   <h4 className="text-2xl font-bold">Mobile Legends</h4>
                 </div>
-                <div className="space-y-4">
-                  {featuredMlbbPackages.map((pkg, index) => (
-                    <div key={pkg.id} className="flex justify-between items-center p-3 bg-muted rounded-lg" data-testid={`mlbb-package-${index}`}>
-                      <span>{pkg.name}</span>
-                      <span className="font-mono text-green-400">
-                        {pkg.piPrice ? `${pkg.piPrice.toFixed(1)} π` : 'Loading...'}
-                      </span>
-                    </div>
-                  ))}
-                  {packagesLoading && (
-                    <div className="text-muted-foreground" data-testid="loading-packages">Loading packages...</div>
-                  )}
+                <div className="text-left space-y-4">
+                  <p className="text-muted-foreground">
+                    Buy Diamonds for Mobile Legends using Pi coins. 
+                    Power up your heroes and dominate the battlefield with our fast and secure payment system.
+                  </p>
+                  <ul className="list-disc list-inside text-muted-foreground space-y-2">
+                    <li>Direct to game account delivery</li>
+                    <li>Real-time Pi conversion rates</li>
+                    <li>Protected by Pi Network security</li>
+                    <li>Global availability</li>
+                  </ul>
                 </div>
               </div>
             </div>
