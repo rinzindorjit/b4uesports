@@ -58,13 +58,10 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     
     if (isPreview) {
       // In preview mode, we can't use the real Pi SDK
-      // We'll simulate the authentication flow
+      // We'll simulate the authentication flow with NO delay
       setIsLoading(true);
       
-      // Simulate authentication delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Create mock user data
+      // Create mock user data immediately
       const mockUser: User = {
         id: 'preview-user-123',
         username: 'preview_user',
@@ -95,6 +92,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       localStorage.setItem('pi_token', mockToken);
       localStorage.setItem('pi_user', JSON.stringify(mockUser));
       
+      // Set loading to false immediately
       setIsLoading(false);
       return;
     }
