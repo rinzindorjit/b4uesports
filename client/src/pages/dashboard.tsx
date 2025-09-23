@@ -181,6 +181,27 @@ export default function Dashboard() {
               <p className="text-muted-foreground font-mono" data-testid="user-wallet">
                 Wallet: {formatWalletAddress(currentUser?.walletAddress || '')}
               </p>
+              {/* Profile Verification Notice */}
+              {!isPreviewMode && currentUser && (
+                <div className="mt-2">
+                  {currentUser.email && currentUser.phone ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <i className="fas fa-check-circle mr-1"></i>
+                      Profile Verified
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      <i className="fas fa-exclamation-triangle mr-1"></i>
+                      Profile Incomplete - <button 
+                        onClick={() => setIsProfileModalOpen(true)}
+                        className="ml-1 underline hover:no-underline"
+                      >
+                        Complete Now
+                      </button>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             
             {/* Live Pi Price Ticker */}
