@@ -53,10 +53,10 @@ export const LANGUAGES = [
 ];
 
 export const PACKAGE_IMAGES = {
-  // Using transparent UC image for PUBG packages
-  UC: "https://static.wikia.nocookie.net/pubg/images/3/33/UC.png",
-  // Using transparent diamond image for MLBB packages
-  DIAMOND: "https://static.wikia.nocookie.net/mobile-legends/images/7/72/Diamond.png"
+  // Using UC image for all PUBG packages
+  UC: "https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png",
+  // Using Diamond image for all MLBB packages
+  DIAMOND: "https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png"
 };
 
 export const DEFAULT_PACKAGES = {

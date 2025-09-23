@@ -73,6 +73,7 @@ export interface User {
   country: string;
   language: string;
   walletAddress: string;
+  profileImageUrl?: string;
   gameAccounts?: {
     pubg?: { ign: string; uid: string };
     mlbb?: { userId: string; zoneId: string };

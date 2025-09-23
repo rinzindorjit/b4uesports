@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -25,23 +25,50 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
-    country: 'Bhutan',
+    country: 'BT', // Bhutan as default
     language: 'en',
     gameAccounts: {
       pubg: { ign: '', uid: '' },
       mlbb: { userId: '', zoneId: '' }
     },
-    referralCode: ''
+    referralCode: '',
+    selectedGames: ['pubg', 'mlbb'] // Track which games the user plays
   });
 
   const [showCountrySelector, setShowCountrySelector] = useState(false);
 
+  // Country code mapping
+  const countryCodes: Record<string, string> = {
+    'BT': '+975',
+    'IN': '+91',
+    'US': '+1',
+    'GB': '+44',
+    'CA': '+1',
+    'AU': '+61',
+    'DE': '+49',
+    'FR': '+33',
+    'JP': '+81',
+    'KR': '+82',
+    'SG': '+65',
+    'MY': '+60',
+    'TH': '+66',
+    'ID': '+62',
+    'PH': '+63',
+    'VN': '+84'
+  };
+
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize with user data including profile image
   useEffect(() => {
     if (user && isOpen) {
       setFormData({
         email: user.email || '',
         phone: user.phone || '',
-        country: user.country || 'Bhutan',
+        country: user.country || 'BT',
         language: user.language || 'en',
         gameAccounts: {
           pubg: {
@@ -53,25 +80,55 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             zoneId: user.gameAccounts?.mlbb?.zoneId || ''
           }
         },
-        referralCode: user.referralCode || ''
+        referralCode: user.referralCode || '',
+        selectedGames: [
+          user.gameAccounts?.pubg ? 'pubg' : null,
+          user.gameAccounts?.mlbb ? 'mlbb' : null
+        ].filter(Boolean) as string[]
       });
+      
+      // Set profile image URL if available
+      if ((user as any).profileImageUrl) {
+        setProfileImageUrl((user as any).profileImageUrl);
+      }
     }
   }, [user, isOpen]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: any) => {
+      // Create FormData for file upload if profile image is selected
+      const formDataToSend = new FormData();
+      
+      // Append text data
+      Object.keys(data).forEach(key => {
+        if (key !== 'profileImage') {
+          formDataToSend.append(key, JSON.stringify(data[key]));
+        }
+      });
+      
+      // Append profile image if selected
+      if (profileImage) {
+        formDataToSend.append('profileImage', profileImage);
+      }
+      
       const response = await fetch('/api/profile', {
-        method: 'PUT',
+        method: 'PUT',  
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
+        body: formDataToSend,
       });
       
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Profile update failed');
+        const errorText = await response.text();
+        let errorMessage = 'Profile update failed';
+        try {
+          const error = JSON.parse(errorText);
+          errorMessage = error.message || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
       
       return response.json();
@@ -139,7 +196,21 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     }));
   };
 
+  const handleGameSelection = (game: string) => {
+    setFormData(prev => {
+      const selectedGames = prev.selectedGames.includes(game)
+        ? prev.selectedGames.filter(g => g !== game)
+        : [...prev.selectedGames, game];
+      
+      return {
+        ...prev,
+        selectedGames
+      };
+    });
+  };
+
   const selectedCountry = COUNTRIES.find(c => c.code === formData.country);
+  const countryCode = countryCodes[formData.country] || '+975'; // Default to Bhutan
 
   return (
     <>
@@ -150,6 +221,79 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Profile Image */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Image</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-6">
+                  <div className="relative">
+                    {profileImageUrl ? (
+                      <img 
+                        src={profileImageUrl} 
+                        alt="Profile" 
+                        className="w-24 h-24 rounded-full object-cover border-2 border-primary"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-primary">
+                        <i className="fas fa-user text-2xl text-muted-foreground"></i>
+                      </div>
+                    )}
+                    {isUploading && (
+                      <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                        <i className="fas fa-spinner fa-spin text-white"></i>
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                    >
+                      {profileImage ? 'Change Image' : 'Upload Image'}
+                    </Button>
+                    <input 
+                      ref={fileInputRef}
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setProfileImage(file);
+                          // Create preview URL
+                          const url = URL.createObjectURL(file);
+                          setProfileImageUrl(url);
+                        }
+                      }}
+                    />
+                    {profileImageUrl && (
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        className="ml-2"
+                        onClick={() => {
+                          setProfileImage(null);
+                          setProfileImageUrl(null);
+                          if (fileInputRef.current) {
+                            fileInputRef.current.value = '';
+                          }
+                        }}
+                      >
+                        Remove
+                      </Button>
+                    )}
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Optional. JPG, PNG, or GIF. Max 2MB.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Personal Information */}
             <Card>
               <CardHeader>
@@ -186,20 +330,6 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     />
                   </div>
                   <div>
-                    <Label>Contact Number *</Label>
-                    <Input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => {
-                        // Only allow numbers
-                        const value = e.target.value.replace(/\D/g, '');
-                        handleInputChange('phone', value);
-                      }}
-                      placeholder="+97517875099"
-                      data-testid="input-phone"
-                    />
-                  </div>
-                  <div>
                     <Label>Country *</Label>
                     <Button
                       type="button"
@@ -210,6 +340,45 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     >
                       {selectedCountry?.flag} {selectedCountry?.name}
                     </Button>
+                  </div>
+                  <div>
+                    <Label>Contact Number *</Label>
+                    <div className="flex gap-2">
+                      <Select 
+                        value={formData.country} 
+                        onValueChange={(value) => {
+                          handleInputChange('country', value);
+                          // Reset phone number when country changes
+                          setFormData(prev => ({
+                            ...prev,
+                            phone: ''
+                          }));
+                        }}
+                      >
+                        <SelectTrigger className="w-[120px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COUNTRIES.map((country) => (
+                            <SelectItem key={country.code} value={country.code}>
+                              {country.flag} {countryCodes[country.code] || '+975'}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => {
+                          // Only allow numbers
+                          const value = e.target.value.replace(/\D/g, '');
+                          handleInputChange('phone', value);
+                        }}
+                        placeholder="Enter phone number"
+                        className="flex-1 font-mono"
+                        data-testid="input-phone"
+                      />
+                    </div>
                   </div>
                   <div>
                     <Label>Language</Label>
@@ -230,82 +399,124 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               </CardContent>
             </Card>
 
+            {/* Game Selection */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Game Preferences</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant={formData.selectedGames.includes('pubg') ? "default" : "outline"}
+                    onClick={() => handleGameSelection('pubg')}
+                    className="flex items-center gap-2"
+                  >
+                    <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-6 h-6" />
+                    PUBG Mobile
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={formData.selectedGames.includes('mlbb') ? "default" : "outline"}
+                    onClick={() => handleGameSelection('mlbb')}
+                    className="flex items-center gap-2"
+                  >
+                    <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-6 h-6" />
+                    Mobile Legends
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Select the games you play. You can add game accounts for selected games below.
+                </p>
+              </CardContent>
+            </Card>
+
             {/* Game Accounts */}
             <Card>
               <CardHeader>
                 <CardTitle>Game Accounts</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* PUBG Mobile */}
-                <div className="p-4 bg-muted rounded-lg" data-testid="pubg-account">
-                  <div className="flex items-center mb-4">
-                    <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-8 h-8 mr-3" />
-                    <h4 className="text-lg font-semibold">PUBG Mobile</h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>In-Game Name (IGN)</Label>
-                      <Input
-                        value={formData.gameAccounts.pubg.ign}
-                        onChange={(e) => handleGameAccountChange('pubg', 'ign', e.target.value)}
-                        placeholder="ProGamer2025"
-                        data-testid="pubg-ign"
-                      />
+                {/* PUBG Mobile - Only show if selected */}
+                {formData.selectedGames.includes('pubg') && (
+                  <div className="p-4 bg-muted rounded-lg" data-testid="pubg-account">
+                    <div className="flex items-center mb-4">
+                      <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-8 h-8 mr-3" />
+                      <h4 className="text-lg font-semibold">PUBG Mobile</h4>
                     </div>
-                    <div>
-                      <Label>Player UID</Label>
-                      <Input
-                        value={formData.gameAccounts.pubg.uid}
-                        onChange={(e) => {
-                          // Only allow numbers
-                          const value = e.target.value.replace(/\D/g, '');
-                          handleGameAccountChange('pubg', 'uid', value);
-                        }}
-                        placeholder="5123456789"
-                        className="font-mono"
-                        data-testid="pubg-uid"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>In-Game Name (IGN)</Label>
+                        <Input
+                          value={formData.gameAccounts.pubg.ign}
+                          onChange={(e) => handleGameAccountChange('pubg', 'ign', e.target.value)}
+                          placeholder="ProGamer2025"
+                          data-testid="pubg-ign"
+                        />
+                      </div>
+                      <div>
+                        <Label>Player UID</Label>
+                        <Input
+                          value={formData.gameAccounts.pubg.uid}
+                          onChange={(e) => {
+                            // Only allow numbers
+                            const value = e.target.value.replace(/\D/g, '');
+                            handleGameAccountChange('pubg', 'uid', value);
+                          }}
+                          placeholder="5123456789"
+                          className="font-mono"
+                          data-testid="pubg-uid"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                {/* Mobile Legends */}
-                <div className="p-4 bg-muted rounded-lg" data-testid="mlbb-account">
-                  <div className="flex items-center mb-4">
-                    <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-8 h-8 mr-3" />
-                    <h4 className="text-lg font-semibold">Mobile Legends: Bang Bang</h4>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>User ID</Label>
-                      <Input
-                        value={formData.gameAccounts.mlbb.userId}
-                        onChange={(e) => {
-                          // Only allow numbers
-                          const value = e.target.value.replace(/\D/g, '');
-                          handleGameAccountChange('mlbb', 'userId', value);
-                        }}
-                        placeholder="123456789"
-                        className="font-mono"
-                        data-testid="mlbb-user-id"
-                      />
+                {/* Mobile Legends - Only show if selected */}
+                {formData.selectedGames.includes('mlbb') && (
+                  <div className="p-4 bg-muted rounded-lg" data-testid="mlbb-account">
+                    <div className="flex items-center mb-4">
+                      <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-8 h-8 mr-3" />
+                      <h4 className="text-lg font-semibold">Mobile Legends: Bang Bang</h4>
                     </div>
-                    <div>
-                      <Label>Zone ID</Label>
-                      <Input
-                        value={formData.gameAccounts.mlbb.zoneId}
-                        onChange={(e) => {
-                          // Only allow numbers
-                          const value = e.target.value.replace(/\D/g, '');
-                          handleGameAccountChange('mlbb', 'zoneId', value);
-                        }}
-                        placeholder="3002"
-                        className="font-mono"
-                        data-testid="mlbb-zone-id"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>User ID</Label>
+                        <Input
+                          value={formData.gameAccounts.mlbb.userId}
+                          onChange={(e) => {
+                            // Only allow numbers
+                            const value = e.target.value.replace(/\D/g, '');
+                            handleGameAccountChange('mlbb', 'userId', value);
+                          }}
+                          placeholder="123456789"
+                          className="font-mono"
+                          data-testid="mlbb-user-id"
+                        />
+                      </div>
+                      <div>
+                        <Label>Zone ID</Label>
+                        <Input
+                          value={formData.gameAccounts.mlbb.zoneId}
+                          onChange={(e) => {
+                            // Only allow numbers
+                            const value = e.target.value.replace(/\D/g, '');
+                            handleGameAccountChange('mlbb', 'zoneId', value);
+                          }}
+                          placeholder="3002"
+                          className="font-mono"
+                          data-testid="mlbb-zone-id"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {formData.selectedGames.length === 0 && (
+                  <div className="text-center py-4 text-muted-foreground">
+                    <p>Select games above to add your game accounts</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

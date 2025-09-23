@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   country: text("country").notNull().default("Bhutan"),
   language: text("language").notNull().default("en"),
   walletAddress: text("wallet_address").notNull(),
+  profileImageUrl: text("profile_image_url"),
   gameAccounts: jsonb("game_accounts").$type<{
     pubg?: { ign: string; uid: string };
     mlbb?: { userId: string; zoneId: string };

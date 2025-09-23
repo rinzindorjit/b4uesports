@@ -1,10 +1,14 @@
 import express, { type Request, Response, NextFunction } from "express";
+import multer from "multer";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
+const upload = multer({ dest: 'uploads/' });
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+app.use(upload.any());
 
 app.use((req, res, next) => {
   const start = Date.now();

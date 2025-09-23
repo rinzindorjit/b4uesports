@@ -75,16 +75,29 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
       return;
     }
 
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "User not authenticated. Please log in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
       // Create payment with Pi Network
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
       const paymentData = {
         amount: pkg.piPrice || 0,
         memo: `${pkg.name} - ${gameName}`,
         metadata: {
           type: 'backend' as const,
-          userId: user!.id,
+          userId: user.id,
           packageId: pkg.id,
           gameAccount: editableGameAccount,
           passphrase: await bcrypt.hash(passphrase, 10), // Hash passphrase
@@ -151,7 +164,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md" data-testid="purchase-modal">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" data-testid="purchase-modal">
         {step === 'confirm' ? (
           <>
             <DialogHeader>
@@ -238,7 +251,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                       <p className="font-mono text-green-400 text-xl font-bold" data-testid="total-cost">
                         {pkg.piPrice?.toFixed(1)} π
                       </p>
-                      <p className="text-sm text-muted-foreground">≈ ${pkg.usdtValue}</p>
+                      {/* USD value hidden as per requirements */}
                     </div>
                   </div>
                 </CardContent>
@@ -254,22 +267,25 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               </div>
             )}
 
-            <div className="flex space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={onClose} 
-                className="flex-1"
-                data-testid="cancel-purchase"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleConfirmPurchase} 
-                className="flex-1"
-                data-testid="confirm-purchase"
-              >
-                Continue
-              </Button>
+            {/* Floating Confirm Purchase Button */}
+            <div className="sticky bottom-0 bg-background pt-4 pb-2 -mx-6 px-6 border-t border-border">
+              <div className="flex space-x-4">
+                <Button 
+                  variant="outline" 
+                  onClick={onClose} 
+                  className="flex-1"
+                  data-testid="cancel-purchase"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleConfirmPurchase} 
+                  className="flex-1"
+                  data-testid="confirm-purchase"
+                >
+                  Continue
+                </Button>
+              </div>
             </div>
           </>
         ) : (
@@ -300,13 +316,13 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               </Card>
 
               <div className="space-y-2">
-                <Label>Payment Passphrase</Label>
+                <Label>Pi Wallet Passphrase</Label>
                 <div className="relative">
                   <Input
                     type={showPassphrase ? "text" : "password"}
                     value={passphrase}
                     onChange={(e) => setPassphrase(e.target.value)}
-                    placeholder="Enter your secure passphrase"
+                    placeholder="Enter your secure Pi wallet passphrase"
                     disabled={isProcessing}
                     data-testid="payment-passphrase"
                   />
@@ -334,34 +350,37 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               </p>
             </div>
 
-            <div className="flex space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setStep('confirm')} 
-                className="flex-1"
-                disabled={isProcessing}
-                data-testid="back-to-confirm"
-              >
-                Back
-              </Button>
-              <Button 
-                onClick={handleProcessPayment} 
-                className="flex-1"
-                disabled={isProcessing || !passphrase}
-                data-testid="process-payment"
-              >
-                {isProcessing ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin mr-2"></i>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-credit-card mr-2"></i>
-                    Pay Now
-                  </>
-                )}
-              </Button>
+            {/* Floating Pay Now Button */}
+            <div className="sticky bottom-0 bg-background pt-4 pb-2 -mx-6 px-6 border-t border-border">
+              <div className="flex space-x-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStep('confirm')} 
+                  className="flex-1"
+                  disabled={isProcessing}
+                  data-testid="back-to-confirm"
+                >
+                  Back
+                </Button>
+                <Button 
+                  onClick={handleProcessPayment} 
+                  className="flex-1"
+                  disabled={isProcessing || !passphrase}
+                  data-testid="process-payment"
+                >
+                  {isProcessing ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-credit-card mr-2"></i>
+                      Pay Now
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </>
         )}

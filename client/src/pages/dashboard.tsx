@@ -137,9 +137,10 @@ export default function Dashboard() {
 
   const handlePurchaseClick = (pkg: Package) => {
     if (isPreviewMode) {
+      // In preview mode, show the alert but also open the modal
       alert(`In the full application, this would initiate a Pi Network payment for ${pkg.name} (${pkg.piPrice?.toFixed(1)} π). This is a preview only.`);
-      return;
     }
+    // Always open the modal in both preview and production modes
     setSelectedPackage(pkg);
     setIsPurchaseModalOpen(true);
   };
@@ -175,7 +176,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold text-foreground" data-testid="user-greeting">
-                Welcome back, {currentUser?.username || 'User'}!
+                Welcome back, <span className="text-primary">{currentUser?.username || 'User'}!</span>
               </h1>
               <p className="text-muted-foreground font-mono" data-testid="user-wallet">
                 Wallet: {formatWalletAddress(currentUser?.walletAddress || '')}
@@ -194,8 +195,8 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6" data-testid="user-stats">
+          {/* Quick Stats - Two columns on mobile */}
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6" data-testid="user-stats">
             <Card>
               <CardContent className="p-4">
                 <h3 className="text-sm text-muted-foreground">Total Spent</h3>
@@ -254,7 +255,7 @@ export default function Dashboard() {
               </TabsList>
               
               <TabsContent value="pubg" className="mt-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="pubg-packages">
+                <div className="grid grid-cols-2 gap-6" data-testid="pubg-packages">
                   {packagesLoading ? (
                     <div className="col-span-2 text-center text-muted-foreground" data-testid="loading-packages">
                       Loading packages...
@@ -273,7 +274,7 @@ export default function Dashboard() {
               </TabsContent>
               
               <TabsContent value="mlbb" className="mt-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="mlbb-packages">
+                <div className="grid grid-cols-2 gap-6" data-testid="mlbb-packages">
                   {packagesLoading ? (
                     <div className="col-span-2 text-center text-muted-foreground" data-testid="loading-packages">
                       Loading packages...

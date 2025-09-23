@@ -59,6 +59,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           walletAddress: '', // Will be updated when they make their first transaction
         };
         user = await storage.createUser(newUser);
+      } else {
+        // If user exists but doesn't have a wallet address, we'll try to update it
+        // This will happen when they make their first transaction
       }
 
       // Generate JWT token for session
@@ -74,6 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           language: user.language,
           gameAccounts: user.gameAccounts,
           walletAddress: user.walletAddress,
+          profileImageUrl: user.profileImageUrl,
         },
         token,
       });
@@ -166,7 +170,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const decoded = jwt.verify(token, JWT_SECRET) as any;
       const userId = decoded.userId;
 
-      const updateData = req.body;
+      // Handle both JSON and multipart form data
+      let updateData: any = {};
+      if (req.headers['content-type']?.includes('multipart/form-data')) {
+        // For multipart form data (file uploads)
+        updateData = {};
+        // Process text fields
+        Object.keys(req.body).forEach(key => {
+          try {
+            updateData[key] = JSON.parse(req.body[key]);
+          } catch (e) {
+            // If parsing fails, use as string
+            updateData[key] = req.body[key];
+          }
+        });
+        
+        // Handle profile image upload (placeholder - in a real app you'd save to storage)
+        if ((req as any).files && (req as any).files.length > 0) {
+          const file = (req as any).files[0];
+          // In a real implementation, you would upload to cloud storage and save the URL
+          // For now, we'll just generate a placeholder URL
+          updateData.profileImageUrl = `/uploads/profile-${userId}-${Date.now()}.jpg`;
+        }
+      } else {
+        // For JSON data
+        updateData = req.body;
+      }
       
       // Validate required fields
       if (updateData.email && !updateData.email.endsWith('@gmail.com')) {
@@ -181,7 +210,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedUser);
     } catch (error) {
       console.error('Profile update error:', error);
-      res.status(500).json({ message: 'Profile update failed' });
+      // Return a proper JSON error response
+      if (error instanceof Error) {
+        return res.status(500).json({ message: error.message || 'Profile update failed' });
+      }
+      return res.status(500).json({ message: 'Profile update failed' });
     }
   });
 

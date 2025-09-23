@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { GAME_LOGOS } from '@/lib/constants';
+import { PACKAGE_IMAGES } from '@/lib/constants';
 import type { Package } from '@/types/pi-network';
 
 interface PackageCardProps {
@@ -10,27 +10,27 @@ interface PackageCardProps {
 }
 
 export default function PackageCard({ package: pkg, onPurchase, 'data-testid': testId }: PackageCardProps) {
-  const gameLogoUrl = pkg.game === 'PUBG' ? GAME_LOGOS.PUBG : GAME_LOGOS.MLBB;
-  const gameName = pkg.game === 'PUBG' ? 'PUBG Mobile' : 'Mobile Legends';
+  // Determine which image to use based on package type
+  const packageImageUrl = pkg.game === 'PUBG' ? PACKAGE_IMAGES.UC : PACKAGE_IMAGES.DIAMOND;
 
   return (
     <Card className="game-card hover:transform hover:-translate-y-2 transition-all duration-300" data-testid={testId}>
       <CardContent className="p-6">
-        <div className="flex items-center mb-4">
+        {/* Package image */}
+        <div className="flex justify-center mb-4">
           <img 
-            src={gameLogoUrl} 
-            alt={gameName} 
-            className="w-12 h-12 mr-3"
-            data-testid={`${testId}-logo`}
+            src={packageImageUrl} 
+            alt={pkg.name} 
+            className="w-16 h-16 object-contain"
+            data-testid={`${testId}-package-image`}
           />
-          <div>
-            <h3 className="text-xl font-bold" data-testid={`${testId}-name`}>
-              {pkg.name}
-            </h3>
-            <p className="text-muted-foreground text-sm">
-              {pkg.game === 'PUBG' ? 'UC Package' : 'Diamonds Package'}
-            </p>
-          </div>
+        </div>
+        
+        {/* Package name below image */}
+        <div className="text-center mb-4">
+          <h3 className="text-xl font-bold" data-testid={`${testId}-name`}>
+            {pkg.name}
+          </h3>
         </div>
         
         <div className="flex justify-center items-center mb-4">
