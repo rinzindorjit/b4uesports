@@ -56,7 +56,13 @@ export class PiSDK {
     }
 
     try {
-      const authResult = await window.Pi.authenticate(scopes);
+      // Ensure required scopes are included
+      const requiredScopes = ['payments', 'username'];
+      const finalScopes = Array.from(new Set([...scopes, ...requiredScopes]));
+      
+      console.log('Requesting Pi authentication with scopes:', finalScopes);
+      const authResult = await window.Pi.authenticate(finalScopes);
+      console.log('Pi authentication result:', authResult);
       return authResult;
     } catch (error) {
       console.error('Pi authentication failed:', error);

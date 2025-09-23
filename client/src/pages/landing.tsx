@@ -15,14 +15,6 @@ export default function Landing() {
   const { data: piPrice } = usePiPrice();
   const [, setLocation] = useLocation();
 
-  // Simulate authentication for preview purposes
-  const simulateAuth = () => {
-    // In a real app, this would trigger Pi Network authentication
-    // For preview, we'll just show an alert and redirect to dashboard
-    alert("In the full application, this would connect to Pi Network. For preview purposes, you'll be redirected to the dashboard.");
-    setLocation('/dashboard');
-  };
-
   // Create mock packages for preview
   const mockPackages = useMemo(() => {
     if (!piPrice) return [];
@@ -70,12 +62,9 @@ export default function Landing() {
 
   const handlePiLogin = async () => {
     try {
-      // For preview, use simulated authentication
-      if (import.meta.env.MODE === 'production') {
-        await authenticate();
-      } else {
-        simulateAuth();
-      }
+      // For development and production, use actual Pi Network authentication
+      // Only use simulated authentication for preview mode
+      await authenticate();
     } catch (error) {
       console.error('Login failed:', error);
     }
@@ -103,22 +92,22 @@ export default function Landing() {
               Purchase PUBG UC and Mobile Legends Diamonds using Pi coins. Fast, secure, and integrated with Pi Network's revolutionary payment system.
             </p>
 
-            {/* Pi Network Login Button */}
+            {/* Pi Network Login Button - Reduced size */}
             <div className="mb-8">
               <Button
                 onClick={handlePiLogin}
                 disabled={piLoading}
-                className="gradient-border inline-block p-0 h-auto bg-transparent hover:bg-transparent transform hover:scale-105 transition-transform duration-300"
+                className="inline-block p-0 h-auto bg-transparent hover:bg-transparent transform hover:scale-105 transition-transform duration-300"
                 data-testid="pi-login-button"
               >
-                <div className="gradient-border-content px-12 py-6 flex items-center space-x-4 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-lg hover:shadow-xl">
+                <div className="px-4 py-2 flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-lg hover:shadow-xl">
                   <img 
                     src={BRAND_LOGOS.PI} 
                     alt="Pi Network Logo" 
-                    className="w-12 h-12 rounded-full border-2 border-white"
+                    className="w-6 h-6 rounded-full border border-white"
                     data-testid="pi-logo-button"
                   />
-                  <span className="text-2xl font-bold text-white">
+                  <span className="text-base font-bold text-white">
                     {piLoading ? 'Connecting...' : 'Sign In with Pi Network'}
                   </span>
                 </div>

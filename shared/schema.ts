@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   }>(),
   referralCode: text("referral_code"),
   passphrase: text("passphrase"), // hashed passphrase for payment confirmation
+  isProfileVerified: boolean("is_profile_verified").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

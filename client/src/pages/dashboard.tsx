@@ -1,5 +1,6 @@
 import { usePiNetwork } from '@/hooks/use-pi-network';
 import { usePiPrice } from '@/hooks/use-pi-price';
+import { usePiBalance } from '@/hooks/use-pi-balance';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useState } from 'react';
@@ -19,6 +20,7 @@ import { useMemo } from 'react';
 export default function Dashboard() {
   const { user, isAuthenticated, logout, token } = usePiNetwork();
   const { data: piPrice } = usePiPrice();
+  const { data: piBalance } = usePiBalance();
   const [, setLocation] = useLocation();
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -122,6 +124,13 @@ export default function Dashboard() {
     return null;
   }
 
+  // In preview mode, we should still show the dashboard even if not "authenticated"
+  // since we're using mock data
+  if (isPreviewMode && !isAuthenticated) {
+    // Set mock authentication state for preview
+    setIsAuthenticated(true);
+  }
+
   // Fix the package filtering to ensure it works correctly
   const pubgPackages = useMemo(() => {
     // Always return packages even if packages is undefined
@@ -173,8 +182,8 @@ export default function Dashboard() {
       {/* Dashboard Header */}
       <div className="bg-card border-b border-border" data-testid="dashboard-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <div className="w-full sm:w-auto">
               <h1 className="text-3xl font-bold text-foreground" data-testid="user-greeting">
                 Welcome back, <span className="text-primary">{currentUser?.username || 'User'}!</span>
               </h1>
@@ -184,7 +193,7 @@ export default function Dashboard() {
               {/* Profile Verification Notice */}
               {!isPreviewMode && currentUser && (
                 <div className="mt-2">
-                  {currentUser.email && currentUser.phone ? (
+                  {currentUser.isProfileVerified ? (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                       <i className="fas fa-check-circle mr-1"></i>
                       Profile Verified
@@ -202,14 +211,24 @@ export default function Dashboard() {
                   )}
                 </div>
               )}
+              {/* Pi Balance Display */}
+              {!isPreviewMode && piBalance && (
+                <div className="mt-2">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <i className="fas fa-wallet mr-1"></i>
+                    Balance: {piBalance.balance.toFixed(2)} π
+                    {piBalance.isTestnet && <span className="ml-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded">Testnet</span>}
+                  </span>
+                </div>
+              )}
             </div>
             
             {/* Live Pi Price Ticker */}
             {piPrice && (
-              <div className="pi-price-ticker px-6 py-3 rounded-lg" data-testid="pi-price-dashboard">
+              <div className="pi-price-ticker px-4 py-2 rounded-lg w-full sm:w-auto sticky top-0 z-10 sm:static sm:z-auto bg-card/90 backdrop-blur sm:bg-transparent" data-testid="pi-price-dashboard">
                 <div className="text-center">
-                  <p className="text-sm text-white/80">Live Pi Price</p>
-                  <p className="text-2xl font-bold text-white">${piPrice.price.toFixed(3)}</p>
+                  <p className="text-xs text-white/80">Live Pi Price</p>
+                  <p className="text-lg font-bold text-white">1 π = ${piPrice.price.toFixed(4)} USD</p>
                   <p className="text-xs text-white/60">Updated 60s ago</p>
                 </div>
               </div>
@@ -395,6 +414,15 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Floating Pi Price for Mobile */}
+      {piPrice && (
+        <div className="fixed bottom-4 right-4 sm:hidden pi-price-ticker px-3 py-2 rounded-full shadow-lg z-50 bg-gradient-to-r from-blue-600 to-indigo-700">
+          <div className="text-center">
+            <p className="text-xs text-white font-medium">1 π = ${piPrice.price.toFixed(4)}</p>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       <ProfileModal 

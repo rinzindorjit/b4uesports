@@ -179,7 +179,13 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       return;
     }
 
-    updateProfileMutation.mutate(formData);
+    // Add isProfileVerified flag when profile is completed (if not already set)
+    const profileData = {
+      ...formData,
+      isProfileVerified: (user as any)?.isProfileVerified || true // Keep existing status or set to true if completing
+    };
+
+    updateProfileMutation.mutate(profileData);
   };
 
   const handleInputChange = (field: string, value: string) => {

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { usePiNetwork } from '@/hooks/use-pi-network';
+import { usePiBalance } from '@/hooks/use-pi-balance';
 import { GAME_LOGOS } from '@/lib/constants';
 import type { Package } from '@/types/pi-network';
 import bcrypt from 'bcryptjs';
@@ -18,6 +19,7 @@ interface PurchaseModalProps {
 
 export default function PurchaseModal({ isOpen, onClose, package: pkg }: PurchaseModalProps) {
   const { user, createPayment } = usePiNetwork();
+  const { data: piBalance } = usePiBalance();
   const { toast } = useToast();
   const [step, setStep] = useState<'confirm' | 'auth'>('confirm');
   const [passphrase, setPassphrase] = useState('');
@@ -189,6 +191,33 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                   </div>
                 </CardContent>
               </Card>
+
+              {/* User Balance Information */}
+              {piBalance && (
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">Your Balance</span>
+                      <div className="text-right">
+                        <p className="font-mono text-blue-400 text-lg font-bold">
+                          {piBalance.balance.toFixed(2)} π
+                        </p>
+                        {piBalance.isTestnet && (
+                          <p className="text-xs text-amber-400">Testnet</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="font-medium">After Purchase</span>
+                      <div className="text-right">
+                        <p className="font-mono text-green-400 text-lg font-bold">
+                          {(piBalance.balance - (pkg.piPrice || 0)).toFixed(2)} π
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               <Card>
                 <CardContent className="p-4">

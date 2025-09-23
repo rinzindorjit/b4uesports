@@ -3,14 +3,18 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+// Get the directory name in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3002;
 
 // Serve static files from the client build directory
-app.use(express.static(path.join(__dirname, 'dist/public')));
+const staticPath = path.join(__dirname, 'dist', 'public');
+console.log('Static files path:', staticPath);
+console.log('Index file path:', path.join(staticPath, 'index.html'));
+
+app.use(express.static(staticPath));
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -162,13 +166,69 @@ app.get('/api/transactions', (req, res) => {
   res.json(mockTransactions);
 });
 
-// All other routes serve the client app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist/public/index.html'));
+// Development login endpoint for testing
+app.post('/api/auth/pi', (req, res) => {
+  // Mock user for development/testing
+  const mockUser = {
+    id: 'dev-user-123',
+    piUID: 'dev-pi-uid-123',
+    username: 'dev_test_user',
+    email: 'dev@example.com',
+    phone: '+1234567890',
+    country: 'US',
+    language: 'en',
+    walletAddress: 'GAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+    gameAccounts: {
+      pubg: { ign: 'DevPlayer', uid: '123456789' },
+      mlbb: { userId: '987654321', zoneId: '1234' }
+    },
+    profileImageUrl: null,
+    isProfileVerified: true,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  // Mock JWT token
+  const mockToken = 'dev-jwt-token-12345';
+
+  res.json({
+    user: mockUser,
+    token: mockToken
+  });
 });
 
+// Mock Pi balance endpoint for development
+app.get('/api/pi-balance', (req, res) => {
+  // Mock balance for testing
+  const mockBalance = {
+    balance: Math.random() * 1000 + 100, // Random balance between 100-1100 Pi
+    currency: 'π',
+    lastUpdated: new Date().toISOString(),
+    isTestnet: true
+  };
+
+  res.json(mockBalance);
+});
+
+// All other routes serve the client app
+app.get('*', (req, res) => {
+  const indexPath = path.join(__dirname, 'dist/public/index.html');
+  console.log('Serving index.html from:', indexPath);
+  
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('Error serving index.html:', err);
+      res.status(500).send('Error serving index.html');
+    }
+  });
+});
+
+const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
   console.log(`Preview server running on http://localhost:${PORT}`);
   console.log('Note: This is a preview mode without database connectivity.');
   console.log('Some features like profile updates and real payments are simulated.');
+  console.log('Static files path:', path.join(__dirname, 'dist/public'));
+  console.log('Index file path:', path.join(__dirname, 'dist/public/index.html'));
 });

@@ -28,7 +28,17 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   useEffect(() => {
     // Initialize Pi SDK
     const isProduction = import.meta.env.PROD;
-    piSDK.init(!isProduction); // sandbox mode for development
+    const isDevelopment = import.meta.env.DEV;
+    const isPreview = import.meta.env.MODE === 'preview';
+    
+    // In development or preview, we can use sandbox mode
+    // In production, we use the live network
+    const useSandbox = isDevelopment || isPreview || !isProduction;
+    
+    // Only initialize Pi SDK if not in preview mode
+    if (!isPreview) {
+      piSDK.init(useSandbox); // sandbox mode for development/preview, production mode for production
+    }
 
     // Check for existing session
     const savedToken = localStorage.getItem('pi_token');
@@ -44,11 +54,58 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   }, []);
 
   const authenticate = async () => {
+    const isPreview = import.meta.env.MODE === 'preview';
+    
+    if (isPreview) {
+      // In preview mode, we can't use the real Pi SDK
+      // We'll simulate the authentication flow
+      setIsLoading(true);
+      
+      // Simulate authentication delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Create mock user data
+      const mockUser: User = {
+        id: 'preview-user-123',
+        username: 'preview_user',
+        email: 'preview@example.com',
+        phone: '+1234567890',
+        country: 'US',
+        language: 'en',
+        walletAddress: 'GAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+        gameAccounts: {
+          pubg: { ign: 'PreviewPlayer', uid: '123456789' },
+          mlbb: { userId: '987654321', zoneId: '1234' }
+        },
+        profileImageUrl: undefined,
+        isProfileVerified: false,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      } as User;
+      
+      // Set mock token and user
+      const mockToken = 'preview-jwt-token-12345';
+      
+      setUser(mockUser);
+      setToken(mockToken);
+      setIsAuthenticated(true);
+      
+      // Save to localStorage
+      localStorage.setItem('pi_token', mockToken);
+      localStorage.setItem('pi_user', JSON.stringify(mockUser));
+      
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
     try {
-      const authResult = await piSDK.authenticate(['payments', 'username']);
+      // Ensure we request both 'payments' and 'username' scopes
+      // Also add 'wallet_address' scope to get wallet address
+      const authResult = await piSDK.authenticate(['payments', 'username', 'wallet_address']);
       if (!authResult) {
-        throw new Error('Authentication failed');
+        throw new Error('Authentication failed - missing required scopes');
       }
 
       // Send access token to backend for verification

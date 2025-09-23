@@ -53,6 +53,13 @@ export interface PiPrice {
   lastUpdated: Date;
 }
 
+export interface PiBalance {
+  balance: number;
+  currency: string;
+  lastUpdated: string;
+  isTestnet: boolean;
+}
+
 export interface Package {
   id: string;
   game: string;
@@ -79,6 +86,7 @@ export interface User {
     mlbb?: { userId: string; zoneId: string };
   };
   referralCode?: string;
+  isProfileVerified?: boolean; // Add this field
 }
 
 export interface Transaction {

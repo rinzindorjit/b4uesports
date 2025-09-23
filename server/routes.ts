@@ -57,6 +57,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           country: 'Bhutan',
           language: 'en',
           walletAddress: '', // Will be updated when they make their first transaction
+          isProfileVerified: false, // Profile not verified yet
         };
         user = await storage.createUser(newUser);
       } else {
@@ -140,6 +141,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user Pi balance (for testing only)
+  app.get('/api/pi-balance', async (req, res) => {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
+      }
+
+      // In a real implementation, you would fetch the actual Pi balance from Pi Network
+      // For testing purposes, we'll return a mock balance
+      // In production, you would integrate with Pi Network's balance API
+      
+      // Mock balance for testing
+      const mockBalance = {
+        balance: Math.random() * 1000 + 100, // Random balance between 100-1100 Pi
+        currency: 'π',
+        lastUpdated: new Date().toISOString(),
+        isTestnet: true
+      };
+
+      res.json(mockBalance);
+    } catch (error) {
+      console.error('Pi balance fetch error:', error);
+      res.status(500).json({ message: 'Failed to fetch Pi balance' });
+    }
+  });
+
   // Get packages with Pi pricing
   app.get('/api/packages', async (req, res) => {
     try {
@@ -197,6 +225,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const fs = require('fs');
           const path = require('path');
           const uploadPath = path.join(__dirname, '../uploads', `profile-${userId}-${Date.now()}.${file.originalname.split('.').pop()}`);
+          
+          // Ensure uploads directory exists
+          const uploadsDir = path.join(__dirname, '../uploads');
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+          
           fs.renameSync(file.path, uploadPath);
         }
       } else {
@@ -207,6 +242,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate required fields
       if (updateData.email && !updateData.email.endsWith('@gmail.com')) {
         return res.status(400).json({ message: 'Email must be a Gmail address' });
+      }
+
+      // If profile is being completed (email and phone provided), set as verified
+      // But don't override if it's already verified
+      if (updateData.email && updateData.phone && updateData.isProfileVerified !== false) {
+        updateData.isProfileVerified = true;
       }
 
       const updatedUser = await storage.updateUser(userId, updateData);
