@@ -1,25 +1,5 @@
-// Vercel API endpoint for Pi Network metadata
-// This file should be placed in the api directory for Vercel deployment
-
+// Pi Network metadata endpoint
 export default function handler(request, response) {
-  // Set CORS headers for Pi Network requests
-  response.setHeader('Access-Control-Allow-Origin', '*');
-  response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  // Handle preflight requests
-  if (request.method === 'OPTIONS') {
-    response.status(200).end();
-    return;
-  }
-  
-  // Only allow GET requests
-  if (request.method !== 'GET') {
-    response.status(405).json({ error: 'Method Not Allowed' });
-    return;
-  }
-  
-  // Pi Network metadata
   const metadata = {
     // Application metadata
     application: {
@@ -100,6 +80,5 @@ export default function handler(request, response) {
     last_updated: new Date().toISOString()
   };
   
-  // Return metadata as JSON
   response.status(200).json(metadata);
 }

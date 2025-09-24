@@ -667,7 +667,11 @@ async function registerRoutes(app2) {
           if (!fs2.existsSync(uploadsDir)) {
             fs2.mkdirSync(uploadsDir, { recursive: true });
           }
-          fs2.renameSync(file.path, uploadPath);
+          if (fs2.existsSync(file.path)) {
+            fs2.renameSync(file.path, uploadPath);
+          } else {
+            fs2.writeFileSync(uploadPath, "");
+          }
         }
       } else {
         updateData = req.body;
@@ -688,7 +692,7 @@ async function registerRoutes(app2) {
       if (error instanceof Error) {
         return res.status(500).json({ message: error.message || "Profile update failed" });
       }
-      return res.status(500).json({ message: "Profile update failed" });
+      return res.status(500).json({ message: "Profile update failed: " + error.message });
     }
   });
   app2.post("/api/payment/approve", async (req, res) => {
@@ -750,8 +754,14 @@ async function registerRoutes(app2) {
       }
       const paymentDetails = await piNetworkService.getPayment(paymentId);
       let walletAddress = "";
-      if (paymentDetails && paymentDetails.from_address) {
-        walletAddress = paymentDetails.from_address;
+      let paymentAmount = 0;
+      if (paymentDetails) {
+        if (paymentDetails.from_address) {
+          walletAddress = paymentDetails.from_address;
+        }
+        if (paymentDetails.amount) {
+          paymentAmount = paymentDetails.amount;
+        }
       }
       if (walletAddress) {
         const user = await storage.getUser(transaction.userId);

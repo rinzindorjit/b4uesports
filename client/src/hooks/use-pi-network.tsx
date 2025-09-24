@@ -27,10 +27,10 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   useEffect(() => {
     // Initialize Pi SDK
-    const isProduction = import.meta.env?.PROD || process.env.NODE_ENV === 'production';
-    const isDevelopment = import.meta.env?.DEV || process.env.NODE_ENV === 'development';
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isDevelopment = process.env.NODE_ENV === 'development';
     // Check if we're in preview mode by looking at the hostname
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3002';
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3003';
     
     console.log('PiNetworkProvider init, isProduction:', isProduction, 'isDevelopment:', isDevelopment, 'isPreview:', isPreview);
     
@@ -58,7 +58,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   const authenticate = async () => {
     // Check if we're in preview mode by looking at the hostname
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3002';
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3003';
     
     console.log('Authentication called, isPreview:', isPreview);
     console.log('Window location:', window.location);
@@ -151,7 +151,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   const createPayment = (paymentData: PaymentData, callbacks: PaymentCallbacks) => {
     // Check if we're in preview mode
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3002';
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3003';
     
     if (isPreview) {
       // Mock payment flow for preview mode
@@ -212,7 +212,23 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       onError: callbacks.onError,
     };
 
-    piSDK.createPayment(enhancedPaymentData, enhancedCallbacks);
+    // Initialize Pi SDK if not already initialized
+    try {
+      piSDK.createPayment(enhancedPaymentData, enhancedCallbacks);
+    } catch (error) {
+      console.error('Payment creation failed:', error);
+      // Try to reinitialize Pi SDK and retry
+      try {
+        const isProduction = process.env.NODE_ENV === 'production';
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        const useSandbox = isDevelopment || !isProduction;
+        piSDK.init(useSandbox);
+        piSDK.createPayment(enhancedPaymentData, enhancedCallbacks);
+      } catch (retryError) {
+        console.error('Payment creation retry failed:', retryError);
+        callbacks.onError(retryError as Error);
+      }
+    }
   };
 
   return (

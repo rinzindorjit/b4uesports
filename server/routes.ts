@@ -195,6 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'No token provided' });
       }
 
+      // Verify JWT token
       const decoded = jwt.verify(token, JWT_SECRET) as any;
       const userId = decoded.userId;
 

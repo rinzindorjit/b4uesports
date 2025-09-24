@@ -259,7 +259,7 @@ app.get('*', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3003;
+const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
   console.log(`Preview server running on http://localhost:${PORT}`);
   console.log('Note: This is a preview mode without database connectivity.');
