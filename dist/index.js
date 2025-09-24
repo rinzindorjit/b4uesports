@@ -157,25 +157,66 @@ if (!process.env.DATABASE_URL && !isPreview) {
 function getDatabase() {
   if (isPreview) {
     console.log("Using mock database for preview mode");
+    const mockData = {
+      users: [],
+      packages: [],
+      transactions: [],
+      admins: [],
+      piPriceHistory: []
+    };
     return {
       select: () => ({
-        from: () => ({
-          where: () => Promise.resolve([]),
-          orderBy: () => Promise.resolve([])
-        })
+        from: (table) => {
+          const tableName = Object.keys(schema_exports).find((key) => schema_exports[key] === table);
+          return {
+            where: () => Promise.resolve(mockData[tableName] || []),
+            orderBy: () => Promise.resolve(mockData[tableName] || [])
+          };
+        }
       }),
-      insert: () => ({
-        values: () => ({
-          returning: () => Promise.resolve([])
-        })
-      }),
-      update: () => ({
-        set: () => ({
-          where: () => ({
-            returning: () => Promise.resolve([])
+      insert: (table) => {
+        const tableName = Object.keys(schema_exports).find((key) => schema_exports[key] === table);
+        return {
+          values: (values) => {
+            const newValues = Array.isArray(values) ? values : [values];
+            if (mockData[tableName]) {
+              mockData[tableName].push(...newValues.map((val, index) => ({
+                ...val,
+                id: val.id || `mock-${tableName}-${Date.now()}-${index}`,
+                createdAt: val.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+                updatedAt: val.updatedAt || (/* @__PURE__ */ new Date()).toISOString()
+              })));
+            }
+            return {
+              returning: () => Promise.resolve(newValues.map((val, index) => ({
+                ...val,
+                id: val.id || `mock-${tableName}-${Date.now()}-${index}`,
+                createdAt: val.createdAt || (/* @__PURE__ */ new Date()).toISOString(),
+                updatedAt: val.updatedAt || (/* @__PURE__ */ new Date()).toISOString()
+              })))
+            };
+          }
+        };
+      },
+      update: (table) => {
+        const tableName = Object.keys(schema_exports).find((key) => schema_exports[key] === table);
+        return {
+          set: (updateData) => ({
+            where: () => {
+              if (mockData[tableName] && mockData[tableName].length > 0) {
+                mockData[tableName][0] = {
+                  ...mockData[tableName][0],
+                  ...updateData,
+                  updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+                };
+              }
+              return {
+                returning: () => Promise.resolve([mockData[tableName][0]].filter(Boolean))
+              };
+            }
           })
-        })
-      }),
+        };
+      },
       delete: () => ({
         where: () => Promise.resolve([])
       })
@@ -302,14 +343,26 @@ import axios from "axios";
 var PI_API_BASE = "https://api.minepi.com";
 var SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
 if (!SERVER_API_KEY) {
-  throw new Error("PI_SERVER_API_KEY environment variable must be set");
+  console.warn("PI_SERVER_API_KEY environment variable not set - using mock mode");
 }
 var PiNetworkService = class {
   apiKey;
+  isMockMode;
   constructor() {
-    this.apiKey = SERVER_API_KEY;
+    this.apiKey = SERVER_API_KEY || null;
+    this.isMockMode = !SERVER_API_KEY;
+    if (this.isMockMode) {
+      console.log("PiNetworkService running in mock mode - no real API calls will be made");
+    }
   }
   async verifyAccessToken(accessToken) {
+    if (this.isMockMode) {
+      return {
+        uid: "mock-user-uid",
+        username: "mock_user",
+        roles: ["user"]
+      };
+    }
     try {
       const response = await axios.get(`${PI_API_BASE}/v2/me`, {
         headers: {
@@ -323,6 +376,18 @@ var PiNetworkService = class {
     }
   }
   async approvePayment(paymentId) {
+    if (this.isMockMode) {
+      console.log("Mock payment approval for:", paymentId);
+      const globalAny = global;
+      if (globalAny.mockTransactions) {
+        const transaction = globalAny.mockTransactions.find((tx) => tx.paymentId === paymentId);
+        if (transaction) {
+          transaction.status = "approved";
+          transaction.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+        }
+      }
+      return true;
+    }
     try {
       await axios.post(
         `${PI_API_BASE}/v2/payments/${paymentId}/approve`,
@@ -341,6 +406,19 @@ var PiNetworkService = class {
     }
   }
   async completePayment(paymentId, txid) {
+    if (this.isMockMode) {
+      console.log("Mock payment completion for:", paymentId, "with txid:", txid);
+      const globalAny = global;
+      if (globalAny.mockTransactions) {
+        const transaction = globalAny.mockTransactions.find((tx) => tx.paymentId === paymentId);
+        if (transaction) {
+          transaction.status = "completed";
+          transaction.txid = txid;
+          transaction.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+        }
+      }
+      return true;
+    }
     try {
       await axios.post(
         `${PI_API_BASE}/v2/payments/${paymentId}/complete`,
@@ -359,6 +437,29 @@ var PiNetworkService = class {
     }
   }
   async getPayment(paymentId) {
+    if (this.isMockMode) {
+      console.log("Mock payment retrieval for:", paymentId);
+      return {
+        identifier: paymentId,
+        user_uid: "mock-user-uid",
+        amount: 1,
+        memo: "Mock payment",
+        metadata: {},
+        from_address: "mock-from-address",
+        to_address: "mock-to-address",
+        direction: "user_to_app",
+        created_at: (/* @__PURE__ */ new Date()).toISOString(),
+        network: "Pi Testnet",
+        status: {
+          developer_approved: true,
+          transaction_verified: true,
+          developer_completed: false,
+          cancelled: false,
+          user_cancelled: false
+        },
+        transaction: null
+      };
+    }
     try {
       const response = await axios.get(`${PI_API_BASE}/v2/payments/${paymentId}`, {
         headers: {
@@ -372,6 +473,10 @@ var PiNetworkService = class {
     }
   }
   async cancelPayment(paymentId) {
+    if (this.isMockMode) {
+      console.log("Mock payment cancellation for:", paymentId);
+      return true;
+    }
     try {
       await axios.post(
         `${PI_API_BASE}/v2/payments/${paymentId}/cancel`,

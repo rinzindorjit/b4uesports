@@ -38,7 +38,8 @@ export default function Dashboard() {
     gameAccounts: {
       pubg: { ign: 'PreviewPlayer', uid: '123456789' },
       mlbb: { userId: '987654321', zoneId: '1234' }
-    }
+    },
+    isProfileVerified: (typeof globalThis !== 'undefined' && globalThis.previewUserData?.isProfileVerified) || false
   };
 
   // Create mock packages for preview with all the specified packages

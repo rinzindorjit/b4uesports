@@ -19,25 +19,70 @@ export function getDatabase() {
   // In preview mode, return a mock database
   if (isPreview) {
     console.log('Using mock database for preview mode');
+    
+    // Mock data storage
+    const mockData: any = {
+      users: [],
+      packages: [],
+      transactions: [],
+      admins: [],
+      piPriceHistory: []
+    };
+    
     return {
       select: () => ({
-        from: () => ({
-          where: () => Promise.resolve([]),
-          orderBy: () => Promise.resolve([]),
-        }),
+        from: (table: any) => {
+          const tableName = Object.keys(schema).find(key => schema[key] === table);
+          return {
+            where: () => Promise.resolve(mockData[tableName] || []),
+            orderBy: () => Promise.resolve(mockData[tableName] || []),
+          };
+        },
       }),
-      insert: () => ({
-        values: () => ({
-          returning: () => Promise.resolve([]),
-        }),
-      }),
-      update: () => ({
-        set: () => ({
-          where: () => ({
-            returning: () => Promise.resolve([]),
+      insert: (table: any) => {
+        const tableName = Object.keys(schema).find(key => schema[key] === table);
+        return {
+          values: (values: any) => {
+            const newValues = Array.isArray(values) ? values : [values];
+            if (mockData[tableName]) {
+              mockData[tableName].push(...newValues.map((val: any, index: number) => ({
+                ...val,
+                id: val.id || `mock-${tableName}-${Date.now()}-${index}`,
+                createdAt: val.createdAt || new Date().toISOString(),
+                updatedAt: val.updatedAt || new Date().toISOString()
+              })));
+            }
+            return {
+              returning: () => Promise.resolve(newValues.map((val: any, index: number) => ({
+                ...val,
+                id: val.id || `mock-${tableName}-${Date.now()}-${index}`,
+                createdAt: val.createdAt || new Date().toISOString(),
+                updatedAt: val.updatedAt || new Date().toISOString()
+              })))
+            };
+          },
+        };
+      },
+      update: (table: any) => {
+        const tableName = Object.keys(schema).find(key => schema[key] === table);
+        return {
+          set: (updateData: any) => ({
+            where: () => {
+              if (mockData[tableName] && mockData[tableName].length > 0) {
+                // Update the first item as a mock
+                mockData[tableName][0] = {
+                  ...mockData[tableName][0],
+                  ...updateData,
+                  updatedAt: new Date().toISOString()
+                };
+              }
+              return {
+                returning: () => Promise.resolve([mockData[tableName][0]].filter(Boolean))
+              };
+            },
           }),
-        }),
-      }),
+        };
+      },
       delete: () => ({
         where: () => Promise.resolve([]),
       }),

@@ -30,7 +30,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     const isProduction = process.env.NODE_ENV === 'production';
     const isDevelopment = process.env.NODE_ENV === 'development';
     // Check if we're in preview mode by looking at the hostname
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3004';
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3005';
     
     console.log('PiNetworkProvider init, isProduction:', isProduction, 'isDevelopment:', isDevelopment, 'isPreview:', isPreview);
     
@@ -58,7 +58,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   const authenticate = async () => {
     // Check if we're in preview mode by looking at the hostname
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3004';
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3005';
     
     console.log('Authentication called, isPreview:', isPreview);
     console.log('Window location:', window.location);
@@ -83,7 +83,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
           mlbb: { userId: '987654321', zoneId: '1234' }
         },
         profileImageUrl: undefined,
-        isProfileVerified: false,
+        isProfileVerified: true, // Set to true for preview
         isActive: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -141,17 +141,9 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     setIsLoading(false);
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('pi_token');
-    localStorage.removeItem('pi_user');
-  };
-
   const createPayment = (paymentData: PaymentData, callbacks: PaymentCallbacks) => {
     // Check if we're in preview mode
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3004';
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3005';
     
     if (isPreview) {
       // Mock payment flow for preview mode
@@ -164,10 +156,49 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       setTimeout(() => {
         callbacks.onReadyForServerApproval(mockPaymentId);
         
-        // Simulate payment completion
-        setTimeout(() => {
+        // Simulate payment completion with API call to update transactions
+        setTimeout(async () => {
           const mockTxId = 'preview_tx_' + Date.now();
           callbacks.onReadyForServerCompletion(mockPaymentId, mockTxId);
+          
+          // In preview mode, we should also update the transactions in localStorage
+          // to simulate the backend updating the database
+          try {
+            const token = localStorage.getItem('pi_token');
+            if (token) {
+              // Create a mock transaction and add it to localStorage
+              const mockTransaction = {
+                id: 'transaction-' + Date.now(),
+                userId: 'preview-user-123',
+                packageId: paymentData.metadata?.packageId || 'unknown',
+                paymentId: mockPaymentId,
+                txid: mockTxId,
+                piAmount: paymentData.amount.toString(),
+                usdAmount: (paymentData.amount * 0.01).toString(), // Mock conversion
+                piPriceAtTime: '0.01',
+                status: 'completed',
+                gameAccount: paymentData.metadata?.gameAccount || {},
+                metadata: paymentData.metadata || {},
+                emailSent: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              
+              // Get existing transactions from localStorage
+              const existingTransactions = JSON.parse(localStorage.getItem('mock_transactions') || '[]');
+              existingTransactions.push(mockTransaction);
+              localStorage.setItem('mock_transactions', JSON.stringify(existingTransactions));
+              
+              // Also update the global mock transactions for immediate UI update
+              // Type assertion to avoid TypeScript errors
+              const globalAny: any = global;
+              if (globalAny.mockTransactions) {
+                globalAny.mockTransactions.push(mockTransaction);
+              }
+            }
+          } catch (error) {
+            console.error('Error updating mock transactions:', error);
+          }
         }, 1000);
       }, 500);
       
@@ -229,6 +260,14 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
         callbacks.onError(retryError as Error);
       }
     }
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('pi_token');
+    localStorage.removeItem('pi_user');
   };
 
   return (

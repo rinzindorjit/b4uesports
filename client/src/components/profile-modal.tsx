@@ -179,10 +179,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       return;
     }
 
-    // Add isProfileVerified flag when profile is completed (if not already set)
+    // Add isProfileVerified flag when profile is completed
     const profileData = {
       ...formData,
-      isProfileVerified: (user as any)?.isProfileVerified || true // Keep existing status or set to true if completing
+      isProfileVerified: !!(formData.email && formData.phone) // Mark as verified when email and phone are provided
     };
 
     updateProfileMutation.mutate(profileData);

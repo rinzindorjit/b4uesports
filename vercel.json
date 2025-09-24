@@ -11,9 +11,17 @@
           "shared/**"
         ]
       }
+    },
+    {
+      "src": "api/pi/*.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/api/pi/(.*)",
+      "dest": "api/pi/$1"
+    },
     {
       "src": "/api/(.*)",
       "dest": "server/index.ts"

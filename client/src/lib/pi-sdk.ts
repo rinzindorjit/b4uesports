@@ -61,7 +61,10 @@ export class PiSDK {
       const finalScopes = Array.from(new Set([...scopes, ...requiredScopes]));
       
       console.log('Requesting Pi authentication with scopes:', finalScopes);
-      const authResult = await window.Pi.authenticate(finalScopes);
+      const authResult = await window.Pi.authenticate(finalScopes, (payment) => {
+        console.log('Incomplete payment found:', payment);
+        // Handle incomplete payments if needed
+      });
       console.log('Pi authentication result:', authResult);
       return authResult;
     } catch (error) {

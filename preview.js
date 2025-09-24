@@ -9,6 +9,10 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
+// Add middleware to parse JSON bodies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // Serve static files from the client build directory
 const staticPath = path.join(__dirname, 'dist', 'public');
 console.log('Static files path:', staticPath);
@@ -109,9 +113,9 @@ app.get('/api/packages', async (req, res) => {
   let currentPiPrice = 0.01; // Default fallback price
   
   try {
-    // Fetch live Pi price from CoinGecko
+    // Fetch live Pi price from CoinGecko with a shorter timeout
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4', {
-      timeout: 5000 // 5 second timeout
+      timeout: 3000 // 3 second timeout
     });
     const data = await response.json();
     currentPiPrice = data['pi-network']?.usd || 0.01;
@@ -145,63 +149,107 @@ app.get('/api/packages', async (req, res) => {
   res.json(mockPackages);
 });
 
+// Add endpoint to get user transactions in preview mode
 app.get('/api/transactions', (req, res) => {
-  const mockTransactions = [
-    {
-      id: '1',
-      userId: 'preview-user',
-      packageId: 'pubg-1',
-      paymentId: 'payment-1',
-      piAmount: '150.0',
-      usdAmount: '1.5',
-      piPriceAtTime: '0.01',
-      status: 'completed',
-      gameAccount: { ign: 'PreviewPlayer', uid: '123456789' },
-      emailSent: true,
+  // Use in-memory storage for mock transactions
+  // since localStorage is not available in Node.js
+  if (!global.mockTransactions) {
+    global.mockTransactions = [
+      {
+        id: '1',
+        userId: 'preview-user-123',
+        packageId: 'pubg-1',
+        paymentId: 'payment-1',
+        piAmount: '150.0',
+        usdAmount: '1.5',
+        piPriceAtTime: '0.01',
+        status: 'completed',
+        gameAccount: { ign: 'PreviewPlayer', uid: '123456789' },
+        emailSent: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      },
+      {
+        id: '2',
+        userId: 'preview-user-123',
+        packageId: 'mlbb-1',
+        paymentId: 'payment-2',
+        piAmount: '300.0',
+        usdAmount: '3.0',
+        piPriceAtTime: '0.01',
+        status: 'completed',
+        gameAccount: { userId: '987654321', zoneId: '1234' },
+        emailSent: true,
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000).toISOString()
+      }
+    ];
+  }
+  
+  // Filter transactions for the current user
+  const userTransactions = global.mockTransactions.filter(tx => tx.userId === 'preview-user-123');
+  res.json(userTransactions);
+});
+
+// Add endpoint to create new transactions in preview mode
+app.post('/api/transactions', (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    // Create a new transaction
+    const newTransaction = {
+      id: 'transaction-' + Date.now(),
+      userId: 'preview-user-123',
+      ...req.body,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
-    },
-    {
-      id: '2',
-      userId: 'preview-user',
-      packageId: 'mlbb-1',
-      paymentId: 'payment-2',
-      piAmount: '300.0',
-      usdAmount: '3.0',
-      piPriceAtTime: '0.01',
-      status: 'completed',
-      gameAccount: { userId: '987654321', zoneId: '1234' },
-      emailSent: true,
-      createdAt: new Date(Date.now() - 86400000).toISOString(),
-      updatedAt: new Date(Date.now() - 86400000).toISOString()
+    };
+    
+    // Initialize mock transactions array if it doesn't exist
+    if (!global.mockTransactions) {
+      global.mockTransactions = [];
     }
-  ];
-  
-  res.json(mockTransactions);
+    
+    // Add the new transaction
+    global.mockTransactions.push(newTransaction);
+    
+    res.json(newTransaction);
+  } catch (error) {
+    console.error('Transaction creation error:', error);
+    res.status(500).json({ message: 'Transaction creation failed' });
+  }
 });
 
 // Development login endpoint for testing
 app.post('/api/auth/pi', (req, res) => {
   // Mock user for development/testing
-  const mockUser = {
-    id: 'preview-user-123',
-    piUID: 'preview-pi-uid-123',
-    username: 'preview_user',
-    email: 'preview@example.com',
-    phone: '+1234567890',
-    country: 'US',
-    language: 'en',
-    walletAddress: 'GAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-    gameAccounts: {
-      pubg: { ign: 'PreviewPlayer', uid: '123456789' },
-      mlbb: { userId: '987654321', zoneId: '1234' }
-    },
-    profileImageUrl: null,
-    isProfileVerified: false,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
+  // Check if we have a saved user profile
+  let mockUser = global.previewUserData;
+  
+  if (!mockUser) {
+    mockUser = {
+      id: 'preview-user-123',
+      piUID: 'preview-pi-uid-123',
+      username: 'preview_user',
+      email: 'preview@example.com',
+      phone: '+1234567890',
+      country: 'US',
+      language: 'en',
+      walletAddress: 'GAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+      gameAccounts: {
+        pubg: { ign: 'PreviewPlayer', uid: '123456789' },
+        mlbb: { userId: '987654321', zoneId: '1234' }
+      },
+      profileImageUrl: null,
+      isProfileVerified: true, // Set to true for preview
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+  }
 
   // Mock JWT token
   const mockToken = 'preview-jwt-token-12345';
@@ -210,6 +258,66 @@ app.post('/api/auth/pi', (req, res) => {
     user: mockUser,
     token: mockToken
   });
+});
+
+// Add endpoint for profile update in preview mode
+app.put('/api/profile', (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    // In preview mode, just return the updated user data
+    const updateData = req.body;
+    
+    // For preview mode, we'll use a simple in-memory storage
+    // since localStorage is not available in Node.js
+    if (!global.previewUserData) {
+      global.previewUserData = {
+        id: 'preview-user-123',
+        piUID: 'preview-pi-uid-123',
+        username: 'preview_user',
+        email: 'preview@example.com',
+        phone: '+1234567890',
+        country: 'US',
+        language: 'en',
+        walletAddress: 'GAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+        gameAccounts: {
+          pubg: { ign: 'PreviewPlayer', uid: '123456789' },
+          mlbb: { userId: '987654321', zoneId: '1234' }
+        },
+        profileImageUrl: null,
+        isProfileVerified: false,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+    }
+    
+    // Check if profile is being completed (email and phone provided)
+    // If so, mark as verified
+    if (updateData.email && updateData.phone) {
+      updateData.isProfileVerified = true;
+    }
+    
+    // Ensure isProfileVerified status is maintained if already verified
+    if (global.previewUserData && global.previewUserData.isProfileVerified) {
+      updateData.isProfileVerified = true;
+    }
+    
+    // Update user data with new values
+    global.previewUserData = {
+      ...global.previewUserData,
+      ...updateData,
+      updatedAt: new Date().toISOString()
+    };
+    
+    res.json(global.previewUserData);
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ message: 'Profile update failed' });
+  }
 });
 
 // Mock Pi balance endpoint for development
@@ -228,9 +336,9 @@ app.get('/api/pi-balance', (req, res) => {
 // Mock Pi price endpoint for development
 app.get('/api/pi-price', async (req, res) => {
   try {
-    // Fetch live Pi price from CoinGecko
+    // Fetch live Pi price from CoinGecko with a shorter timeout
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4', {
-      timeout: 5000 // 5 second timeout
+      timeout: 3000 // 3 second timeout
     });
     const data = await response.json();
     
@@ -263,7 +371,7 @@ app.get('*', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3004;
+const PORT = process.env.PORT || 3005;
 app.listen(PORT, () => {
   console.log(`Preview server running on http://localhost:${PORT}`);
   console.log('Note: This is a preview mode without database connectivity.');
