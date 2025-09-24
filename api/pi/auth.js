@@ -16,7 +16,13 @@ export default async function handler(request, response) {
   }
 
   try {
-    const { accessToken } = request.body;
+    // Parse request body if it's a string
+    let body = request.body;
+    if (typeof body === 'string') {
+      body = JSON.parse(body);
+    }
+    
+    const { accessToken } = body || {};
     if (!accessToken) {
       return response.status(400).json({ message: 'Access token required' });
     }
@@ -57,6 +63,6 @@ export default async function handler(request, response) {
     });
   } catch (error) {
     console.error('Pi authentication error:', error);
-    response.status(500).json({ message: 'Authentication failed' });
+    response.status(500).json({ message: 'Authentication failed', error: error.message });
   }
 }

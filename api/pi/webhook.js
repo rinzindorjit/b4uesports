@@ -16,7 +16,13 @@ export default async function handler(request, response) {
   }
 
   try {
-    const { action, paymentId, txid } = request.body;
+    // Parse request body if it's a string
+    let body = request.body;
+    if (typeof body === 'string') {
+      body = JSON.parse(body);
+    }
+    
+    const { action, paymentId, txid } = body || {};
     
     // Log the webhook event
     console.log('Pi Network webhook received:', { action, paymentId, txid });
@@ -60,6 +66,6 @@ export default async function handler(request, response) {
     response.status(200).json({ success: true });
   } catch (error) {
     console.error('Webhook processing error:', error);
-    response.status(500).json({ message: 'Webhook processing failed' });
+    response.status(500).json({ message: 'Webhook processing failed', error: error.message });
   }
 }

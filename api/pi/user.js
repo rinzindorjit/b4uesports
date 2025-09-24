@@ -11,9 +11,9 @@ export default async function handler(request, response) {
     return;
   }
   
-  if (request.method === 'GET') {
-    // Get user info
-    try {
+  try {
+    if (request.method === 'GET') {
+      // Get user info
       // For mock purposes, return mock user data
       const mockUser = {
         id: 'mock-user-' + Date.now(),
@@ -33,14 +33,13 @@ export default async function handler(request, response) {
       };
 
       response.status(200).json(mockUser);
-    } catch (error) {
-      console.error('User fetch error:', error);
-      response.status(500).json({ message: 'Failed to fetch user' });
-    }
-  } else if (request.method === 'PUT') {
-    // Update user profile
-    try {
-      const userData = request.body;
+    } else if (request.method === 'PUT') {
+      // Update user profile
+      // Parse request body if it's a string
+      let userData = request.body;
+      if (typeof userData === 'string') {
+        userData = JSON.parse(userData);
+      }
       
       // For mock purposes, return the updated user data
       // Check if profile is being completed (email and phone provided)
@@ -54,11 +53,11 @@ export default async function handler(request, response) {
       };
 
       response.status(200).json(updatedUser);
-    } catch (error) {
-      console.error('User update error:', error);
-      response.status(500).json({ message: 'Failed to update user' });
+    } else {
+      response.status(405).json({ message: 'Method not allowed' });
     }
-  } else {
-    response.status(405).json({ message: 'Method not allowed' });
+  } catch (error) {
+    console.error('User handler error:', error);
+    response.status(500).json({ message: 'Failed to handle user request', error: error.message });
   }
 }
