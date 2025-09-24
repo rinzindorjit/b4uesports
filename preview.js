@@ -170,33 +170,33 @@ app.get('/api/transactions', (req, res) => {
 app.post('/api/auth/pi', (req, res) => {
   // Mock user for development/testing
   const mockUser = {
-    id: 'dev-user-123',
-    piUID: 'dev-pi-uid-123',
-    username: 'dev_test_user',
-    email: 'dev@example.com',
+    id: 'preview-user-123',
+    piUID: 'preview-pi-uid-123',
+    username: 'preview_user',
+    email: 'preview@example.com',
     phone: '+1234567890',
     country: 'US',
     language: 'en',
     walletAddress: 'GAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
     gameAccounts: {
-      pubg: { ign: 'DevPlayer', uid: '123456789' },
+      pubg: { ign: 'PreviewPlayer', uid: '123456789' },
       mlbb: { userId: '987654321', zoneId: '1234' }
     },
     profileImageUrl: null,
-    isProfileVerified: true,
+    isProfileVerified: false,
     isActive: true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
 
   // Mock JWT token
-  const mockToken = 'dev-jwt-token-12345';
+  const mockToken = 'preview-jwt-token-12345';
 
   res.json({
     user: mockUser,
     token: mockToken
   });
-});
+}););
 
 // Mock Pi balance endpoint for development
 app.get('/api/pi-balance', (req, res) => {
