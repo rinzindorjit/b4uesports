@@ -110,7 +110,9 @@ app.get('/api/packages', async (req, res) => {
   
   try {
     // Fetch live Pi price from CoinGecko
-    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4');
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4', {
+      timeout: 5000 // 5 second timeout
+    });
     const data = await response.json();
     currentPiPrice = data['pi-network']?.usd || 0.01;
   } catch (error) {
@@ -227,7 +229,9 @@ app.get('/api/pi-balance', (req, res) => {
 app.get('/api/pi-price', async (req, res) => {
   try {
     // Fetch live Pi price from CoinGecko
-    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4');
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4', {
+      timeout: 5000 // 5 second timeout
+    });
     const data = await response.json();
     
     const price = data['pi-network']?.usd || 0.01; // fallback to 0.01 if not available
@@ -259,7 +263,7 @@ app.get('*', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3004;
 app.listen(PORT, () => {
   console.log(`Preview server running on http://localhost:${PORT}`);
   console.log('Note: This is a preview mode without database connectivity.');
