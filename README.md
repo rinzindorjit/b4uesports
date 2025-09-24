@@ -20,6 +20,7 @@ B4U Esports is a Pi Network integrated marketplace for purchasing in-game curren
    - `EMAILJS_PUBLIC_KEY` - Your EmailJS public key
    - `JWT_SECRET` - Secret for JWT token generation
    - `DATABASE_URL` - Connection string for your PostgreSQL database
+   - `COINGECKO_API_KEY` - Your CoinGecko API key (optional but recommended)
 
 ### Vercel Configuration
 The `vercel.json` file in the root directory configures:
@@ -33,6 +34,20 @@ Vercel will automatically:
 2. Build the client application with Vite
 3. Bundle the server with esbuild
 4. Deploy the application
+
+## Database Setup
+
+### 1. Create Database Tables
+Run the following command to create the necessary database tables:
+```bash
+npm run db:push
+```
+
+### 2. Seed Database with Packages
+Run the following command to populate the database with game packages:
+```bash
+npm run db:seed
+```
 
 ## Development
 To run locally:
@@ -53,11 +68,3 @@ npm run preview
 - `/shared` - Shared types and utilities
 - `/public` - Static assets
 - `/uploads` - User uploaded files (in production)
-
-## Features
-- Pi Network payment integration
-- Profile management with verification
-- Gaming currency packages for PUBG and Mobile Legends
-- Email notifications via EmailJS
-- Responsive design for all devices
-- Live Pi price tracking
