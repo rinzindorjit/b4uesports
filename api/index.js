@@ -18,26 +18,34 @@ export default async function handler(request, response) {
   }
   
   // Extract the path from the request
-  const url = new URL(request.url, `http://${request.headers.host}`);
-  const path = url.pathname;
-  
-  // Route to appropriate handler based on path
   try {
+    const url = new URL(request.url, `http://${request.headers.host}`);
+    const path = url.pathname;
+    
+    console.log('API request received:', { method: request.method, path, url: request.url, headers: request.headers });
+    
+    // Route to appropriate handler based on path
     if (path === '/api/pi/auth') {
+      console.log('Routing to auth handler');
       return await authHandler(request, response);
     } else if (path === '/api/pi/payments') {
+      console.log('Routing to payments handler');
       return await paymentsHandler(request, response);
     } else if (path === '/api/pi/user') {
+      console.log('Routing to user handler');
       return await userHandler(request, response);
     } else if (path === '/api/pi/webhook') {
+      console.log('Routing to webhook handler');
       return await webhookHandler(request, response);
     } else if (path === '/api/metadata') {
+      console.log('Routing to metadata handler');
       return await metadataHandler(request, response);
     } else {
+      console.log('API endpoint not found:', path);
       response.status(404).json({ message: `API endpoint not found: ${path}` });
     }
   } catch (error) {
     console.error('API handler error:', error);
-    response.status(500).json({ message: 'Internal server error' });
+    response.status(500).json({ message: 'Internal server error', error: error.message });
   }
 }
