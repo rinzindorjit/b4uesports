@@ -2,33 +2,34 @@
   "version": 2,
   "builds": [
     {
-      "src": "server/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "dist/**",
-          "server/**",
-          "shared/**"
-        ]
-      }
+      "src": "api/pi/*.js",
+      "use": "@vercel/node"
     },
     {
-      "src": "api/pi/*.js",
+      "src": "api/metadata.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/pi/(.*)",
-      "dest": "api/pi/$1"
+      "src": "/api/pi/auth",
+      "dest": "/api/pi/auth.js"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "server/index.ts"
+      "src": "/api/pi/payments",
+      "dest": "/api/pi/payments.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "server/index.ts"
+      "src": "/api/pi/user",
+      "dest": "/api/pi/user.js"
+    },
+    {
+      "src": "/api/pi/webhook",
+      "dest": "/api/pi/webhook.js"
+    },
+    {
+      "src": "/api/metadata",
+      "dest": "/api/metadata.js"
     }
   ]
 }
