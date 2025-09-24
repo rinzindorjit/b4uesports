@@ -3,7 +3,7 @@ import { usePiPrice } from '@/hooks/use-pi-price';
 import { usePiBalance } from '@/hooks/use-pi-balance';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ParticleBackground from '@/components/particle-background';
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
@@ -25,22 +25,6 @@ export default function Dashboard() {
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
-
-  // Create mock user for preview
-  const mockUser: User = {
-    id: 'preview-user',
-    username: 'preview_user',
-    email: 'preview@example.com',
-    phone: '+1234567890',
-    country: 'US',
-    language: 'en',
-    walletAddress: 'GAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-    gameAccounts: {
-      pubg: { ign: 'PreviewPlayer', uid: '123456789' },
-      mlbb: { userId: '987654321', zoneId: '1234' }
-    },
-    isProfileVerified: (typeof globalThis !== 'undefined' && globalThis.previewUserData?.isProfileVerified) || false
-  };
 
   // Create mock packages for preview with all the specified packages
   const mockPackages = useMemo(() => {
@@ -110,7 +94,42 @@ export default function Dashboard() {
 
   // For preview, use mock data instead of API
   const isPreviewMode = import.meta.env.MODE !== 'production';
-  const currentUser = isPreviewMode ? mockUser : user;
+  
+  // Get current user with proper profile verification status
+  const currentUser = useMemo(() => {
+    if (isPreviewMode) {
+      // In preview mode, check localStorage for updated profile
+      if (typeof window !== 'undefined') {
+        const savedUser = localStorage.getItem('pi_user');
+        if (savedUser) {
+          try {
+            return JSON.parse(savedUser);
+          } catch (e) {
+            console.error('Error parsing saved user data:', e);
+          }
+        }
+      }
+      
+      // Default mock user
+      return {
+        id: 'preview-user',
+        username: 'preview_user',
+        email: 'preview@example.com',
+        phone: '+1234567890',
+        country: 'US',
+        language: 'en',
+        walletAddress: 'GAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+        gameAccounts: {
+          pubg: { ign: 'PreviewPlayer', uid: '123456789' },
+          mlbb: { userId: '987654321', zoneId: '1234' }
+        },
+        isProfileVerified: false
+      };
+    }
+    
+    return user;
+  }, [user, isPreviewMode]);
+
   const { data: packages, isLoading: packagesLoading } = isPreviewMode ? 
     { data: mockPackages, isLoading: false } as { data: Package[]; isLoading: boolean } : 
     useQuery<Package[]>({ queryKey: ['/api/packages'] });
@@ -123,13 +142,6 @@ export default function Dashboard() {
   if (!isAuthenticated && !isPreviewMode) {
     setLocation('/');
     return null;
-  }
-
-  // In preview mode, we should still show the dashboard even if not "authenticated"
-  // since we're using mock data
-  if (isPreviewMode && !isAuthenticated) {
-    // Set mock authentication state for preview
-    setIsAuthenticated(true);
   }
 
   // Fix the package filtering to ensure it works correctly
@@ -192,7 +204,7 @@ export default function Dashboard() {
                 Wallet: {formatWalletAddress(currentUser?.walletAddress || '')}
               </p>
               {/* Profile Verification Notice */}
-              {!isPreviewMode && currentUser && (
+              {currentUser && (
                 <div className="mt-2">
                   {currentUser.isProfileVerified ? (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

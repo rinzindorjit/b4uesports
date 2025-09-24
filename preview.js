@@ -2,6 +2,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 // Get the directory name in ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -22,6 +23,34 @@ app.use(express.static(staticPath));
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// File path for storing preview data
+const PREVIEW_DATA_FILE = path.join(__dirname, 'preview-data.json');
+
+// Function to load preview data from file
+function loadPreviewData() {
+  try {
+    if (fs.existsSync(PREVIEW_DATA_FILE)) {
+      const data = fs.readFileSync(PREVIEW_DATA_FILE, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Error loading preview data:', error);
+  }
+  return {};
+}
+
+// Function to save preview data to file
+function savePreviewData(data) {
+  try {
+    fs.writeFileSync(PREVIEW_DATA_FILE, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error('Error saving preview data:', error);
+  }
+}
+
+// Load preview data at startup
+let previewData = loadPreviewData();
 
 // API endpoints that return mock data for preview
 app.get('/api/metadata', (req, res) => {
@@ -151,10 +180,9 @@ app.get('/api/packages', async (req, res) => {
 
 // Add endpoint to get user transactions in preview mode
 app.get('/api/transactions', (req, res) => {
-  // Use in-memory storage for mock transactions
-  // since localStorage is not available in Node.js
-  if (!global.mockTransactions) {
-    global.mockTransactions = [
+  // Initialize mock transactions array if it doesn't exist
+  if (!previewData.mockTransactions) {
+    previewData.mockTransactions = [
       {
         id: '1',
         userId: 'preview-user-123',
@@ -184,10 +212,11 @@ app.get('/api/transactions', (req, res) => {
         updatedAt: new Date(Date.now() - 86400000).toISOString()
       }
     ];
+    savePreviewData(previewData);
   }
   
   // Filter transactions for the current user
-  const userTransactions = global.mockTransactions.filter(tx => tx.userId === 'preview-user-123');
+  const userTransactions = previewData.mockTransactions.filter(tx => tx.userId === 'preview-user-123');
   res.json(userTransactions);
 });
 
@@ -209,12 +238,13 @@ app.post('/api/transactions', (req, res) => {
     };
     
     // Initialize mock transactions array if it doesn't exist
-    if (!global.mockTransactions) {
-      global.mockTransactions = [];
+    if (!previewData.mockTransactions) {
+      previewData.mockTransactions = [];
     }
     
     // Add the new transaction
-    global.mockTransactions.push(newTransaction);
+    previewData.mockTransactions.push(newTransaction);
+    savePreviewData(previewData);
     
     res.json(newTransaction);
   } catch (error) {
@@ -227,7 +257,7 @@ app.post('/api/transactions', (req, res) => {
 app.post('/api/auth/pi', (req, res) => {
   // Mock user for development/testing
   // Check if we have a saved user profile
-  let mockUser = global.previewUserData;
+  let mockUser = previewData.previewUserData;
   
   if (!mockUser) {
     mockUser = {
@@ -244,7 +274,7 @@ app.post('/api/auth/pi', (req, res) => {
         mlbb: { userId: '987654321', zoneId: '1234' }
       },
       profileImageUrl: null,
-      isProfileVerified: true, // Set to true for preview
+      isProfileVerified: false, // Initialize as false, will be set to true when profile is completed
       isActive: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -271,10 +301,9 @@ app.put('/api/profile', (req, res) => {
     // In preview mode, just return the updated user data
     const updateData = req.body;
     
-    // For preview mode, we'll use a simple in-memory storage
-    // since localStorage is not available in Node.js
-    if (!global.previewUserData) {
-      global.previewUserData = {
+    // For preview mode, we'll use persistent storage
+    if (!previewData.previewUserData) {
+      previewData.previewUserData = {
         id: 'preview-user-123',
         piUID: 'preview-pi-uid-123',
         username: 'preview_user',
@@ -302,18 +331,21 @@ app.put('/api/profile', (req, res) => {
     }
     
     // Ensure isProfileVerified status is maintained if already verified
-    if (global.previewUserData && global.previewUserData.isProfileVerified) {
+    if (previewData.previewUserData && previewData.previewUserData.isProfileVerified) {
       updateData.isProfileVerified = true;
     }
     
     // Update user data with new values
-    global.previewUserData = {
-      ...global.previewUserData,
+    previewData.previewUserData = {
+      ...previewData.previewUserData,
       ...updateData,
       updatedAt: new Date().toISOString()
     };
     
-    res.json(global.previewUserData);
+    // Save to persistent storage
+    savePreviewData(previewData);
+    
+    res.json(previewData.previewUserData);
   } catch (error) {
     console.error('Profile update error:', error);
     res.status(500).json({ message: 'Profile update failed' });

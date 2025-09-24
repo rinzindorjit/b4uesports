@@ -18,7 +18,7 @@ interface ProfileModalProps {
 }
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
-  const { user, token } = usePiNetwork();
+  const { user, token, setUser } = usePiNetwork();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -139,7 +139,15 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (updatedUser) => {
+      // Update the user in the Pi Network context
+      if (setUser) {
+        setUser(updatedUser);
+      }
+      
+      // Also update localStorage to persist the changes
+      localStorage.setItem('pi_user', JSON.stringify(updatedUser));
+      
       queryClient.invalidateQueries({ queryKey: ['/api/profile'] });
       toast({
         title: "Success",
