@@ -22,7 +22,13 @@ export default async function handler(request, response) {
     const url = new URL(request.url, `http://${request.headers.host}`);
     const path = url.pathname;
     
-    console.log('API request received:', { method: request.method, path, url: request.url, headers: request.headers });
+    console.log('API request received:', { 
+      method: request.method, 
+      path, 
+      url: request.url, 
+      headers: request.headers,
+      body: request.body
+    });
     
     // Route to appropriate handler based on path
     if (path === '/api/pi/auth') {
@@ -46,6 +52,11 @@ export default async function handler(request, response) {
     }
   } catch (error) {
     console.error('API handler error:', error);
-    response.status(500).json({ message: 'Internal server error', error: error.message });
+    console.error('Error stack:', error.stack);
+    response.status(500).json({ 
+      message: 'Internal server error', 
+      error: error.message,
+      stack: error.stack
+    });
   }
 }
