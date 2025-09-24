@@ -30,7 +30,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     const isProduction = process.env.NODE_ENV === 'production';
     const isDevelopment = process.env.NODE_ENV === 'development';
     // Check if we're in preview mode by looking at the hostname
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3003';
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3002';
     
     console.log('PiNetworkProvider init, isProduction:', isProduction, 'isDevelopment:', isDevelopment, 'isPreview:', isPreview);
     
@@ -58,7 +58,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   const authenticate = async () => {
     // Check if we're in preview mode by looking at the hostname
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3003';
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3002';
     
     console.log('Authentication called, isPreview:', isPreview);
     console.log('Window location:', window.location);
@@ -151,7 +151,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   const createPayment = (paymentData: PaymentData, callbacks: PaymentCallbacks) => {
     // Check if we're in preview mode
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3003';
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3002';
     
     if (isPreview) {
       // Mock payment flow for preview mode
