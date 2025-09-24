@@ -38,7 +38,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div data-testid="footer-quick-links">
+          <div className="text-center md:text-left" data-testid="footer-quick-links">
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-home">Home</Link></li>
@@ -49,7 +49,7 @@ export default function Footer() {
           </div>
 
           {/* Legal */}
-          <div data-testid="footer-legal">
+          <div className="text-center md:text-left" data-testid="footer-legal">
             <h4 className="text-lg font-semibold mb-4">Legal</h4>
             <ul className="space-y-2">
               <li><Link href="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-privacy">Privacy Policy</Link></li>
@@ -64,7 +64,7 @@ export default function Footer() {
         {/* Social Media & Copyright */}
         <div className="border-t border-border pt-8 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-6 mb-4 md:mb-0" data-testid="footer-social">
+            <div className="flex items-center justify-center space-x-6 mb-4 md:mb-0" data-testid="footer-social">
               <a 
                 href={SOCIAL_LINKS.FACEBOOK} 
                 className="social-icon text-muted-foreground hover:text-blue-500 transition-colors text-xl"
