@@ -1,6 +1,4 @@
 // Pi Network payments endpoint for Vercel
-import { piNetworkService } from '../../server/services/pi-network';
-
 export default async function handler(request, response) {
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
@@ -52,8 +50,6 @@ export default async function handler(request, response) {
       
       if (action === 'approve') {
         // Mock approval
-        const result = await piNetworkService.approvePayment(paymentId);
-        
         // In mock mode, we'll also update our mock transactions
         if (global.mockTransactions) {
           const transaction = global.mockTransactions.find(tx => tx.paymentId === paymentId);
@@ -70,8 +66,6 @@ export default async function handler(request, response) {
         });
       } else if (action === 'complete') {
         // Mock completion
-        const result = await piNetworkService.completePayment(paymentId, txid);
-        
         // In mock mode, we'll also update our mock transactions
         if (global.mockTransactions) {
           const transaction = global.mockTransactions.find(tx => tx.paymentId === paymentId);

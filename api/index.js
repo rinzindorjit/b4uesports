@@ -1,9 +1,9 @@
 // Main API handler for Vercel
-import authHandler from './pi/auth';
-import paymentsHandler from './pi/payments';
-import userHandler from './pi/user';
-import webhookHandler from './pi/webhook';
-import metadataHandler from './metadata';
+import authHandler from './pi/auth.js';
+import paymentsHandler from './pi/payments.js';
+import userHandler from './pi/user.js';
+import webhookHandler from './pi/webhook.js';
+import metadataHandler from './metadata.js';
 
 export default async function handler(request, response) {
   // Set CORS headers
@@ -17,20 +17,27 @@ export default async function handler(request, response) {
     return;
   }
   
-  const { pathname } = new URL(request.url, `http://${request.headers.host}`);
+  // Extract the path from the request
+  const url = new URL(request.url, `http://${request.headers.host}`);
+  const path = url.pathname;
   
   // Route to appropriate handler based on path
-  if (pathname === '/api/pi/auth') {
-    return authHandler(request, response);
-  } else if (pathname === '/api/pi/payments') {
-    return paymentsHandler(request, response);
-  } else if (pathname === '/api/pi/user') {
-    return userHandler(request, response);
-  } else if (pathname === '/api/pi/webhook') {
-    return webhookHandler(request, response);
-  } else if (pathname === '/api/metadata') {
-    return metadataHandler(request, response);
-  } else {
-    response.status(404).json({ message: 'API endpoint not found' });
+  try {
+    if (path === '/api/pi/auth') {
+      return await authHandler(request, response);
+    } else if (path === '/api/pi/payments') {
+      return await paymentsHandler(request, response);
+    } else if (path === '/api/pi/user') {
+      return await userHandler(request, response);
+    } else if (path === '/api/pi/webhook') {
+      return await webhookHandler(request, response);
+    } else if (path === '/api/metadata') {
+      return await metadataHandler(request, response);
+    } else {
+      response.status(404).json({ message: `API endpoint not found: ${path}` });
+    }
+  } catch (error) {
+    console.error('API handler error:', error);
+    response.status(500).json({ message: 'Internal server error' });
   }
 }

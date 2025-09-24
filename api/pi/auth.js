@@ -1,6 +1,4 @@
 // Pi Network authentication endpoint for Vercel
-import { piNetworkService } from '../../server/services/pi-network';
-
 export default async function handler(request, response) {
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
@@ -23,10 +21,13 @@ export default async function handler(request, response) {
       return response.status(400).json({ message: 'Access token required' });
     }
 
-    const piUser = await piNetworkService.verifyAccessToken(accessToken);
-    if (!piUser) {
-      return response.status(401).json({ message: 'Invalid Pi Network token' });
-    }
+    // For mock purposes, we'll return a mock user
+    // In a real implementation, you would verify the access token with Pi Network
+    const piUser = {
+      uid: 'mock-user-uid-' + Date.now(),
+      username: 'mock_user',
+      roles: ['user']
+    };
 
     // For mock purposes, we'll return a mock user
     // In a real implementation, you would create/update the user in your database
