@@ -27,18 +27,20 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   useEffect(() => {
     // Initialize Pi SDK
-    const isProduction = import.meta.env.PROD;
-    const isDevelopment = import.meta.env.DEV;
-    const isPreview = import.meta.env.MODE === 'preview';
+    const isProduction = import.meta.env?.PROD || process.env.NODE_ENV === 'production';
+    const isDevelopment = import.meta.env?.DEV || process.env.NODE_ENV === 'development';
+    // Check if we're in preview mode by looking at the hostname
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3002';
+    
+    console.log('PiNetworkProvider init, isProduction:', isProduction, 'isDevelopment:', isDevelopment, 'isPreview:', isPreview);
     
     // In development or preview, we can use sandbox mode
     // In production, we use the live network
     const useSandbox = isDevelopment || isPreview || !isProduction;
     
-    // Only initialize Pi SDK if not in preview mode
-    if (!isPreview) {
-      piSDK.init(useSandbox); // sandbox mode for development/preview, production mode for production
-    }
+    // Initialize Pi SDK even in preview mode for payment functionality
+    // But mock the actual payment calls
+    piSDK.init(useSandbox); // sandbox mode for development/preview, production mode for production
 
     // Check for existing session
     const savedToken = localStorage.getItem('pi_token');
@@ -48,15 +50,21 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
       setIsAuthenticated(true);
+      console.log('Restored session from localStorage');
     }
     
     setIsLoading(false);
   }, []);
 
   const authenticate = async () => {
-    const isPreview = import.meta.env.MODE === 'preview';
+    // Check if we're in preview mode by looking at the hostname
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3002';
+    
+    console.log('Authentication called, isPreview:', isPreview);
+    console.log('Window location:', window.location);
     
     if (isPreview) {
+      console.log('Using preview authentication flow');
       // In preview mode, we can't use the real Pi SDK
       // We'll simulate the authentication flow with NO delay
       setIsLoading(true);
@@ -84,6 +92,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       // Set mock token and user
       const mockToken = 'preview-jwt-token-12345';
       
+      console.log('Setting mock user and token');
       setUser(mockUser);
       setToken(mockToken);
       setIsAuthenticated(true);
@@ -91,6 +100,8 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       // Save to localStorage
       localStorage.setItem('pi_token', mockToken);
       localStorage.setItem('pi_user', JSON.stringify(mockUser));
+      
+      console.log('Authentication complete, user:', mockUser);
       
       // Set loading to false immediately
       setIsLoading(false);
@@ -139,6 +150,30 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   };
 
   const createPayment = (paymentData: PaymentData, callbacks: PaymentCallbacks) => {
+    // Check if we're in preview mode
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3002';
+    
+    if (isPreview) {
+      // Mock payment flow for preview mode
+      console.log('Mock payment initiated:', paymentData);
+      
+      // Generate a mock payment ID
+      const mockPaymentId = 'preview_payment_' + Date.now();
+      
+      // Simulate payment approval
+      setTimeout(() => {
+        callbacks.onReadyForServerApproval(mockPaymentId);
+        
+        // Simulate payment completion
+        setTimeout(() => {
+          const mockTxId = 'preview_tx_' + Date.now();
+          callbacks.onReadyForServerCompletion(mockPaymentId, mockTxId);
+        }, 1000);
+      }, 500);
+      
+      return;
+    }
+    
     if (!isAuthenticated || !user) {
       throw new Error('User not authenticated');
     }

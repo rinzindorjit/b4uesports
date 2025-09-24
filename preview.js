@@ -196,19 +196,42 @@ app.post('/api/auth/pi', (req, res) => {
     user: mockUser,
     token: mockToken
   });
-}););
+});
 
 // Mock Pi balance endpoint for development
 app.get('/api/pi-balance', (req, res) => {
-  // Mock balance for testing
+  // Mock balance for testing - fixed at 1000 Pi
   const mockBalance = {
-    balance: Math.random() * 1000 + 100, // Random balance between 100-1100 Pi
+    balance: 1000, // Fixed balance at 1000 Pi
     currency: 'π',
     lastUpdated: new Date().toISOString(),
     isTestnet: true
   };
 
   res.json(mockBalance);
+});
+
+// Mock Pi price endpoint for development
+app.get('/api/pi-price', async (req, res) => {
+  try {
+    // Fetch live Pi price from CoinGecko
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4');
+    const data = await response.json();
+    
+    const price = data['pi-network']?.usd || 0.01; // fallback to 0.01 if not available
+    
+    res.json({
+      price,
+      lastUpdated: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Failed to fetch Pi price from CoinGecko:', error);
+    // Fallback to default price
+    res.json({
+      price: 0.01,
+      lastUpdated: new Date().toISOString(),
+    });
+  }
 });
 
 // All other routes serve the client app
@@ -224,7 +247,7 @@ app.get('*', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3003;
 app.listen(PORT, () => {
   console.log(`Preview server running on http://localhost:${PORT}`);
   console.log('Note: This is a preview mode without database connectivity.');

@@ -232,6 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fs.mkdirSync(uploadsDir, { recursive: true });
           }
           
+          // Move file from temp location to final location
           fs.renameSync(file.path, uploadPath);
         }
       } else {

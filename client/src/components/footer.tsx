@@ -7,8 +7,8 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Company Info */}
-          <div className="col-span-1 md:col-span-2" data-testid="footer-company">
-            <div className="flex items-center space-x-4 mb-4">
+          <div className="col-span-1 md:col-span-2 text-center md:text-left" data-testid="footer-company">
+            <div className="flex items-center justify-center md:justify-start space-x-4 mb-4">
               <img 
                 src={BRAND_LOGOS.B4U} 
                 alt="B4U Esports" 
@@ -17,7 +17,7 @@ export default function Footer() {
               />
               <h3 className="text-xl font-bold">B4U Esports</h3>
             </div>
-            <p className="text-muted-foreground mb-6 max-w-md" data-testid="footer-description">
+            <p className="text-muted-foreground mb-6 max-w-md text-center md:text-left" data-testid="footer-description">
               The premier gaming marketplace powered by Pi Network. Purchase in-game currencies with Pi coins in a secure, fast, and reliable environment.
             </p>
             
@@ -29,9 +29,9 @@ export default function Footer() {
                 </a>
               </p>
               <p className="text-muted-foreground">
-                <i className="fas fa-phone mr-2"></i>
-                <a href={`tel:${CONTACT_INFO.PHONE}`} className="hover:text-primary" data-testid="contact-phone">
-                  {CONTACT_INFO.PHONE}
+                <i className="fab fa-whatsapp mr-2"></i>
+                <a href="https://wa.me/+97517875099" target="_blank" rel="noopener noreferrer" className="hover:text-primary" data-testid="contact-whatsapp">
+                  WhatsApp
                 </a>
               </p>
             </div>

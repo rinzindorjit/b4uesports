@@ -2,6 +2,10 @@
   "version": 2,
   "builds": [
     {
+      "src": "dist/public/**",
+      "use": "@vercel/static"
+    },
+    {
       "src": "server/index.ts",
       "use": "@vercel/node",
       "config": {
@@ -20,7 +24,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "server/index.ts"
+      "dest": "dist/public/index.html"
     }
   ],
   "env": {
