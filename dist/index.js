@@ -1167,8 +1167,7 @@ app.use((req, res, next) => {
   });
   next();
 });
-(async () => {
-  const server = await registerRoutes(app);
+registerRoutes(app).then(() => {
   app.use("/uploads", express2.static(path3.join(__dirname, "../uploads")));
   app.use((err, _req, res, _next) => {
     const status = err.status || err.statusCode || 500;
@@ -1176,17 +1175,26 @@ app.use((req, res, next) => {
     res.status(status).json({ message });
     throw err;
   });
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
+  const isServerless = process.env.VERCEL || process.env.NOW_REGION;
+  if (!isServerless) {
+    if (app.get("env") === "development") {
+      setupVite(app, app.listen(0));
+    } else {
+      serveStatic(app);
+    }
+    const port = parseInt(process.env.PORT || "5000", 10);
+    app.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true
+    }, () => {
+      log(`serving on port ${port}`);
+    });
   } else {
     serveStatic(app);
   }
-  const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true
-  }, () => {
-    log(`serving on port ${port}`);
-  });
-})();
+});
+var index_default = app;
+export {
+  index_default as default
+};

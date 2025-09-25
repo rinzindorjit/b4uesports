@@ -4,6 +4,10 @@
     {
       "src": "api/**/*.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "dist/public/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -13,15 +17,15 @@
     },
     {
       "src": "/assets/(.*)",
-      "dest": "/public/assets/$1"
+      "dest": "/dist/public/assets/$1"
     },
     {
       "src": "/$",
-      "dest": "/public/index.html"
+      "dest": "/dist/public/index.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "/dist/public/index.html"
     }
   ]
 }
