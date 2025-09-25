@@ -147,7 +147,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       setToken(null);
     }
     setIsLoading(false);
-  };
+  }
 
   const createPayment = (paymentData: PaymentData, callbacks: PaymentCallbacks) => {
     // Check if we're in preview mode

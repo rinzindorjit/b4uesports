@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from the client build directory
-const staticPath = path.join(__dirname, 'dist', 'public');
+const staticPath = path.join(__dirname, 'dist');
 console.log('Static files path:', staticPath);
 console.log('Index file path:', path.join(staticPath, 'index.html'));
 
@@ -392,7 +392,7 @@ app.get('/api/pi-price', async (req, res) => {
 
 // All other routes serve the client app
 app.get('*', (req, res) => {
-  const indexPath = path.join(__dirname, 'dist/public/index.html');
+  const indexPath = path.join(__dirname, 'dist/index.html');
   console.log('Serving index.html from:', indexPath);
   
   res.sendFile(indexPath, (err) => {
@@ -408,6 +408,6 @@ app.listen(PORT, () => {
   console.log(`Preview server running on http://localhost:${PORT}`);
   console.log('Note: This is a preview mode without database connectivity.');
   console.log('Some features like profile updates and real payments are simulated.');
-  console.log('Static files path:', path.join(__dirname, 'dist/public'));
-  console.log('Index file path:', path.join(__dirname, 'dist/public/index.html'));
+  console.log('Static files path:', path.join(__dirname, 'dist'));
+  console.log('Index file path:', path.join(__dirname, 'dist/index.html'));
 });
