@@ -36,11 +36,11 @@
     },
     {
       "src": "/api/auth/pi",
-      "dest": "/server/index.ts"
+      "dest": "/api/index.js"
     },
     {
       "src": "/api/profile",
-      "dest": "/server/index.ts"
+      "dest": "/api/index.js"
     },
     {
       "src": "/api/(.*)",
