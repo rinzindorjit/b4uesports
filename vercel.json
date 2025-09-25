@@ -4,18 +4,6 @@
     {
       "src": "api/**/*.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "dist/index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "dist/assets/*.css",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "dist/assets/*.js",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
