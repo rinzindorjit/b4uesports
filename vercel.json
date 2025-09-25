@@ -16,6 +16,10 @@
       "dest": "/api/$1.js"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "/dist/assets/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/dist/index.html"
     }
