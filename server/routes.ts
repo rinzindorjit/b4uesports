@@ -12,6 +12,15 @@ import { z } from "zod";
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check endpoint for Render and other deployment platforms
+  app.get('/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  });
+
   // Middleware for admin authentication
   const authenticateAdmin = async (req: any, res: any, next: any) => {
     const token = req.headers.authorization?.replace('Bearer ', '');

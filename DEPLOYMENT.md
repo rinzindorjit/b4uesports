@@ -7,7 +7,7 @@ This document explains how to deploy the B4U Esports application to different en
 Before deploying, ensure you have:
 
 1. A GitHub account
-2. A Vercel account
+2. A Vercel account (for Vercel deployment) OR a Render account (for Render deployment)
 3. Required environment variables (see below)
 4. Pi Network Developer Portal account (for Pi integration)
 
@@ -67,6 +67,54 @@ npm install -g vercel
 vercel --prod
 ```
 
+## Render Deployment
+
+### Automatic Deployment
+
+1. Connect your GitHub repository to Render
+2. Select the repository when prompted
+3. Render will automatically detect the `render.yaml` file
+4. Configure the environment variables in the Render dashboard
+5. Deploy!
+
+### Manual Deployment
+
+You can also deploy manually using the Render CLI:
+
+```bash
+# Install Render CLI
+npm install -g render-cli
+
+# Deploy
+render deploy
+```
+
+### Environment Variables for Render
+
+Set the following environment variables in your Render dashboard:
+
+```
+# EmailJS Configuration
+EMAILJS_SERVICE_ID=your_service_id
+EMAILJS_TEMPLATE_ID=your_template_id
+EMAILJS_ADMIN_TEMPLATE_ID=your_admin_template_id
+EMAILJS_PUBLIC_KEY=your_public_key
+ADMIN_EMAIL=admin@b4uesports.com
+
+# Pi Network
+PI_SECRET_KEY=your_pi_secret_key
+PI_SERVER_API_KEY=your_pi_server_api_key
+
+# Database
+DATABASE_URL=your_database_url
+
+# JWT
+JWT_SECRET=your_jwt_secret
+
+# Node Environment
+NODE_ENV=production
+```
+
 ## Environment-Specific Deployment
 
 ### Development Deployment
@@ -104,7 +152,7 @@ After deployment, verify that:
 
 Set up error monitoring for your deployment:
 
-1. Check Vercel logs for build and runtime errors
+1. Check deployment logs for build and runtime errors
 2. Monitor browser console for client-side errors
 3. Set up server-side error logging
 
@@ -112,7 +160,7 @@ Set up error monitoring for your deployment:
 
 Monitor application performance:
 
-1. Use Vercel Analytics
+1. Use deployment platform's analytics
 2. Monitor database performance
 3. Track API response times
 
@@ -134,7 +182,7 @@ npm update
 
 If the build fails:
 
-1. Check the build logs in Vercel
+1. Check the build logs in your deployment platform
 2. Verify all dependencies are correctly installed
 3. Ensure environment variables are set
 4. Check for TypeScript/JavaScript errors
@@ -170,10 +218,9 @@ If Pi Network integration is not working:
 
 If you need to rollback a deployment:
 
-1. In Vercel, go to your project deployments
-2. Find the previous working deployment
-3. Click "Promote to Production"
-4. Monitor the application to ensure it's working correctly
+1. In your deployment platform, find the previous working deployment
+2. Revert to that version
+3. Monitor the application to ensure it's working correctly
 
 ## Scaling Considerations
 

@@ -146,6 +146,22 @@ This command will:
 
 ## Deployment
 
+This application can be deployed to multiple platforms:
+
+### Vercel Deployment
+
+For Vercel deployment, follow the instructions in [DEPLOYMENT.md](DEPLOYMENT.md#vercel-deployment).
+
+### Render Deployment
+
+For Render deployment, follow the instructions in [DEPLOYMENT.md](DEPLOYMENT.md#render-deployment).
+
+The application includes a `render.yaml` file that defines the services needed for Render deployment.
+
+### Environment Variables
+
+Make sure to set all required environment variables as specified in [DEPLOYMENT.md](DEPLOYMENT.md#environment-variables).
+
 ### Vercel Deployment
 
 This application is configured for deployment on Vercel. The deployment process is automated through GitHub integration.

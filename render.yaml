@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: b4u-esports-frontend
+    env: node
+    buildCommand: npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    domains:
+      - b4uesports.onrender.com
+
+  - type: web
+    name: b4u-esports-api
+    env: node
+    buildCommand: npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10001
+    domains:
+      - api.b4uesports.onrender.com
+
+envVarGroups:
+  - name: b4u-esports-env
+    envVars:
+      - key: EMAILJS_SERVICE_ID
+        value: your_service_id
+      - key: EMAILJS_TEMPLATE_ID
+        value: your_template_id
+      - key: EMAILJS_ADMIN_TEMPLATE_ID
+        value: your_admin_template_id
+      - key: EMAILJS_PUBLIC_KEY
+        value: your_public_key
+      - key: ADMIN_EMAIL
+        value: admin@b4uesports.com
+      - key: PI_SECRET_KEY
+        value: your_pi_secret_key
+      - key: PI_SERVER_API_KEY
+        value: your_pi_server_api_key
+      - key: DATABASE_URL
+        value: your_database_url
+      - key: JWT_SECRET
+        value: your_jwt_secret
