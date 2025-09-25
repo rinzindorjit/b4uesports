@@ -1,5 +1,6 @@
 // Pi Network authentication endpoint for Vercel
-import fetch from 'node-fetch';
+// Use built-in fetch when available (Node.js 18+ in Netlify) to avoid compatibility issues
+const fetch = globalThis.fetch;
 
 export default async function handler(request, response) {
   console.log('=== AUTH API ENDPOINT CALLED ===');

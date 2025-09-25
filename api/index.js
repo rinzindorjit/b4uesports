@@ -191,6 +191,13 @@ async function handleAnalytics(request, response) {
 }
 
 export default async function handler(request, response) {
+  console.log('=== DEBUG API REQUEST ===');
+  console.log('Full request URL:', request.url);
+  console.log('Request method:', request.method);
+  console.log('Request headers:', request.headers);
+  console.log('Request body:', request.body);
+  console.log('Request body type:', typeof request.body);
+  
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
