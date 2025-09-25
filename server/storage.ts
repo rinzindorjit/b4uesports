@@ -23,6 +23,7 @@ export interface IStorage {
   getUserByPiUID(piUID: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<User>): Promise<User | undefined>;
+  updateUserBalance(id: string, amount: number, operation: 'add' | 'subtract'): Promise<User | undefined>;
   
   // Packages
   getPackages(): Promise<Package[]>;
@@ -80,6 +81,37 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
+  }
+
+  async updateUserBalance(id: string, amount: number, operation: 'add' | 'subtract'): Promise<User | undefined> {
+    try {
+      // First get the current user to get their current balance
+      const currentUser = await this.getUser(id);
+      if (!currentUser) {
+        throw new Error('User not found');
+      }
+
+      // Calculate new balance
+      const currentBalance = parseFloat(currentUser.balance || '0');
+      const newBalance = operation === 'add' 
+        ? currentBalance + amount 
+        : currentBalance - amount;
+
+      // Update user with new balance
+      const [user] = await db
+        .update(users)
+        .set({ 
+          balance: newBalance.toString(),
+          updatedAt: new Date() 
+        })
+        .where(eq(users.id, id))
+        .returning();
+      
+      return user || undefined;
+    } catch (error) {
+      console.error('Error updating user balance:', error);
+      return undefined;
+    }
   }
 
   async getPackages(): Promise<Package[]> {

@@ -17,25 +17,41 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Pi SDK - Only loaded when needed -->
+    <!-- Pi SDK - Load for testnet/sandbox environments -->
     <script>
       // Check if we're in an environment that needs the Pi SDK
-      const isVercel = window.location.hostname.includes('vercel.app');
-      const isPiBrowser = navigator.userAgent.includes('PiBrowser') || navigator.userAgent.includes('Pi Network');
+      const hostname = window.location.hostname;
+      const userAgent = navigator.userAgent;
+      const isVercel = hostname.includes('vercel.app');
+      const isPiBrowser = userAgent.includes('PiBrowser') || userAgent.includes('Pi Network');
+      const isLocalhost = hostname === 'localhost';
       
-      // Only load Pi SDK for Pi Browser or production environments
-      if (isPiBrowser || !isVercel) {
+      // Load Pi SDK for Pi Browser, localhost development, and Vercel deployments
+      // Since this is a sandbox/testnet application, we should always load Pi SDK
+      if (isPiBrowser || isLocalhost || isVercel) {
         const script = document.createElement('script');
-        script.src = 'https://sdk.minepi.com/pi-sdk.js';
+        // Use sandbox SDK for all environments as this is for sandbox purpose only
+        script.src = 'https://sandbox.minepi.com/pi-sdk.js';
         script.onload = function() {
           console.log('Pi SDK loaded successfully');
+          // Initialize with sandbox mode for all environments
+          if (window.Pi) {
+            try {
+              window.Pi.init({ version: "2.0", sandbox: true });
+              console.log('Pi SDK initialized in sandbox mode');
+            } catch (error) {
+              console.warn('Failed to initialize Pi SDK:', error);
+            }
+          }
         };
         script.onerror = function() {
           console.warn('Failed to load Pi SDK');
         };
         document.head.appendChild(script);
+        console.log('Loading Pi SDK for testnet/sandbox environment');
       } else {
-        console.log('Skipping Pi SDK load for Vercel deployment - using mock authentication');
+        // For production, we might want to load the production SDK
+        console.log('Production environment - Pi SDK handling to be determined');
       }
     </script>
     <script type="module" crossorigin src="/assets/index-B_C2pK8W.js"></script>

@@ -1,0 +1,13 @@
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex 3109150..53c6f6d 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -3,4 +3,5 @@[m [mnode_modules[m
+ server/public[m
+ vite.config.ts.*[m
+ *.tar.gz[m
+[31m-# dist/  <-- Removed this line as it was causing deployment issues[m
+\ No newline at end of file[m
+[32m+[m[32m# dist/  <-- Removed this line as it was causing deployment issues[m
+[32m+[m[32m.vercel[m

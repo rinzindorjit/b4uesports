@@ -2,52 +2,268 @@
 
 This is the official repository for B4U Esports, a gaming marketplace that allows users to purchase PUBG UC and Mobile Legends Diamonds using Pi coins.
 
-## Features
+## Table of Contents
 
-- Pi Network integration for secure payments
-- Support for PUBG and Mobile Legends top-ups
-- User authentication and profile management
-- Transaction history tracking
-- Admin dashboard for managing packages and transactions
+- [Project Overview](#project-overview)
+- [Technology Stack](#technology-stack)
+- [Project Structure](#project-structure)
+- [Environment Setup](#environment-setup)
+- [Development](#development)
+- [Building for Production](#building-for-production)
+- [Deployment](#deployment)
+- [Authentication Flow](#authentication-flow)
+- [API Endpoints](#api-endpoints)
+- [Recent Improvements](#recent-improvements)
 
-## Deployment Status
+## Project Overview
 
-Last updated: September 24, 2025
+B4U Esports is a Pi Network integrated marketplace that allows users to purchase in-game currency for popular mobile games using Pi coins. The platform provides a secure and seamless payment experience integrated with Pi Network's payment system.
 
-## API Endpoints
+## Technology Stack
 
-- `/api/auth/pi` - Authenticate with Pi Network
-- `/api/packages` - Get available top-up packages
-- `/api/transactions` - Get transaction history
-- `/api/payment/approve` - Approve Pi payment
-- `/api/payment/complete` - Complete Pi payment
+- **Frontend**: React with TypeScript, Vite, Tailwind CSS
+- **Backend**: Node.js with Express
+- **Database**: PostgreSQL (via Drizzle ORM)
+- **Deployment**: Vercel
+- **State Management**: React Context API
+- **Data Fetching**: TanStack Query (React Query)
+- **UI Components**: Radix UI, Shadcn UI
 
-## Environment Variables
+## Project Structure
 
-Make sure to set the following environment variables:
+```
+B4U Esports/
+├── client/                 # Frontend React application
+│   ├── src/
+│   │   ├── components/     # Reusable UI components
+│   │   ├── hooks/          # Custom React hooks
+│   │   ├── lib/            # Utility functions and SDK wrappers
+│   │   ├── pages/          # Page components
+│   │   ├── types/          # TypeScript type definitions
+│   │   └── App.tsx         # Main application component
+│   └── index.html          # Frontend entry point
+├── server/                 # Backend Express server
+│   ├── api/                # API route handlers
+│   ├── db/                 # Database schema and migrations
+│   └── index.ts            # Server entry point
+├── public/                 # Static assets
+├── dist/                   # Build output directory
+├── .env                    # Environment variables
+├── package.json            # Project dependencies and scripts
+└── vercel.json             # Vercel deployment configuration
+```
 
-- `PI_API_KEY` - Pi Network API key
-- `PI_SECRET_KEY` - Pi Network secret key
-- `JWT_SECRET` - Secret for JWT token generation
-- `DATABASE_URL` - Connection string for the database
+## Environment Setup
 
-## Getting Started
+### Required Environment Variables
 
-1. Clone the repository
-2. Install dependencies with `npm install`
-3. Set up environment variables
-4. Run the development server with `npm run dev`
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# EmailJS Configuration
+EMAILJS_SERVICE_ID=your_service_id
+EMAILJS_TEMPLATE_ID=your_template_id
+EMAILJS_ADMIN_TEMPLATE_ID=your_admin_template_id
+EMAILJS_PUBLIC_KEY=your_public_key
+ADMIN_EMAIL=admin@b4uesports.com
+
+# Pi Network (Get from Pi Developer Portal)
+PI_API_KEY=your_pi_api_key
+PI_SECRET=your_pi_secret
+
+# Database (PostgreSQL connection string)
+DATABASE_URL=your_database_url
+
+# JWT (For token generation)
+JWT_SECRET=your_jwt_secret
+
+# Node Environment
+NODE_ENV=development
+```
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/rinzindorjit/b4uesports.git
+   cd b4uesports
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables (copy `.env.example` to `.env` and fill in values)
+
+## Development
+
+### Running the Development Server
+
+```bash
+# Start the development server
+npm run dev
+```
+
+This will start both the frontend and backend servers. The frontend will be available at `http://localhost:3000` and the backend API at `http://localhost:3001`.
+
+### Development Environments
+
+The application supports different environments:
+
+1. **Localhost Development**: 
+   - URL: `http://localhost:3000`
+   - Pi SDK: Loaded in sandbox mode
+   - Authentication: Mock authentication available
+
+2. **Pi Browser Development**:
+   - URL: Any URL opened in Pi Browser
+   - Pi SDK: Loaded in sandbox mode
+   - Authentication: Real Pi Network authentication
+
+3. **Vercel Preview Deployments**:
+   - URL: `*.vercel.app`
+   - Pi SDK: Not loaded (CORS issues)
+   - Authentication: Mock authentication
+
+4. **Production**:
+   - URL: Production domain
+   - Pi SDK: Loaded in production mode
+   - Authentication: Real Pi Network authentication
 
 ## Building for Production
 
-Run `npm run build` to build the project. The build artifacts will be stored in the `dist/` directory.
+To build the application for production:
+
+```bash
+npm run build
+```
+
+This command will:
+1. Build the frontend using Vite
+2. Bundle the backend server using esbuild
+3. Output everything to the `dist/` directory
 
 ## Deployment
 
-This application is deployed on Vercel. The deployment is configured through `vercel.json`.
+### Vercel Deployment
 
-## Recent Changes
+This application is configured for deployment on Vercel. The deployment process is automated through GitHub integration.
 
-- Fixed Vercel deployment configuration
-- Removed conflicting root index.html file
-- Set outputDirectory to "dist" in vercel.json
+**Vercel Configuration** (`vercel.json`):
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "buildCommand": "vite build",
+  "outputDirectory": "dist"
+}
+```
+
+### Deployment Process
+
+1. Push changes to the `main` branch
+2. Vercel automatically builds and deploys the application
+3. The build output is served from the `dist/` directory
+
+### Important Notes for Deployment
+
+1. **Pi SDK Loading**: The Pi SDK is conditionally loaded to prevent CORS issues:
+   - Loaded for Pi Browser and localhost development
+   - Not loaded for Vercel deployments (uses mock authentication instead)
+
+2. **Environment Variables**: Make sure all required environment variables are set in Vercel project settings.
+
+## Authentication Flow
+
+### Pi Network Authentication
+
+The authentication flow varies by environment:
+
+1. **Pi Browser/Localhost**:
+   - Uses real Pi Network authentication
+   - Requests permissions for payments, username, and wallet address
+   - Verifies access token with Pi Network backend
+
+2. **Vercel Deployments**:
+   - Uses mock authentication
+   - Generates mock user data and tokens
+   - Simulates successful authentication without Pi Network
+
+### Mock Authentication
+
+For development and testing environments where Pi Network is not available:
+- Generates mock user data
+- Creates mock JWT tokens
+- Simulates successful authentication flow
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/pi` - Authenticate with Pi Network or mock authentication
+
+### Packages
+- `GET /api/packages` - Get available top-up packages
+- `POST /api/packages` - Create new package (admin only)
+- `PUT /api/packages/:id` - Update package (admin only)
+- `DELETE /api/packages/:id` - Delete package (admin only)
+
+### Transactions
+- `GET /api/transactions` - Get user transaction history
+- `GET /api/transactions/admin` - Get all transactions (admin only)
+- `POST /api/transactions` - Create new transaction
+
+### Payments
+- `POST /api/payment/approve` - Approve Pi payment
+- `POST /api/payment/complete` - Complete Pi payment
+
+### Users
+- `GET /api/users/profile` - Get user profile
+- `PUT /api/users/profile` - Update user profile
+- `POST /api/users/game-account` - Add/update game account
+
+### Admin
+- `POST /api/admin/transactions/:id/complete` - Manually complete transaction
+- `GET /api/admin/stats` - Get platform statistics
+
+## Recent Improvements
+
+### September 2025
+1. **Fixed CORS Issues**: Implemented conditional Pi SDK loading to prevent CORS errors on Vercel deployments
+2. **Enhanced Authentication**: Improved mock authentication flow for development environments
+3. **Environment Detection**: Better detection of different environments (Pi Browser, localhost, Vercel)
+4. **Loading State Management**: Fixed issues with authentication loading states getting stuck
+5. **Error Handling**: Improved error handling and user feedback for authentication failures
+
+### August 2025
+1. **UI/UX Improvements**: Enhanced dashboard and package selection interfaces
+2. **Performance Optimizations**: Improved loading times and reduced bundle size
+3. **Security Updates**: Enhanced JWT token handling and validation
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Authentication Stuck on "Connecting..."**:
+   - Check browser console for errors
+   - Verify environment detection is working correctly
+   - Ensure Pi SDK is properly loaded (or mock auth is triggered)
+
+2. **CORS Errors**:
+   - Verify Pi SDK is not being loaded on Vercel deployments
+   - Check that conditional loading is working correctly
+
+3. **Environment Variables Not Loading**:
+   - Verify `.env` file is in the root directory
+   - Check that variables are correctly named
+   - For Vercel deployments, ensure variables are set in project settings
+
+### Testing Different Environments
+
+1. **Localhost**: Run `npm run dev` and open `http://localhost:3000`
+2. **Pi Browser**: Open your Vercel deployment URL in Pi Browser
+3. **Mock Authentication**: Available on Vercel deployments and can be tested in any browser
+
+## Support
+
+For issues and feature requests, please create a GitHub issue or contact the development team.

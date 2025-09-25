@@ -18,7 +18,7 @@ interface PurchaseModalProps {
 }
 
 export default function PurchaseModal({ isOpen, onClose, package: pkg }: PurchaseModalProps) {
-  const { user, createPayment } = usePiNetwork();
+  const { user, createPayment, token } = usePiNetwork();
   const { data: piBalance } = usePiBalance();
   const { toast } = useToast();
   const [step, setStep] = useState<'confirm' | 'auth'>('confirm');
@@ -89,7 +89,48 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
     setIsProcessing(true);
 
     try {
-      // Create payment with Pi Network
+      // Check if we're in mock mode (Vercel deployment, preview, or Pi Browser)
+      const isPreview = window.location.hostname === 'localhost' && window.location.port === '3005';
+      const isPiBrowserEnv = typeof window !== 'undefined' && 
+        (window.navigator.userAgent.includes('PiBrowser') || window.navigator.userAgent.includes('Pi Network'));
+      const isSandbox = window.location.hostname.includes('vercel.app');
+      
+      if (isPreview || isSandbox || isPiBrowserEnv) {
+        // Use mock payment flow
+        console.log('Using mock payment flow');
+        
+        const response = await fetch('/api/mock-pi-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            packageId: pkg.id,
+            gameAccount: editableGameAccount
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Mock payment failed');
+        }
+        
+        toast({
+          title: "Payment Completed",
+          description: `✅ Payment confirmed! Transaction ID: ${data.transactionId}`,
+        });
+        
+        // Close modal and reset
+        onClose();
+        setStep('confirm');
+        setPassphrase('');
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Create payment with Pi Network (real payment flow)
       if (!user) {
         throw new Error('User not authenticated');
       }
@@ -287,7 +328,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               </Card>
             </div>
 
-            {import.meta.env.DEV && (
+            {process.env.NODE_ENV !== 'production' && (
               <div className="bg-amber-500/20 border border-amber-500 rounded-lg p-4 mb-6">
                 <p className="text-sm text-amber-300">
                   <i className="fas fa-info-circle mr-2"></i>

@@ -156,10 +156,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       } finally {
         console.log('Mock auth finally block - setting isLoading to false');
         // Ensure isLoading is always set to false
-        setTimeout(() => {
-          console.log('Setting isLoading to false (timeout)');
-          setIsLoading(false);
-        }, 100);
+        setIsLoading(false);
       }
       return;
     }
@@ -241,10 +238,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     } finally {
       console.log('Real auth finally block - setting isLoading to false');
       // Ensure isLoading is always set to false
-      setTimeout(() => {
-        console.log('Setting isLoading to false (timeout)');
-        setIsLoading(false);
-      }, 100);
+      setIsLoading(false);
     }
     
     console.log('=== AUTHENTICATION END ===');

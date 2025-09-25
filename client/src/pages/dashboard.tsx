@@ -20,7 +20,7 @@ import { useMemo } from 'react';
 export default function Dashboard() {
   const { user, isAuthenticated, logout, token } = usePiNetwork();
   const { data: piPrice } = usePiPrice();
-  const { data: piBalance } = usePiBalance();
+  const { data: piBalance, refetch: refetchBalance } = usePiBalance();
   const [, setLocation] = useLocation();
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -93,7 +93,7 @@ export default function Dashboard() {
   ];
 
   // For preview, use mock data instead of API
-  const isPreviewMode = import.meta.env.MODE !== 'production';
+  const isPreviewMode = process.env.NODE_ENV !== 'production';
   
   // Get current user with proper profile verification status
   const currentUser = useMemo(() => {
@@ -134,9 +134,18 @@ export default function Dashboard() {
     { data: mockPackages, isLoading: false } as { data: Package[]; isLoading: boolean } : 
     useQuery<Package[]>({ queryKey: ['/api/packages'] });
 
-  const { data: transactions, isLoading: transactionsLoading } = isPreviewMode ? 
-    { data: mockTransactions, isLoading: false } as { data: Transaction[]; isLoading: boolean } : 
+  const { data: transactions, isLoading: transactionsLoading, refetch: refetchTransactions } = isPreviewMode ? 
+    { data: mockTransactions, isLoading: false, refetch: () => {} } as { data: Transaction[]; isLoading: boolean; refetch: () => void } : 
     useQuery<Transaction[]>({ queryKey: ['/api/transactions'], enabled: !!token });
+
+  // Add effect to refresh data after purchase
+  useEffect(() => {
+    if (!isPurchaseModalOpen && !isPreviewMode) {
+      // Refresh balance and transactions when modal closes
+      refetchBalance();
+      refetchTransactions();
+    }
+  }, [isPurchaseModalOpen, isPreviewMode, refetchBalance, refetchTransactions]);
 
   // Redirect to landing if not authenticated
   if (!isAuthenticated && !isPreviewMode) {
@@ -190,7 +199,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground" data-testid="dashboard-page">
       <ParticleBackground />
-      <Navigation isTestnet={import.meta.env.DEV} />
+      <Navigation isTestnet={process.env.NODE_ENV !== 'production'} />
       
       {/* Dashboard Header */}
       <div className="bg-card border-b border-border" data-testid="dashboard-header">
@@ -225,7 +234,7 @@ export default function Dashboard() {
                 </div>
               )}
               {/* Pi Balance Display */}
-              {!isPreviewMode && piBalance && (
+              {piBalance && (
                 <div className="mt-2">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     <i className="fas fa-wallet mr-1"></i>
@@ -365,6 +374,12 @@ export default function Dashboard() {
                 <Button 
                   variant="outline"
                   className="w-full"
+                  onClick={() => {
+                    // In a real implementation, this would navigate to a transaction history page
+                    // For now, we'll just show an alert with transaction count
+                    const completedCount = transactions?.filter(tx => tx.status === 'completed').length || 0;
+                    alert(`You have ${completedCount} completed transactions. In the full application, this would navigate to a detailed transaction history page.`);
+                  }}
                   data-testid="button-view-history"
                 >
                   <i className="fas fa-history mr-2"></i>View History

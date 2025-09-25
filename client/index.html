@@ -17,8 +17,45 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Pi SDK -->
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <!-- Pi SDK - Only loaded when needed -->
+    <script>
+      // Check if we're in an environment that needs the Pi SDK
+      const hostname = window.location.hostname;
+      const userAgent = navigator.userAgent;
+      const isVercel = hostname.includes('vercel.app');
+      const isPiBrowser = userAgent.includes('PiBrowser') || userAgent.includes('Pi Network');
+      const isLocalhost = hostname === 'localhost';
+      
+      // Only load Pi SDK for Pi Browser or localhost development
+      // Skip loading for Vercel deployments to avoid CORS issues
+      if (isPiBrowser || isLocalhost) {
+        const script = document.createElement('script');
+        // Use sandbox SDK for development and Pi Browser
+        script.src = 'https://sandbox.minepi.com/pi-sdk.js';
+        script.onload = function() {
+          console.log('Pi SDK loaded successfully');
+          // Initialize with sandbox mode for development
+          if (window.Pi) {
+            try {
+              window.Pi.init({ version: "2.0", sandbox: true });
+              console.log('Pi SDK initialized in sandbox mode');
+            } catch (error) {
+              console.warn('Failed to initialize Pi SDK:', error);
+            }
+          }
+        };
+        script.onerror = function() {
+          console.warn('Failed to load Pi SDK');
+        };
+        document.head.appendChild(script);
+        console.log('Loading Pi SDK for Pi Browser/localhost development');
+      } else if (isVercel) {
+        console.log('Skipping Pi SDK load for Vercel deployment - using mock authentication');
+      } else {
+        // For production, we might want to load the production SDK
+        console.log('Production environment - Pi SDK handling to be determined');
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

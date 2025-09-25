@@ -22,6 +22,8 @@ export const users = pgTable("users", {
   passphrase: text("passphrase"), // hashed passphrase for payment confirmation
   isProfileVerified: boolean("is_profile_verified").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
+  // Add balance field for tracking user Pi balance
+  balance: decimal("balance", { precision: 18, scale: 8 }).notNull().default("1000.00000000"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

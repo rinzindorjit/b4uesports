@@ -1,12 +1,17 @@
 import axios from 'axios';
 
 const PI_API_BASE = 'https://api.minepi.com';
+// In sandbox mode, no API keys are required
+// For production mode, we would need PI_SERVER_API_KEY
 const SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
 
-if (!SERVER_API_KEY) {
+// Always run in mock mode for sandbox/testnet environments
+const IS_SANDBOX = process.env.NODE_ENV !== 'production';
+
+if (IS_SANDBOX) {
+  console.log("Running in sandbox mode - no API keys required");
+} else if (!SERVER_API_KEY) {
   console.warn("PI_SERVER_API_KEY environment variable not set - using mock mode");
-  // In mock mode, we'll return mock responses
-  // This is for Vercel deployments where we don't have the real API key
 }
 
 export interface PiUser {
@@ -58,10 +63,14 @@ export class PiNetworkService {
 
   constructor() {
     this.apiKey = SERVER_API_KEY || null;
-    this.isMockMode = !SERVER_API_KEY;
+    // Always use mock mode for sandbox environments
+    this.isMockMode = IS_SANDBOX || !SERVER_API_KEY;
     
     if (this.isMockMode) {
       console.log('PiNetworkService running in mock mode - no real API calls will be made');
+      if (IS_SANDBOX) {
+        console.log('Sandbox mode: No API keys required for Pi Network operations');
+      }
     }
   }
 

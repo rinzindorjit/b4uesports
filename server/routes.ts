@@ -188,22 +188,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'No token provided' });
       }
 
-      // In a real implementation, you would fetch the actual Pi balance from Pi Network
-      // For testing purposes, we'll return a mock balance
-      // In production, you would integrate with Pi Network's balance API
-      
-      // Mock balance for testing
-      const mockBalance = {
-        balance: Math.random() * 1000 + 100, // Random balance between 100-1100 Pi
+      // Verify JWT token
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      const userId = decoded.userId;
+
+      // Get user from database to get their actual balance
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const balance = {
+        balance: parseFloat(user.balance || '1000.00000000'), // Default to 1000 Pi if no balance set
         currency: 'π',
         lastUpdated: new Date().toISOString(),
         isTestnet: true
       };
 
-      res.json(mockBalance);
+      res.json(balance);
     } catch (error) {
       console.error('Pi balance fetch error:', error);
       res.status(500).json({ message: 'Failed to fetch Pi balance' });
+    }
+  });
+
+  // Mock Pi Payment Endpoint
+  app.post('/api/mock-pi-payment', async (req, res) => {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
+      }
+
+      // Verify JWT token
+      const decoded = jwt.verify(token, JWT_SECRET) as any;
+      const userId = decoded.userId;
+
+      const { packageId, gameAccount } = req.body;
+
+      // Validate input
+      if (!packageId) {
+        return res.status(400).json({ message: 'Package ID required' });
+      }
+
+      // Get user and package
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const pkg = await storage.getPackage(packageId);
+      if (!pkg) {
+        return res.status(404).json({ message: 'Package not found' });
+      }
+
+      // Check if user has sufficient balance
+      const userBalance = parseFloat(user.balance || '1000.00000000');
+      const packagePrice = parseFloat(pkg.usdtValue);
+      const currentPiPrice = await pricingService.getCurrentPiPrice();
+      const piAmount = pricingService.calculatePiAmount(packagePrice);
+      
+      if (userBalance < piAmount) {
+        return res.status(400).json({ message: 'Insufficient balance' });
+      }
+
+      // Deduct balance from user
+      const updatedUser = await storage.updateUserBalance(userId, piAmount, 'subtract');
+      if (!updatedUser) {
+        return res.status(500).json({ message: 'Failed to update user balance' });
+      }
+
+      // Create transaction record
+      const mockPaymentId = 'MOCK-' + Date.now();
+      const mockTxId = 'MOCK-TX-' + Date.now();
+      
+      const transactionData: any = {
+        userId: userId,
+        packageId: packageId,
+        paymentId: mockPaymentId,
+        txid: mockTxId,
+        piAmount: piAmount.toString(),
+        usdAmount: packagePrice.toString(),
+        piPriceAtTime: currentPiPrice.toString(),
+        status: 'completed',
+        gameAccount: gameAccount || {},
+        metadata: {
+          type: 'mock-payment',
+          mock: true
+        },
+        emailSent: false
+      };
+
+      const transaction = await storage.createTransaction(transactionData);
+
+      // Send confirmation email
+      try {
+        if (user.email) {
+          const gameAccountString = gameAccount?.ign 
+            ? `${gameAccount.ign} (${gameAccount.uid})`
+            : `${gameAccount?.userId}:${gameAccount?.zoneId}`;
+
+          const emailSent = await sendPurchaseConfirmationEmail({
+            to: user.email,
+            username: user.username,
+            packageName: pkg.name,
+            piAmount: piAmount.toString(),
+            usdAmount: packagePrice.toString(),
+            gameAccount: gameAccountString,
+            transactionId: transaction.id,
+            paymentId: mockPaymentId,
+            isTestnet: true,
+          });
+
+          await storage.updateTransaction(transaction.id, { emailSent });
+        }
+      } catch (emailError) {
+        console.error('Email sending failed:', emailError);
+        // Don't fail the transaction if email fails
+      }
+
+      res.json({
+        success: true,
+        message: "Mock payment processed successfully",
+        transactionId: transaction.id,
+        newBalance: parseFloat(updatedUser.balance || '0')
+      });
+    } catch (error) {
+      console.error('Mock payment error:', error);
+      res.status(500).json({ message: 'Mock payment failed', error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

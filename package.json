@@ -1,6 +1,7 @@
 {
-  "name": "rest-express",
+  "name": "b4u-esports-pi-marketplace",
   "version": "1.0.0",
+  "description": "B4U Esports - A Pi Network integrated gaming marketplace for purchasing PUBG UC and Mobile Legends Diamonds with Pi coins",
   "type": "module",
   "license": "MIT",
   "scripts": {
@@ -117,5 +118,25 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
-  }
+  },
+  "keywords": [
+    "pi-network",
+    "gaming",
+    "marketplace",
+    "pubg",
+    "mobile-legends",
+    "cryptocurrency",
+    "react",
+    "nodejs",
+    "express"
+  ],
+  "author": "B4U Esports Team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rinzindorjit/b4uesports.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rinzindorjit/b4uesports/issues"
+  },
+  "homepage": "https://b4uesports.vercel.app"
 }
