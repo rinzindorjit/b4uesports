@@ -4,8 +4,6 @@ import paymentsHandler from './pi/payments.js';
 import userHandler from './pi/user.js';
 import webhookHandler from './pi/webhook.js';
 import metadataHandler from './metadata.js';
-import fs from 'fs';
-import path from 'path';
 
 // Mock handlers for additional routes
 async function handleAuthPi(request, response) {
@@ -247,38 +245,6 @@ async function handleAnalytics(request, response) {
   response.status(200).json(mockAnalytics);
 }
 
-// Serve static files
-function serveStaticFile(filePath, response) {
-  try {
-    const fullPath = path.join(process.cwd(), 'dist', 'public', filePath);
-    if (fs.existsSync(fullPath)) {
-      const fileContent = fs.readFileSync(fullPath);
-      if (filePath.endsWith('.html')) {
-        response.setHeader('Content-Type', 'text/html');
-      } else if (filePath.endsWith('.js')) {
-        response.setHeader('Content-Type', 'application/javascript');
-      } else if (filePath.endsWith('.css')) {
-        response.setHeader('Content-Type', 'text/css');
-      } else if (filePath.endsWith('.json')) {
-        response.setHeader('Content-Type', 'application/json');
-      } else if (filePath.endsWith('.png')) {
-        response.setHeader('Content-Type', 'image/png');
-      } else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) {
-        response.setHeader('Content-Type', 'image/jpeg');
-      } else if (filePath.endsWith('.gif')) {
-        response.setHeader('Content-Type', 'image/gif');
-      } else {
-        response.setHeader('Content-Type', 'application/octet-stream');
-      }
-      response.status(200).send(fileContent);
-      return true;
-    }
-  } catch (error) {
-    console.error('Error serving static file:', error);
-  }
-  return false;
-}
-
 export default async function handler(request, response) {
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
@@ -350,40 +316,15 @@ export default async function handler(request, response) {
     } else if (path === '/api/admin/analytics') {
       console.log('Routing to analytics handler');
       return await handleAnalytics(request, response);
-    } else if (path === '/' || path === '/index.html') {
-      // Serve the main index.html file
-      console.log('Serving index.html');
-      const indexPath = path.join(process.cwd(), 'dist', 'public', 'index.html');
-      if (fs.existsSync(indexPath)) {
-        const fileContent = fs.readFileSync(indexPath, 'utf8');
-        response.setHeader('Content-Type', 'text/html');
-        response.status(200).send(fileContent);
-      } else {
-        response.status(404).json({ message: 'Index file not found' });
-      }
+    } else if (path === '/') {
+      // For the root path, return a simple response for now
+      console.log('Serving root path');
+      response.status(200).json({ message: 'B4U Esports API is running' });
       return;
-    } else if (path.startsWith('/assets/')) {
-      // Serve static assets
-      console.log('Serving static asset:', path);
-      if (serveStaticFile(path, response)) {
-        return;
-      }
     } else {
-      // For all other routes, serve the index.html file (for SPA routing)
-      console.log('Serving index.html for SPA route:', path);
-      const indexPath = path.join(process.cwd(), 'dist', 'public', 'index.html');
-      if (fs.existsSync(indexPath)) {
-        const fileContent = fs.readFileSync(indexPath, 'utf8');
-        response.setHeader('Content-Type', 'text/html');
-        response.status(200).send(fileContent);
-      } else {
-        response.status(404).json({ message: 'Index file not found' });
-      }
-      return;
+      console.log('API endpoint not found:', path);
+      response.status(404).json({ message: `API endpoint not found: ${path}` });
     }
-    
-    console.log('API endpoint not found:', path);
-    response.status(404).json({ message: `API endpoint not found: ${path}` });
   } catch (error) {
     console.error('API handler error:', error);
     console.error('Error stack:', error.stack);
