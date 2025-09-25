@@ -45,7 +45,7 @@ export function shouldUseMockAuth(): boolean {
   const mode = getAuthMode();
   console.log('shouldUseMockAuth check, mode:', mode);
   // Use mock auth for Vercel deployments, Pi Browser, and development mock environments
-  return mode === 'vercel-sandbox' || mode === 'development-mock' || mode === 'pi-browser';
+  return mode === 'vercel-sandbox' || mode === 'development-mock' || mode === 'pi-browser' || mode === 'localhost-development';
 }
 
 export function shouldInitializePiSDK(): boolean {
@@ -59,6 +59,6 @@ export function shouldInitializePiSDK(): boolean {
 export function getPiSDKSandboxMode(): boolean {
   const mode = getAuthMode();
   console.log('getPiSDKSandboxMode check, mode:', mode);
-  // Use sandbox mode for Pi Browser and localhost development
-  return mode === 'pi-browser' || mode === 'localhost-development';
+  // Use sandbox mode for Pi Browser, localhost development, and Vercel sandbox
+  return mode === 'pi-browser' || mode === 'localhost-development' || mode === 'vercel-sandbox';
 }

@@ -90,12 +90,13 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
 
     try {
       // Check if we're in mock mode (Vercel deployment, preview, or Pi Browser)
-      const isPreview = window.location.hostname === 'localhost' && window.location.port === '3005';
+      const isPreview = window.location.hostname === 'localhost' && window.location.port === '5173';
       const isPiBrowserEnv = typeof window !== 'undefined' && 
         (window.navigator.userAgent.includes('PiBrowser') || window.navigator.userAgent.includes('Pi Network'));
-      const isSandbox = window.location.hostname.includes('vercel.app');
+      const isVercel = window.location.hostname.includes('vercel.app');
       
-      if (isPreview || isSandbox || isPiBrowserEnv) {
+      // Always use mock payment flow for Vercel deployments, preview mode, or Pi Browser
+      if (isPreview || isVercel || isPiBrowserEnv) {
         // Use mock payment flow
         console.log('Using mock payment flow');
         

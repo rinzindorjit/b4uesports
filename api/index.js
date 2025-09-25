@@ -4,6 +4,7 @@ import paymentsHandler from './pi/payments.js';
 import userHandler from './pi/user.js';
 import webhookHandler from './pi/webhook.js';
 import metadataHandler from './metadata.js';
+import mockPaymentHandler from './pi/mock-payment.js';
 
 // Remove the mock handleAuthPi function and use the imported authHandler instead
 
@@ -263,6 +264,9 @@ export default async function handler(request, response) {
     } else if (path === '/api/admin/analytics') {
       console.log('Routing to analytics handler');
       return await handleAnalytics(request, response);
+    } else if (path === '/api/mock-pi-payment') {
+      console.log('Routing to mock payment handler');
+      return await mockPaymentHandler(request, response);
     } else if (path.startsWith('/api/')) {
       console.log('API endpoint not found:', path);
       response.status(404).json({ message: `API endpoint not found: ${path}` });

@@ -6,7 +6,8 @@ const PI_API_BASE = 'https://api.minepi.com';
 const SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
 
 // Always run in mock mode for sandbox/testnet environments
-const IS_SANDBOX = process.env.NODE_ENV !== 'production';
+// Since we're using Pi Network testnet, we'll always use mock mode
+const IS_SANDBOX = true; // Always true for this testnet application
 
 if (IS_SANDBOX) {
   console.log("Running in sandbox mode - no API keys required");

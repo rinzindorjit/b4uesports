@@ -61,6 +61,16 @@ function isPiBrowser() {
   return false;
 }
 
+// Add a new function to detect if we're in a sandbox environment
+function isSandboxEnvironment() {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // Always treat as sandbox for this application since it's a testnet app
+    return true; // Always return true for this testnet application
+  }
+  return true;
+}
+
 export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
@@ -69,7 +79,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   useEffect(() => {
     // Initialize Pi SDK
-    const useMockAuth = shouldUseMockAuth();
+    const useMockAuth = true; // Always use mock auth for this testnet application
     const shouldInitPiSDK = shouldInitializePiSDK();
     const sandboxMode = getPiSDKSandboxMode();
     

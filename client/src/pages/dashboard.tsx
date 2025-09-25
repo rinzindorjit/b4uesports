@@ -93,7 +93,8 @@ export default function Dashboard() {
   ];
 
   // For preview, use mock data instead of API
-  const isPreviewMode = process.env.NODE_ENV !== 'production';
+  const isPreviewMode = window.location.hostname.includes('vercel.app') || 
+                       (window.location.hostname === 'localhost' && window.location.port === '5173');
   
   // Get current user with proper profile verification status
   const currentUser = useMemo(() => {
