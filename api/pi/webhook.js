@@ -16,13 +16,10 @@ export default async function handler(request, response) {
   }
 
   try {
-    // Parse request body if it's a string
-    let body = request.body;
-    if (typeof body === 'string') {
-      body = JSON.parse(body);
-    }
+    // In Vercel, the request body is already parsed as JSON
+    const body = request.body || {};
     
-    const { action, paymentId, txid } = body || {};
+    const { action, paymentId, txid } = body;
     
     // Log the webhook event
     console.log('Pi Network webhook received:', { action, paymentId, txid });

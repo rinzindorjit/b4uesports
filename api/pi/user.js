@@ -35,11 +35,8 @@ export default async function handler(request, response) {
       response.status(200).json(mockUser);
     } else if (request.method === 'PUT') {
       // Update user profile
-      // Parse request body if it's a string
-      let userData = request.body;
-      if (typeof userData === 'string') {
-        userData = JSON.parse(userData);
-      }
+      // In Vercel, the request body is already parsed as JSON
+      const userData = request.body || {};
       
       // For mock purposes, return the updated user data
       // Check if profile is being completed (email and phone provided)

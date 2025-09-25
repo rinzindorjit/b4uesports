@@ -14,13 +14,10 @@ export default async function handler(request, response) {
   try {
     if (request.method === 'POST') {
       // Handle payment creation
-      // Parse request body if it's a string
-      let body = request.body;
-      if (typeof body === 'string') {
-        body = JSON.parse(body);
-      }
+      // In Vercel, the request body is already parsed as JSON
+      const body = request.body || {};
       
-      const { paymentData } = body || {};
+      const { paymentData } = body;
       
       // For mock purposes, we'll return a mock payment
       const mockPayment = {
@@ -47,13 +44,10 @@ export default async function handler(request, response) {
       response.status(200).json(mockPayment);
     } else if (request.method === 'PUT') {
       // Handle payment approval/completion
-      // Parse request body if it's a string
-      let body = request.body;
-      if (typeof body === 'string') {
-        body = JSON.parse(body);
-      }
+      // In Vercel, the request body is already parsed as JSON
+      const body = request.body || {};
       
-      const { action, paymentId, txid } = body || {};
+      const { action, paymentId, txid } = body;
       
       if (action === 'approve') {
         // Mock approval
