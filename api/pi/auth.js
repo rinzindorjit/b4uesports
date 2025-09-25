@@ -5,6 +5,8 @@ export default async function handler(request, response) {
   console.log('=== AUTH API ENDPOINT CALLED ===');
   console.log('Request method:', request.method);
   console.log('Request headers:', request.headers);
+  console.log('Request URL:', request.url);
+  console.log('Full request object:', JSON.stringify(request, null, 2));
   
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
