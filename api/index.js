@@ -251,9 +251,12 @@ export default async function handler(request, response) {
       method: request.method, 
       path, 
       url: request.url, 
-      headers: request.headers,
-      body: request.body
+      headers: request.headers
     });
+    
+    // Log request body for debugging
+    console.log('Request body:', request.body);
+    console.log('Request body type:', typeof request.body);
     
     // Route to appropriate handler based on path
     if (path === '/api/pi/auth') {

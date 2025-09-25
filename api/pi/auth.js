@@ -16,11 +16,19 @@ export default async function handler(request, response) {
   }
 
   try {
+    console.log('Request body:', request.body);
+    console.log('Request body type:', typeof request.body);
+    
     // In Vercel, the request body is already parsed as JSON
     // So we don't need to parse it again
     const body = request.body || {};
     
+    console.log('Body:', body);
+    console.log('Body type:', typeof body);
+    
     const { accessToken } = body;
+    console.log('Access token:', accessToken);
+    
     if (!accessToken) {
       return response.status(400).json({ message: 'Access token required' });
     }
