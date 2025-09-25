@@ -1,70 +1,53 @@
 # B4U Esports - Pi Network Gaming Marketplace
 
-## Overview
-B4U Esports is a Pi Network integrated marketplace for purchasing in-game currencies with Pi coins. This platform provides a secure, fast, and reliable environment for gamers to buy gaming credits.
+This is the official repository for B4U Esports, a gaming marketplace that allows users to purchase PUBG UC and Mobile Legends Diamonds using Pi coins.
 
-## Deployment to Vercel
+## Features
 
-### Prerequisites
-- A Vercel account
-- This repository
+- Pi Network integration for secure payments
+- Support for PUBG and Mobile Legends top-ups
+- User authentication and profile management
+- Transaction history tracking
+- Admin dashboard for managing packages and transactions
 
-### Deployment Steps
-1. Push this repository to GitHub/GitLab/Bitbucket
-2. Connect your repository to Vercel
-3. Configure the following environment variables in Vercel:
-   - `PI_API_KEY` - Your Pi Network API key
-   - `PI_SECRET_KEY` - Your Pi Network secret key
-   - `EMAILJS_SERVICE_ID` - Your EmailJS service ID
-   - `EMAILJS_TEMPLATE_ID` - Your EmailJS template ID
-   - `EMAILJS_PUBLIC_KEY` - Your EmailJS public key
-   - `JWT_SECRET` - Secret for JWT token generation
-   - `DATABASE_URL` - Connection string for your PostgreSQL database
-   - `COINGECKO_API_KEY` - Your CoinGecko API key (optional but recommended)
+## Deployment Status
 
-### Vercel Configuration
-The `vercel.json` file in the root directory configures:
-- Build process using `@vercel/node`
-- Routing for API endpoints and client-side application
-- Environment variables
+Last updated: September 24, 2025
 
-### Build Process
-Vercel will automatically:
-1. Install dependencies
-2. Build the client application with Vite
-3. Bundle the server with esbuild
-4. Deploy the application
+## API Endpoints
 
-## Database Setup
+- `/api/auth/pi` - Authenticate with Pi Network
+- `/api/packages` - Get available top-up packages
+- `/api/transactions` - Get transaction history
+- `/api/payment/approve` - Approve Pi payment
+- `/api/payment/complete` - Complete Pi payment
 
-### 1. Create Database Tables
-Run the following command to create the necessary database tables:
-```bash
-npm run db:push
-```
+## Environment Variables
 
-### 2. Seed Database with Packages
-Run the following command to populate the database with game packages:
-```bash
-npm run db:seed
-```
+Make sure to set the following environment variables:
 
-## Development
-To run locally:
-```bash
-npm install
-npm run dev
-```
+- `PI_API_KEY` - Pi Network API key
+- `PI_SECRET_KEY` - Pi Network secret key
+- `JWT_SECRET` - Secret for JWT token generation
+- `DATABASE_URL` - Connection string for the database
 
-For preview mode (without database):
-```bash
-npm run preview
-```
+## Getting Started
 
-## Project Structure
-- `/client` - Frontend React application
-- `/server` - Backend API and server logic
-- `/api` - API endpoints
-- `/shared` - Shared types and utilities
-- `/public` - Static assets
-- `/uploads` - User uploaded files (in production)
+1. Clone the repository
+2. Install dependencies with `npm install`
+3. Set up environment variables
+4. Run the development server with `npm run dev`
+
+## Building for Production
+
+Run `npm run build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Deployment
+
+This application is deployed on Vercel. The deployment is configured through `vercel.json`.
+
+## Recent Changes
+
+- Fixed Vercel deployment configuration
+- Removed conflicting root index.html file
+- Set outputDirectory to "dist" in vercel.json
