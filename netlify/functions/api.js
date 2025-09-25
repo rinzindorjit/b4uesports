@@ -13,7 +13,10 @@ export async function handler(event, context) {
   const request = {
     method: event.httpMethod,
     url: event.path,
-    headers: event.headers,
+    headers: {
+      ...event.headers,
+      host: event.headers?.host || 'localhost'
+    },
     body: event.body ? JSON.parse(event.body) : null
   };
   
