@@ -316,14 +316,13 @@ export default async function handler(request, response) {
     } else if (path === '/api/admin/analytics') {
       console.log('Routing to analytics handler');
       return await handleAnalytics(request, response);
-    } else if (path === '/') {
-      // For the root path, return a simple response for now
-      console.log('Serving root path');
-      response.status(200).json({ message: 'B4U Esports API is running' });
-      return;
-    } else {
+    } else if (path.startsWith('/api/')) {
       console.log('API endpoint not found:', path);
       response.status(404).json({ message: `API endpoint not found: ${path}` });
+    } else {
+      // For all non-API routes, return a simple response for now
+      console.log('Serving non-API route:', path);
+      response.status(200).json({ message: 'B4U Esports is running' });
     }
   } catch (error) {
     console.error('API handler error:', error);
