@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi Network Test</title>
+    <script>
+        // Load Pi SDK
+        const script = document.createElement('script');
+        script.src = 'https://sandbox.minepi.com/pi-sdk.js';
+        script.onload = function() {
+            console.log('Pi SDK loaded successfully');
+            // Initialize Pi SDK in sandbox mode
+            if (window.Pi) {
+                try {
+                    window.Pi.init({ version: "2.0", sandbox: true });
+                    console.log('Pi SDK initialized in sandbox mode');
+                    
+                    // Test authentication
+                    document.getElementById('authBtn').disabled = false;
+                } catch (error) {
+                    console.error('Failed to initialize Pi SDK:', error);
+                }
+            }
+        };
+        script.onerror = function() {
+            console.error('Failed to load Pi SDK');
+        };
+        document.head.appendChild(script);
+        
+        function testAuth() {
+            if (window.Pi) {
+                window.Pi.authenticate(['username', 'payments'], (payment) => {
+                    console.log('Incomplete payment found:', payment);
+                }).then(result => {
+                    console.log('Authentication result:', result);
+                    document.getElementById('result').innerText = 'Authentication successful: ' + JSON.stringify(result);
+                }).catch(error => {
+                    console.error('Authentication failed:', error);
+                    document.getElementById('result').innerText = 'Authentication failed: ' + error.message;
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Pi Network Test</h1>
+    <button id="authBtn" onclick="testAuth()" disabled>Test Authentication</button>
+    <div id="result"></div>
+</body>
+</html>

@@ -22,6 +22,18 @@ try {
     console.log('validation-key.txt copied successfully');
   }
   
+  // Copy test files if they exist
+  const testFiles = ['pi-test.html', 'sandbox-test.html'];
+  testFiles.forEach(file => {
+    const sourceFile = resolve(file);
+    const destFile = resolve('dist', file);
+    if (existsSync(sourceFile)) {
+      console.log(`Copying ${file} to dist...`);
+      copyFileSync(sourceFile, destFile);
+      console.log(`${file} copied successfully`);
+    }
+  });
+  
   console.log('Testnet build completed successfully!');
 } catch (error) {
   console.error('Build failed:', error.message);
