@@ -9,22 +9,12 @@ try {
   console.log('Running Vite build...');
   execSync('npx vite build', { stdio: 'inherit' });
   
-  // Copy the testnet-specific index.html to dist
-  const distPath = resolve('dist');
-  const publicIndexPath = resolve('public/index.html');
-  const distIndexPath = resolve(distPath, 'index.html');
-  
-  if (existsSync(publicIndexPath)) {
-    console.log('Copying testnet index.html to dist...');
-    copyFileSync(publicIndexPath, distIndexPath);
-    console.log('Testnet index.html copied successfully');
-  } else {
-    console.log('Public index.html not found, using built version');
-  }
+  // DON'T copy the testnet-specific index.html to dist - let Vite handle it
+  // Vite will generate the correct index.html with proper script references
   
   // Ensure validation-key.txt is in dist
   const publicValidationKey = resolve('client/public/validation-key.txt');
-  const distValidationKey = resolve(distPath, 'validation-key.txt');
+  const distValidationKey = resolve('dist', 'validation-key.txt');
   
   if (existsSync(publicValidationKey)) {
     console.log('Copying validation-key.txt to dist...');
