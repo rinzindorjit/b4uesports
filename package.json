@@ -10,7 +10,7 @@
     "build": "npx vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && npm run build-netlify-functions",
     "vercel-build": "npx vite build",
     "render-build": "npx vite build",
-    "netlify-build": "npx vite build",
+    "netlify-build": "node scripts/build-testnet.js",
     "build-netlify-functions": "npx esbuild netlify/functions/api.js --bundle --platform=node --outdir=dist/functions --external:./api/*",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc",

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <title>B4U Esports - Pi Network Testnet</title>
+    <meta name="description" content="Testnet version of B4U Esports for Pi Network development">
+    
+    <!-- Pi SDK for testnet/sandbox environments -->
+    <script>
+      // Always load Pi SDK for testnet development
+      const script = document.createElement('script');
+      script.src = 'https://sandbox.minepi.com/pi-sdk.js';
+      script.onload = function() {
+        console.log('Pi SDK loaded successfully');
+        // Initialize with sandbox mode
+        if (window.Pi) {
+          try {
+            window.Pi.init({ version: "2.0", sandbox: true });
+            console.log('Pi SDK initialized in sandbox mode');
+          } catch (error) {
+            console.warn('Failed to initialize Pi SDK:', error);
+          }
+        }
+      };
+      script.onerror = function() {
+        console.warn('Failed to load Pi SDK - using mock mode');
+      };
+      document.head.appendChild(script);
+    </script>
+    
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #0f172a;
+        color: #e2e8f0;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        text-align: center;
+      }
+      .header {
+        margin-bottom: 30px;
+      }
+      .card {
+        background-color: #1e293b;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      button {
+        background-color: #8b5cf6;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 10px;
+      }
+      button:hover {
+        background-color: #7c3aed;
+      }
+      .status {
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .success {
+        background-color: #10b981;
+        color: white;
+      }
+      .error {
+        background-color: #ef4444;
+        color: white;
+      }
+      .info {
+        background-color: #3b82f6;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>B4U Esports - Pi Network Testnet</h1>
+        <p>Mock webapp for Pi Network testnet development</p>
+      </div>
+      
+      <div class="card">
+        <h2>Authentication</h2>
+        <button id="authBtn">Authenticate with Pi Network</button>
+        <div id="authStatus"></div>
+      </div>
+      
+      <div class="card">
+        <h2>Payment Test</h2>
+        <button id="paymentBtn" disabled>Make Test Payment</button>
+        <div id="paymentStatus"></div>
+      </div>
+      
+      <div class="card">
+        <h2>User Info</h2>
+        <div id="userInfo">Not authenticated</div>
+      </div>
+    </div>
+
+    <script>
+      // Mock user data
+      const mockUser = {
+        uid: 'test-user-123',
+        username: 'testuser'
+      };
+      
+      let isAuthenticated = false;
+      let authToken = null;
+      
+      // DOM elements
+      const authBtn = document.getElementById('authBtn');
+      const paymentBtn = document.getElementById('paymentBtn');
+      const authStatus = document.getElementById('authStatus');
+      const paymentStatus = document.getElementById('paymentStatus');
+      const userInfo = document.getElementById('userInfo');
+      
+      // Authentication function
+      function authenticate() {
+        authStatus.innerHTML = '<div class="status info">Authenticating...</div>';
+        
+        // Simulate authentication delay
+        setTimeout(() => {
+          isAuthenticated = true;
+          authToken = 'mock-auth-token-' + Date.now();
+          
+          authStatus.innerHTML = '<div class="status success">Authenticated successfully!</div>';
+          userInfo.innerHTML = `<p><strong>User ID:</strong> ${mockUser.uid}</p><p><strong>Username:</strong> ${mockUser.username}</p>`;
+          paymentBtn.disabled = false;
+        }, 1000);
+      }
+      
+      // Payment function
+      function makePayment() {
+        if (!isAuthenticated) {
+          paymentStatus.innerHTML = '<div class="status error">Please authenticate first</div>';
+          return;
+        }
+        
+        paymentStatus.innerHTML = '<div class="status info">Processing payment...</div>';
+        
+        // Simulate payment processing
+        setTimeout(() => {
+          paymentStatus.innerHTML = '<div class="status success">Payment processed successfully!</div>';
+        }, 1500);
+      }
+      
+      // Event listeners
+      authBtn.addEventListener('click', authenticate);
+      paymentBtn.addEventListener('click', makePayment);
+      
+      // Check if Pi SDK is available
+      window.addEventListener('load', () => {
+        if (window.Pi) {
+          console.log('Pi SDK is available');
+        } else {
+          console.log('Pi SDK not available - using mock functionality');
+        }
+      });
+    </script>
+  </body>
+</html>

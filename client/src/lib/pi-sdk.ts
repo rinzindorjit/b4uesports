@@ -52,7 +52,7 @@ export class PiSDK {
     try {
       window.Pi.init({ 
         version: "2.0", 
-        sandbox: true // Always use sandbox for this webapp as it's for sandbox purpose only
+        sandbox: true // Always use sandbox for this webapp as it's for testnet purpose only
       });
       this.initialized = true;
       console.log('Pi SDK initialized successfully with sandbox mode');

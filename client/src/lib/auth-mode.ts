@@ -13,6 +13,7 @@ export function getAuthMode() {
     userAgent,
     isPiBrowser: userAgent.includes('PiBrowser') || userAgent.includes('Pi Network'),
     isLocalhost: hostname === 'localhost',
+    isNetlify: hostname.includes('netlify.app'),
     isVercel: hostname.includes('vercel.app'),
     isProduction: process.env.NODE_ENV === 'production' && !hostname.includes('localhost')
   });
@@ -25,6 +26,11 @@ export function getAuthMode() {
   // Localhost development
   if (hostname === 'localhost') {
     return 'localhost-development';
+  }
+  
+  // Netlify deployment (testnet mode)
+  if (hostname.includes('netlify.app')) {
+    return 'netlify-testnet';
   }
   
   // Vercel deployment (sandbox mode)
@@ -44,21 +50,20 @@ export function getAuthMode() {
 export function shouldUseMockAuth(): boolean {
   const mode = getAuthMode();
   console.log('shouldUseMockAuth check, mode:', mode);
-  // Use mock auth for Vercel deployments, Pi Browser, and development mock environments
-  return mode === 'vercel-sandbox' || mode === 'development-mock' || mode === 'pi-browser' || mode === 'localhost-development';
+  // Use mock auth for testnet environments
+  return mode === 'netlify-testnet' || mode === 'vercel-sandbox' || mode === 'development-mock' || mode === 'pi-browser' || mode === 'localhost-development';
 }
 
 export function shouldInitializePiSDK(): boolean {
   const mode = getAuthMode();
   console.log('shouldInitializePiSDK check, mode:', mode);
-  // Initialize Pi SDK for Pi Browser, localhost development, and Vercel sandbox
-  // Since this is a sandbox/testnet application, we should always try to initialize Pi SDK
-  return mode === 'pi-browser' || mode === 'localhost-development' || mode === 'vercel-sandbox';
+  // Initialize Pi SDK for all environments since this is a testnet application
+  return true;
 }
 
 export function getPiSDKSandboxMode(): boolean {
   const mode = getAuthMode();
   console.log('getPiSDKSandboxMode check, mode:', mode);
-  // Use sandbox mode for Pi Browser, localhost development, and Vercel sandbox
-  return mode === 'pi-browser' || mode === 'localhost-development' || mode === 'vercel-sandbox';
+  // Always use sandbox mode for testnet development
+  return true;
 }

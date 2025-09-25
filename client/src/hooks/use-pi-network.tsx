@@ -41,6 +41,11 @@ function isPiBrowser() {
       return true;
     }
     
+    // Check for Netlify deployment (testnet)
+    if (window.location.hostname.includes('netlify.app')) {
+      return true;
+    }
+    
     // Check for Vercel deployment (for testing)
     if (window.location.hostname.includes('vercel.app')) {
       return true;
@@ -258,9 +263,10 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     // Check if we're in preview mode or Pi Browser
     const isPreview = window.location.hostname === 'localhost' && window.location.port === '3005';
     const isPiBrowserEnv = isPiBrowser();
+    const isNetlify = window.location.hostname.includes('netlify.app');
     const isSandbox = window.location.hostname.includes('vercel.app');
     
-    if (isPreview || isSandbox || isPiBrowserEnv) {
+    if (isPreview || isSandbox || isNetlify || isPiBrowserEnv) {
       // Mock payment flow for preview mode, sandbox, or Pi Browser
       console.log('Mock payment initiated:', paymentData);
       
@@ -368,7 +374,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
         const isProduction = process.env.NODE_ENV === 'production';
         const isDevelopment = process.env.NODE_ENV === 'development';
         // For sandbox mode (Vercel deployments), we also use sandbox mode
-        const useSandbox = isDevelopment || !isProduction || window.location.hostname.includes('vercel.app');
+        const useSandbox = isDevelopment || !isProduction || window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app');
         piSDK.init(useSandbox);
         piSDK.createPayment(enhancedPaymentData, enhancedCallbacks);
       } catch (retryError) {
