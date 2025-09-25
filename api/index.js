@@ -7,13 +7,10 @@ import metadataHandler from './metadata.js';
 
 // Mock handlers for additional routes
 async function handleAuthPi(request, response) {
-  // Parse request body if it's a string
-  let body = request.body;
-  if (typeof body === 'string') {
-    body = JSON.parse(body);
-  }
+  // In Vercel, the request body is already parsed as JSON
+  const body = request.body || {};
   
-  const { accessToken } = body || {};
+  const { accessToken } = body;
   if (!accessToken) {
     return response.status(400).json({ message: 'Access token required' });
   }
@@ -53,11 +50,8 @@ async function handleAuthPi(request, response) {
 }
 
 async function handleProfileUpdate(request, response) {
-  // Parse request body if it's a string
-  let userData = request.body;
-  if (typeof userData === 'string') {
-    userData = JSON.parse(userData);
-  }
+  // In Vercel, the request body is already parsed as JSON
+  const userData = request.body || {};
   
   // For mock purposes, return the updated user data
   // Check if profile is being completed (email and phone provided)
@@ -75,13 +69,10 @@ async function handleProfileUpdate(request, response) {
 
 // Mock handler for admin login
 async function handleAdminLogin(request, response) {
-  // Parse request body if it's a string
-  let body = request.body;
-  if (typeof body === 'string') {
-    body = JSON.parse(body);
-  }
+  // In Vercel, the request body is already parsed as JSON
+  const body = request.body || {};
   
-  const { username, password } = body || {};
+  const { username, password } = body;
   if (!username || !password) {
     return response.status(400).json({ message: 'Username and password required' });
   }
@@ -192,13 +183,10 @@ async function handleTransactions(request, response) {
 
 // Mock handler for payment approval
 async function handlePaymentApproval(request, response) {
-  // Parse request body if it's a string
-  let body = request.body;
-  if (typeof body === 'string') {
-    body = JSON.parse(body);
-  }
+  // In Vercel, the request body is already parsed as JSON
+  const body = request.body || {};
   
-  const { paymentId } = body || {};
+  const { paymentId } = body;
   if (!paymentId) {
     return response.status(400).json({ message: 'Payment ID required' });
   }
@@ -212,13 +200,10 @@ async function handlePaymentApproval(request, response) {
 
 // Mock handler for payment completion
 async function handlePaymentCompletion(request, response) {
-  // Parse request body if it's a string
-  let body = request.body;
-  if (typeof body === 'string') {
-    body = JSON.parse(body);
-  }
+  // In Vercel, the request body is already parsed as JSON
+  const body = request.body || {};
   
-  const { paymentId, txid } = body || {};
+  const { paymentId, txid } = body;
   if (!paymentId || !txid) {
     return response.status(400).json({ message: 'Payment ID and txid required' });
   }
