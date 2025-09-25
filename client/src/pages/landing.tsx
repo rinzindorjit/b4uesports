@@ -7,6 +7,7 @@ import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import { Button } from '@/components/ui/button';
 import { BRAND_LOGOS, GAME_LOGOS, DEFAULT_PACKAGES } from '@/lib/constants';
+import { shouldUseMockAuth } from '@/lib/auth-mode';
 import type { Package } from '@/types/pi-network';
 import { useMemo } from 'react';
 
@@ -62,13 +63,33 @@ export default function Landing() {
 
   const handlePiLogin = async () => {
     try {
-      console.log('Starting Pi Network authentication');
+      console.log('=== STARTING PI NETWORK AUTHENTICATION ===');
+      console.log('Current loading state:', piLoading);
+      console.log('Window location:', window.location);
+      console.log('User agent:', window.navigator.userAgent);
+      console.log('Should use mock auth:', shouldUseMockAuth());
+      
       // This will now use mock authentication in Pi Browser/preview/sandbox mode
       await authenticate();
+      
       console.log('Pi Network authentication completed');
+      console.log('New loading state:', piLoading);
     } catch (error) {
       console.error('Login failed:', error);
+      // Ensure we reset loading state on error
+      // The authenticate function should handle this, but we'll add a fallback
+      setTimeout(() => {
+        console.log('Checking if still loading after error...');
+        if (piLoading) {
+          console.log('Still loading, attempting to reset state');
+          // Force update the context if still loading
+          window.location.reload();
+        }
+      }, 2000);
+      
       alert(`Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      console.log('=== PI NETWORK AUTHENTICATION FINISHED ===');
     }
   };
 

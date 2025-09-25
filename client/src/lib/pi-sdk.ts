@@ -1,3 +1,5 @@
+import { shouldInitializePiSDK, getPiSDKSandboxMode } from '@/lib/auth-mode';
+
 declare global {
   interface Window {
     Pi: {
@@ -37,22 +39,53 @@ export class PiSDK {
   }
 
   init(sandbox: boolean = true): void {
+    // Check if we should initialize Pi SDK
+    if (!shouldInitializePiSDK()) {
+      console.log('Skipping Pi SDK initialization in mock environment');
+      this.initialized = true;
+      return;
+    }
+    
     if (this.initialized) return;
     
     if (typeof window !== 'undefined' && window.Pi) {
-      window.Pi.init({ 
-        version: "2.0", 
-        sandbox 
-      });
-      this.initialized = true;
+      try {
+        window.Pi.init({ 
+          version: "2.0", 
+          sandbox 
+        });
+        this.initialized = true;
+        console.log('Pi SDK initialized successfully with sandbox:', sandbox);
+      } catch (error) {
+        console.error('Pi SDK initialization failed:', error);
+      }
     } else {
-      console.error('Pi SDK not loaded');
+      console.warn('Pi SDK not available - running in mock mode');
+      // In mock mode, we still mark as initialized to allow mock operations
+      this.initialized = true;
     }
   }
 
   async authenticate(scopes: string[] = ['payments', 'username']): Promise<{ accessToken: string; user: { uid: string; username: string } } | null> {
-    if (!this.initialized || !window.Pi) {
-      throw new Error('Pi SDK not initialized');
+    // Check if we should use Pi SDK
+    if (!shouldInitializePiSDK()) {
+      console.log('Skipping Pi SDK authentication in mock environment, returning null to trigger mock auth');
+      return null;
+    }
+    
+    if (!this.initialized) {
+      // Try to initialize if not already done
+      const sandboxMode = getPiSDKSandboxMode();
+      this.init(sandboxMode);
+      if (!this.initialized) {
+        throw new Error('Pi SDK not initialized');
+      }
+    }
+
+    // If Pi SDK is not available (e.g., not in Pi Browser), return null to trigger mock auth
+    if (typeof window === 'undefined' || !window.Pi) {
+      console.log('Pi SDK not available, returning null to trigger mock authentication');
+      return null;
     }
 
     try {
@@ -69,7 +102,18 @@ export class PiSDK {
       return authResult;
     } catch (error) {
       console.error('Pi authentication failed:', error);
-      return null;
+      // More detailed error handling
+      if (error instanceof Error) {
+        if (error.message.includes('User closed')) {
+          throw new Error('Authentication cancelled by user');
+        } else if (error.message.includes('scopes')) {
+          throw new Error('Required permissions not granted');
+        } else {
+          throw new Error(`Authentication failed: ${error.message}`);
+        }
+      } else {
+        throw new Error('Authentication failed: Unknown error');
+      }
     }
   }
 
@@ -86,8 +130,21 @@ export class PiSDK {
       onError: (error: Error, payment?: any) => void;
     }
   ): void {
-    if (!this.initialized || !window.Pi) {
+    // Check if we should use Pi SDK
+    if (!shouldInitializePiSDK()) {
+      console.log('Skipping Pi SDK payment creation in mock environment');
+      throw new Error('Pi SDK not available - mock payment should be handled separately');
+    }
+    
+    if (!this.initialized) {
       throw new Error('Pi SDK not initialized');
+    }
+
+    // If Pi SDK is not available, trigger mock payment flow
+    if (typeof window === 'undefined' || !window.Pi) {
+      console.log('Pi SDK not available, triggering mock payment flow');
+      // This should be handled by the calling code
+      throw new Error('Pi SDK not available - mock payment should be handled separately');
     }
 
     window.Pi.createPayment(paymentData, callbacks);

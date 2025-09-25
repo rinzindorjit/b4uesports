@@ -2,6 +2,10 @@
 import fetch from 'node-fetch';
 
 export default async function handler(request, response) {
+  console.log('=== AUTH API ENDPOINT CALLED ===');
+  console.log('Request method:', request.method);
+  console.log('Request headers:', request.headers);
+  
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -9,11 +13,13 @@ export default async function handler(request, response) {
   
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
+    console.log('Handling preflight OPTIONS request');
     response.status(200).end();
     return;
   }
   
   if (request.method !== 'POST') {
+    console.log('Invalid method, returning 405');
     return response.status(405).json({ message: 'Method not allowed' });
   }
 
@@ -30,9 +36,6 @@ export default async function handler(request, response) {
     
     console.log('Body:', body);
     console.log('Body type:', typeof body);
-    
-    const { accessToken } = body;
-    console.log('Access token:', accessToken);
     
     // Check if this is a mock request (for Pi Browser development)
     if (body.isMockAuth) {
@@ -64,11 +67,19 @@ export default async function handler(request, response) {
 
       console.log('Mock authentication successful for user:', mockUser.username);
       
+      // Add a small delay to simulate network request
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      console.log('Sending mock auth response');
       return response.status(200).json({
         user: mockUser,
         token: mockToken
       });
     }
+    
+    // For non-mock requests, we need an access token
+    const { accessToken } = body;
+    console.log('Access token:', accessToken);
     
     if (!accessToken) {
       console.log('Missing access token');
@@ -130,6 +141,10 @@ export default async function handler(request, response) {
 
     console.log('Authentication successful for user:', user.username);
     
+    // Add a small delay to simulate network request
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    console.log('Sending real auth response');
     response.status(200).json({
       user: user,
       token: token
@@ -137,11 +152,17 @@ export default async function handler(request, response) {
   } catch (error) {
     console.error('Pi authentication error:', error);
     console.error('Error stack:', error.stack);
-    response.status(500).json({ 
-      message: 'Authentication failed', 
-      error: error.message,
-      // Don't expose the full stack trace in production
-      ...(process.env.NODE_ENV === 'development' ? { stack: error.stack } : {})
-    });
+    
+    // Ensure we always send a response
+    if (!response.headersSent) {
+      response.status(500).json({ 
+        message: 'Authentication failed', 
+        error: error.message,
+        // Don't expose the full stack trace in production
+        ...(process.env.NODE_ENV === 'development' ? { stack: error.stack } : {})
+      });
+    }
+  } finally {
+    console.log('=== AUTH API ENDPOINT FINISHED ===');
   }
 }

@@ -14,6 +14,7 @@ import DataProtection from "@/pages/data-protection";
 import UserAgreement from "@/pages/user-agreement";
 import AboutUs from "@/pages/about-us";
 import OurHistory from "@/pages/our-history";
+import AuthTest from "@/pages/auth-test";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -29,6 +30,7 @@ function Router() {
       <Route path="/user-agreement" component={UserAgreement} />
       <Route path="/about-us" component={AboutUs} />
       <Route path="/our-history" component={OurHistory} />
+      <Route path="/auth-test" component={AuthTest} />
       <Route component={NotFound} />
     </Switch>
   );

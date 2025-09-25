@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { piSDK } from '@/lib/pi-sdk';
 import { apiRequest } from '@/lib/queryClient';
+import { shouldUseMockAuth, shouldInitializePiSDK, getPiSDKSandboxMode } from '@/lib/auth-mode';
 import type { User, PaymentData, PaymentCallbacks } from '@/types/pi-network';
 
 interface PiNetworkContextType {
@@ -44,6 +45,17 @@ function isPiBrowser() {
     if (window.location.hostname.includes('vercel.app')) {
       return true;
     }
+    
+    // Additional check for mobile devices that might be running in Pi Browser
+    // Pi Browser typically runs on mobile devices
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    if (isMobile && userAgent.includes('Mobile')) {
+      // On mobile, if we're not on localhost and we have the Pi object, likely Pi Browser
+      // @ts-ignore
+      if (window.Pi) {
+        return true;
+      }
+    }
   }
   
   return false;
@@ -57,21 +69,16 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   useEffect(() => {
     // Initialize Pi SDK
-    const isProduction = process.env.NODE_ENV === 'production';
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    // Check if we're in preview mode by looking at the hostname
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3005';
+    const useMockAuth = shouldUseMockAuth();
+    const shouldInitPiSDK = shouldInitializePiSDK();
+    const sandboxMode = getPiSDKSandboxMode();
     
-    console.log('PiNetworkProvider init, isProduction:', isProduction, 'isDevelopment:', isDevelopment, 'isPreview:', isPreview);
+    console.log('PiNetworkProvider init, useMockAuth:', useMockAuth, 'shouldInitPiSDK:', shouldInitPiSDK, 'sandboxMode:', sandboxMode);
     
-    // In development or preview, we can use sandbox mode
-    // In production, we use the live network
-    // For sandbox mode (Vercel deployments), we also use sandbox mode
-    const useSandbox = isDevelopment || isPreview || !isProduction || window.location.hostname.includes('vercel.app');
-    
-    // Initialize Pi SDK even in preview mode for payment functionality
-    // But mock the actual payment calls
-    piSDK.init(useSandbox); // sandbox mode for development/preview/sandbox, production mode for production
+    // Initialize Pi SDK only if needed
+    if (shouldInitPiSDK) {
+      piSDK.init(sandboxMode);
+    }
 
     // Check for existing session
     const savedToken = localStorage.getItem('pi_token');
@@ -88,29 +95,33 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   }, []);
 
   const authenticate = async () => {
-    // Check if we're in preview mode by looking at the hostname
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3005';
-    // Check if we're in sandbox mode (Vercel deployment)
-    const isSandbox = window.location.hostname.includes('vercel.app');
-    // Check if we're in Pi Browser
-    const isPiBrowserEnv = isPiBrowser();
+    console.log('=== AUTHENTICATION START ===');
     
-    console.log('Authentication called, isPreview:', isPreview, 'isSandbox:', isSandbox, 'isPiBrowserEnv:', isPiBrowserEnv);
-    console.log('Window location:', window.location);
+    // Check if we should use mock authentication
+    const useMockAuth = shouldUseMockAuth();
     
-    // Use mock authentication for Pi Browser, preview mode, or sandbox mode
-    if (isPreview || isSandbox || isPiBrowserEnv) {
-      console.log('Using mock authentication flow for Pi Browser/Preview/Sandbox');
-      // In Pi Browser, preview mode, or sandbox, we'll use a mock authentication flow
+    console.log('Authentication environment check:', {
+      useMockAuth,
+      location: window.location,
+      userAgent: window.navigator.userAgent
+    });
+    
+    // Use mock authentication for non-production environments
+    if (useMockAuth) {
+      console.log('Using mock authentication flow');
+      // In mock environments, we'll use a mock authentication flow
       setIsLoading(true);
       
       try {
+        console.log('Sending mock auth request to backend');
         // Send request to backend with mock auth flag
         const response = await apiRequest('POST', '/api/auth/pi', {
           isMockAuth: true
         });
         
+        console.log('Mock auth response received:', response.status, response.statusText);
         const data = await response.json();
+        console.log('Mock auth response data:', data);
         
         if (!response.ok) {
           throw new Error(data.message || 'Mock authentication failed on server');
@@ -136,12 +147,18 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
         localStorage.removeItem('pi_token');
         localStorage.removeItem('pi_user');
       } finally {
-        setIsLoading(false);
+        console.log('Mock auth finally block - setting isLoading to false');
+        // Ensure isLoading is always set to false
+        setTimeout(() => {
+          console.log('Setting isLoading to false (timeout)');
+          setIsLoading(false);
+        }, 100);
       }
       return;
     }
     
     // For production mode, use real Pi Network authentication
+    console.log('Using real Pi Network authentication');
     setIsLoading(true);
     try {
       // Ensure we request both 'payments' and 'username' scopes
@@ -149,6 +166,33 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       console.log('Requesting Pi authentication with scopes: payments, username, wallet_address');
       const authResult = await piSDK.authenticate(['payments', 'username', 'wallet_address']);
       console.log('Pi authentication result:', authResult);
+      
+      // If authResult is null, it means we should use mock authentication
+      if (authResult === null) {
+        console.log('Pi SDK returned null, using mock authentication');
+        // Send request to backend with mock auth flag
+        const response = await apiRequest('POST', '/api/auth/pi', {
+          isMockAuth: true
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Mock authentication failed on server');
+        }
+        
+        console.log('Setting mock user and token');
+        setUser(data.user);
+        setToken(data.token);
+        setIsAuthenticated(true);
+        
+        // Save to localStorage
+        localStorage.setItem('pi_token', data.token);
+        localStorage.setItem('pi_user', JSON.stringify(data.user));
+        
+        console.log('Mock authentication complete, user:', data.user);
+        return;
+      }
       
       if (!authResult) {
         throw new Error('Authentication failed - missing required scopes or user cancelled');
@@ -188,8 +232,15 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       localStorage.removeItem('pi_token');
       localStorage.removeItem('pi_user');
     } finally {
-      setIsLoading(false);
+      console.log('Real auth finally block - setting isLoading to false');
+      // Ensure isLoading is always set to false
+      setTimeout(() => {
+        console.log('Setting isLoading to false (timeout)');
+        setIsLoading(false);
+      }, 100);
     }
+    
+    console.log('=== AUTHENTICATION END ===');
   };
 
   const createPayment = (paymentData: PaymentData, callbacks: PaymentCallbacks) => {

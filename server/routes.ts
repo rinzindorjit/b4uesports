@@ -35,6 +35,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Pi Network Authentication
   app.post('/api/auth/pi', async (req, res) => {
     try {
+      // Check if this is a mock request (for Pi Browser development)
+      if (req.body.isMockAuth) {
+        console.log('Using mock authentication for Pi Browser development');
+        
+        // Create mock user data
+        const mockUser = {
+          id: 'mock-user-' + Date.now(),
+          piUID: 'mock-pi-uid-' + Date.now(),
+          username: 'pi_user_' + Math.floor(Math.random() * 10000),
+          email: 'piuser@example.com',
+          phone: '+1234567890',
+          country: 'US',
+          language: 'en',
+          walletAddress: 'GAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+          gameAccounts: {
+            pubg: { ign: 'PiPlayer', uid: 'PID123456789' },
+            mlbb: { userId: 'MLBB987654321', zoneId: 'ZONE1234' }
+          },
+          profileImageUrl: null,
+          isProfileVerified: true,
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        // Generate a mock JWT token
+        const mockToken = 'mock-jwt-token-' + Date.now();
+
+        console.log('Mock authentication successful for user:', mockUser.username);
+        
+        // Add a small delay to simulate network request
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        return res.status(200).json({
+          user: mockUser,
+          token: mockToken
+        });
+      }
+      
       const { accessToken } = req.body;
       if (!accessToken) {
         return res.status(400).json({ message: 'Access token required' });

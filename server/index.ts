@@ -1,8 +1,14 @@
 import express, { type Request, Response, NextFunction } from "express";
 import multer from "multer";
 import path from "path";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+
+// Fix for __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
