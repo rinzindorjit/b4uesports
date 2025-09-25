@@ -77,7 +77,12 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     
     // Initialize Pi SDK only if needed
     if (shouldInitPiSDK) {
-      piSDK.init(sandboxMode);
+      // Check if Pi SDK is available before initializing
+      if (typeof window !== 'undefined' && window.Pi) {
+        piSDK.init(sandboxMode);
+      } else {
+        console.warn('Pi SDK not available for initialization');
+      }
     }
 
     // Check for existing session
@@ -99,15 +104,17 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     
     // Check if we should use mock authentication
     const useMockAuth = shouldUseMockAuth();
+    const isPiSDKAvailable = typeof window !== 'undefined' && window.Pi;
     
     console.log('Authentication environment check:', {
       useMockAuth,
+      isPiSDKAvailable,
       location: window.location,
       userAgent: window.navigator.userAgent
     });
     
-    // Use mock authentication for non-production environments
-    if (useMockAuth) {
+    // Use mock authentication for non-production environments or when Pi SDK is not available
+    if (useMockAuth || !isPiSDKAvailable) {
       console.log('Using mock authentication flow');
       // In mock environments, we'll use a mock authentication flow
       setIsLoading(true);
@@ -157,7 +164,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       return;
     }
     
-    // For production mode, use real Pi Network authentication
+    // For production mode with available Pi SDK, use real Pi Network authentication
     console.log('Using real Pi Network authentication');
     setIsLoading(true);
     try {

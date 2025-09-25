@@ -40,7 +40,7 @@ export function getAuthMode() {
 
 export function shouldUseMockAuth(): boolean {
   const mode = getAuthMode();
-  return mode !== 'production';
+  return mode !== 'production' && mode !== 'pi-browser';
 }
 
 export function shouldInitializePiSDK(): boolean {
@@ -50,6 +50,6 @@ export function shouldInitializePiSDK(): boolean {
 
 export function getPiSDKSandboxMode(): boolean {
   const mode = getAuthMode();
-  // Use sandbox mode for all non-production environments
+  // Use sandbox mode for all non-production environments except Pi Browser
   return mode !== 'production';
 }

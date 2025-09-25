@@ -15,6 +15,7 @@ import UserAgreement from "@/pages/user-agreement";
 import AboutUs from "@/pages/about-us";
 import OurHistory from "@/pages/our-history";
 import AuthTest from "@/pages/auth-test";
+import SDKTest from "@/pages/sdk-test";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/about-us" component={AboutUs} />
       <Route path="/our-history" component={OurHistory} />
       <Route path="/auth-test" component={AuthTest} />
+      <Route path="/sdk-test" component={SDKTest} />
       <Route component={NotFound} />
     </Switch>
   );

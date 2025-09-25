@@ -68,6 +68,7 @@ export default function Landing() {
       console.log('Window location:', window.location);
       console.log('User agent:', window.navigator.userAgent);
       console.log('Should use mock auth:', shouldUseMockAuth());
+      console.log('Pi SDK available:', typeof window !== 'undefined' && window.Pi);
       
       // This will now use mock authentication in Pi Browser/preview/sandbox mode
       await authenticate();

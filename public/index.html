@@ -17,8 +17,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Pi SDK -->
-    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <!-- Pi SDK - Only loaded when needed -->
+    <script>
+      // Check if we're in an environment that needs the Pi SDK
+      const isVercel = window.location.hostname.includes('vercel.app');
+      const isPiBrowser = navigator.userAgent.includes('PiBrowser') || navigator.userAgent.includes('Pi Network');
+      
+      // Only load Pi SDK for Pi Browser or production environments
+      if (isPiBrowser || !isVercel) {
+        const script = document.createElement('script');
+        script.src = 'https://sdk.minepi.com/pi-sdk.js';
+        script.onload = function() {
+          console.log('Pi SDK loaded successfully');
+        };
+        script.onerror = function() {
+          console.warn('Failed to load Pi SDK');
+        };
+        document.head.appendChild(script);
+      } else {
+        console.log('Skipping Pi SDK load for Vercel deployment - using mock authentication');
+      }
+    </script>
     <script type="module" crossorigin src="/assets/index-B_C2pK8W.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-9Bq5l9mu.css">
   </head>
