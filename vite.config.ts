@@ -54,4 +54,6 @@ export default defineConfig({
       }
     }
   },
+  // Base public path for Netlify deployment
+  base: './',
 });

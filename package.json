@@ -7,9 +7,11 @@
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
     "preview": "node preview.js",
-    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && npm run build-netlify-functions",
     "vercel-build": "vite build",
     "render-build": "vite build",
+    "netlify-build": "vite build",
+    "build-netlify-functions": "esbuild netlify/functions/api.js --bundle --platform=node --outdir=dist/functions --external:./api/*",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
