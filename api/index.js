@@ -5,50 +5,9 @@ import userHandler from './pi/user.js';
 import webhookHandler from './pi/webhook.js';
 import metadataHandler from './metadata.js';
 
+// Remove the mock handleAuthPi function and use the imported authHandler instead
+
 // Mock handlers for additional routes
-async function handleAuthPi(request, response) {
-  // In Vercel, the request body is already parsed as JSON
-  const body = request.body || {};
-  
-  const { accessToken } = body;
-  if (!accessToken) {
-    return response.status(400).json({ message: 'Access token required' });
-  }
-
-  // For mock purposes, we'll return a mock user
-  const piUser = {
-    uid: 'mock-user-uid-' + Date.now(),
-    username: 'mock_user',
-    roles: ['user']
-  };
-
-  // For mock purposes, we'll return a mock user
-  const mockUser = {
-    id: 'user-' + piUser.uid,
-    piUID: piUser.uid,
-    username: piUser.username,
-    email: '',
-    phone: '',
-    country: 'US',
-    language: 'en',
-    walletAddress: '',
-    gameAccounts: {},
-    profileImageUrl: null,
-    isProfileVerified: false,
-    isActive: true,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-
-  // Generate a mock JWT token
-  const mockToken = 'mock-jwt-token-' + Date.now();
-
-  response.status(200).json({
-    user: mockUser,
-    token: mockToken
-  });
-}
-
 async function handleProfileUpdate(request, response) {
   // In Vercel, the request body is already parsed as JSON
   const userData = request.body || {};
@@ -275,8 +234,8 @@ export default async function handler(request, response) {
       console.log('Routing to metadata handler');
       return await metadataHandler(request, response);
     } else if (path === '/api/auth/pi') {
-      console.log('Routing to auth/pi handler');
-      return await handleAuthPi(request, response);
+      console.log('Routing to auth/pi handler - using Pi auth handler');
+      return await authHandler(request, response);
     } else if (path === '/api/profile') {
       console.log('Routing to profile handler');
       return await handleProfileUpdate(request, response);
