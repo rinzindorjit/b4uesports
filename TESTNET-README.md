@@ -25,7 +25,7 @@ This application is deployed to Netlify at: https://b4uesportspi.netlify.app
 
 To test in the Pi Browser sandbox:
 1. Open the Pi Browser app
-2. Navigate to https://sandbox.minepi.com/mobile-app-ui/app/b4u-esports-e763af8471870a10
+2. Navigate to your app's sandbox URL (format: `https://sandbox.minepi.com/mobile-app-ui/app/YOUR_APP_ID`)
 3. The application should load properly without CORS errors
 
 ## Troubleshooting
@@ -35,6 +35,7 @@ If you encounter connection issues:
 2. Check that Content Security Policy headers allow loading from sandbox.minepi.com
 3. Verify that the validation-key.txt file is accessible at the root of the domain
 4. Confirm that mock authentication is being used for testnet development
+5. Make sure your app is properly registered in the Pi Network developer console with the correct domain
 
 ## Development Notes
 
