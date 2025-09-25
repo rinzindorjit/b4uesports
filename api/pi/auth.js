@@ -34,6 +34,42 @@ export default async function handler(request, response) {
     const { accessToken } = body;
     console.log('Access token:', accessToken);
     
+    // Check if this is a mock request (for Pi Browser development)
+    if (body.isMockAuth) {
+      console.log('Using mock authentication for Pi Browser development');
+      
+      // Create mock user data
+      const mockUser = {
+        id: 'mock-user-' + Date.now(),
+        piUID: 'mock-pi-uid-' + Date.now(),
+        username: 'pi_user_' + Math.floor(Math.random() * 10000),
+        email: 'piuser@example.com',
+        phone: '+1234567890',
+        country: 'US',
+        language: 'en',
+        walletAddress: 'GAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+        gameAccounts: {
+          pubg: { ign: 'PiPlayer', uid: 'PID123456789' },
+          mlbb: { userId: 'MLBB987654321', zoneId: 'ZONE1234' }
+        },
+        profileImageUrl: null,
+        isProfileVerified: true,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      // Generate a mock JWT token
+      const mockToken = 'mock-jwt-token-' + Date.now();
+
+      console.log('Mock authentication successful for user:', mockUser.username);
+      
+      return response.status(200).json({
+        user: mockUser,
+        token: mockToken
+      });
+    }
+    
     if (!accessToken) {
       console.log('Missing access token');
       return response.status(400).json({ message: 'Access token required' });

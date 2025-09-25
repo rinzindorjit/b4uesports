@@ -62,11 +62,13 @@ export default function Landing() {
 
   const handlePiLogin = async () => {
     try {
-      // For development and production, use actual Pi Network authentication
-      // Only use simulated authentication for preview mode
+      console.log('Starting Pi Network authentication');
+      // This will now use mock authentication in Pi Browser/preview/sandbox mode
       await authenticate();
+      console.log('Pi Network authentication completed');
     } catch (error) {
       console.error('Login failed:', error);
+      alert(`Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -76,7 +78,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-background text-foreground" data-testid="landing-page">
       <ParticleBackground />
-      <Navigation isTestnet={import.meta.env.DEV} />
+      <Navigation isTestnet={process.env.NODE_ENV !== 'production'} />
       
       {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8" data-testid="hero-section">
