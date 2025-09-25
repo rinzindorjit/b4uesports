@@ -4,11 +4,8 @@
 import apiHandler from '../../api/index.js';
 
 // Netlify Function handler
+// Netlify Function handler
 export async function handler(event, context) {
-  console.log('=== NETLIFY FUNCTION DEBUG ===');
-  console.log('Event received:', JSON.stringify(event, null, 2));
-  console.log('Context received:', JSON.stringify(context, null, 2));
-  
   // Create a mock request object that matches what the API handler expects
   const request = {
     method: event.httpMethod,
@@ -19,9 +16,6 @@ export async function handler(event, context) {
     },
     body: event.body ? JSON.parse(event.body) : null
   };
-  
-  console.log('Created request object:', JSON.stringify(request, null, 2));
-  console.log('=== END NETLIFY FUNCTION DEBUG ===');
 
   // Create a mock response object
   let responseSent = false;

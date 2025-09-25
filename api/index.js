@@ -207,14 +207,12 @@ export default async function handler(request, response) {
     const url = new URL(request.url, `http://${request.headers.host}`);
     const path = url.pathname;
     
-    console.log('=== DEBUG API REQUEST ===');
-    console.log('Full request URL:', request.url);
-    console.log('Parsed path:', path);
-    console.log('Request method:', request.method);
-    console.log('Request headers:', request.headers);
-    console.log('Request body:', request.body);
-    console.log('Host header:', request.headers.host);
-    console.log('=== END DEBUG ===');
+    console.log('API request received:', { 
+      method: request.method, 
+      path, 
+      url: request.url, 
+      headers: request.headers
+    });
     
     // Log request body for debugging
     console.log('Request body:', request.body);
