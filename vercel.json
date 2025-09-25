@@ -8,17 +8,6 @@
     {
       "src": "api/test.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "server/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "dist/**",
-          "server/**",
-          "shared/**"
-        ]
-      }
     }
   ],
   "routes": [
@@ -44,11 +33,11 @@
     },
     {
       "src": "/api/(.*)",
-      "dest": "/server/index.ts"
+      "dest": "/api/index.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/server/index.ts"
+      "dest": "/api/index.js"
     }
   ]
 }
