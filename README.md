@@ -67,10 +67,6 @@ EMAILJS_ADMIN_TEMPLATE_ID=your_admin_template_id
 EMAILJS_PUBLIC_KEY=your_public_key
 ADMIN_EMAIL=admin@b4uesports.com
 
-# Pi Network (Get from Pi Developer Portal)
-PI_API_KEY=your_pi_api_key
-PI_SECRET=your_pi_secret
-
 # Database (PostgreSQL connection string)
 DATABASE_URL=your_database_url
 
@@ -80,6 +76,8 @@ JWT_SECRET=your_jwt_secret
 # Node Environment
 NODE_ENV=development
 ```
+
+Note: For Vercel deployments, Pi Network integration works in Testnet mode using mock authentication to avoid CORS issues. PI_API_KEY and PI_SECRET are not required in Testnet mode.
 
 ### Installation
 
@@ -146,21 +144,7 @@ This command will:
 
 ## Deployment
 
-This application can be deployed to multiple platforms:
-
-### Vercel Deployment
-
-For Vercel deployment, follow the instructions in [DEPLOYMENT.md](DEPLOYMENT.md#vercel-deployment).
-
-### Render Deployment
-
-For Render deployment, follow the instructions in [DEPLOYMENT.md](DEPLOYMENT.md#render-deployment).
-
-The application includes a `render.yaml` file that defines the services needed for Render deployment.
-
-### Environment Variables
-
-Make sure to set all required environment variables as specified in [DEPLOYMENT.md](DEPLOYMENT.md#environment-variables).
+This application is configured for deployment on Vercel.
 
 ### Vercel Deployment
 
@@ -171,8 +155,30 @@ This application is configured for deployment on Vercel. The deployment process 
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "buildCommand": "vite build",
-  "outputDirectory": "dist"
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "dist",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api" }
+  ]
 }
 ```
 
@@ -182,13 +188,29 @@ This application is configured for deployment on Vercel. The deployment process 
 2. Vercel automatically builds and deploys the application
 3. The build output is served from the `dist/` directory
 
-### Important Notes for Deployment
+### Environment Variables for Vercel
+
+Make sure to set all required environment variables in your Vercel project settings:
+
+```
+EMAILJS_SERVICE_ID=your_service_id
+EMAILJS_TEMPLATE_ID=your_template_id
+EMAILJS_ADMIN_TEMPLATE_ID=your_admin_template_id
+EMAILJS_PUBLIC_KEY=your_public_key
+ADMIN_EMAIL=admin@b4uesports.com
+DATABASE_URL=your_database_url
+JWT_SECRET=your_jwt_secret
+```
+
+### Important Notes for Vercel Deployment
 
 1. **Pi SDK Loading**: The Pi SDK is conditionally loaded to prevent CORS issues:
    - Loaded for Pi Browser and localhost development
    - Not loaded for Vercel deployments (uses mock authentication instead)
 
-2. **Environment Variables**: Make sure all required environment variables are set in Vercel project settings.
+2. **Environment Detection**: The application automatically detects the environment and adjusts its behavior accordingly.
+
+3. **Testnet Mode**: For Vercel deployments, Pi Network integration works in Testnet mode using mock authentication to avoid CORS issues.
 
 ## Authentication Flow
 

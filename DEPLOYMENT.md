@@ -1,19 +1,19 @@
 # Deployment Guide
 
-This document explains how to deploy the B4U Esports application to different environments.
+This document explains how to deploy the B4U Esports application to Vercel.
 
 ## Prerequisites
 
 Before deploying, ensure you have:
 
 1. A GitHub account
-2. A Vercel account (for Vercel deployment) OR a Render account (for Render deployment)
+2. A Vercel account
 3. Required environment variables (see below)
 4. Pi Network Developer Portal account (for Pi integration)
 
 ## Environment Variables
 
-You need to set the following environment variables in your deployment environment:
+You need to set the following environment variables in your Vercel project settings:
 
 ### Required Variables
 
@@ -25,10 +25,6 @@ EMAILJS_ADMIN_TEMPLATE_ID=your_admin_template_id
 EMAILJS_PUBLIC_KEY=your_public_key
 ADMIN_EMAIL=admin@b4uesports.com
 
-# Pi Network (Get from Pi Developer Portal)
-PI_API_KEY=your_pi_api_key
-PI_SECRET=your_pi_secret
-
 # Database (PostgreSQL connection string)
 DATABASE_URL=your_database_url
 
@@ -36,10 +32,13 @@ DATABASE_URL=your_database_url
 JWT_SECRET=your_jwt_secret
 ```
 
-### Development vs Production
+### Vercel Testnet Mode (Recommended)
 
-For development environments, you can use test keys from Pi Network's sandbox environment.
-For production, you need real keys from Pi Network's production environment.
+For Vercel deployments, Pi Network integration works in Testnet mode using mock authentication to avoid CORS issues:
+
+- PI_API_KEY and PI_SECRET_KEY are not required in Testnet mode
+- Pi SDK login works through the browser without these keys
+- Authentication is simulated for testing purposes
 
 ## Vercel Deployment
 
@@ -65,54 +64,6 @@ npm install -g vercel
 
 # Deploy
 vercel --prod
-```
-
-## Render Deployment
-
-### Automatic Deployment
-
-1. Connect your GitHub repository to Render
-2. Select the repository when prompted
-3. Render will automatically detect the `render.yaml` file
-4. Configure the environment variables in the Render dashboard
-5. Deploy!
-
-### Manual Deployment
-
-You can also deploy manually using the Render CLI:
-
-```bash
-# Install Render CLI
-npm install -g render-cli
-
-# Deploy
-render deploy
-```
-
-### Environment Variables for Render
-
-Set the following environment variables in your Render dashboard:
-
-```
-# EmailJS Configuration
-EMAILJS_SERVICE_ID=your_service_id
-EMAILJS_TEMPLATE_ID=your_template_id
-EMAILJS_ADMIN_TEMPLATE_ID=your_admin_template_id
-EMAILJS_PUBLIC_KEY=your_public_key
-ADMIN_EMAIL=admin@b4uesports.com
-
-# Pi Network
-PI_SECRET_KEY=your_pi_secret_key
-PI_SERVER_API_KEY=your_pi_server_api_key
-
-# Database
-DATABASE_URL=your_database_url
-
-# JWT
-JWT_SECRET=your_jwt_secret
-
-# Node Environment
-NODE_ENV=production
 ```
 
 ## Environment-Specific Deployment
@@ -160,7 +111,7 @@ Set up error monitoring for your deployment:
 
 Monitor application performance:
 
-1. Use deployment platform's analytics
+1. Use Vercel's analytics
 2. Monitor database performance
 3. Track API response times
 
@@ -182,7 +133,7 @@ npm update
 
 If the build fails:
 
-1. Check the build logs in your deployment platform
+1. Check the build logs in Vercel dashboard
 2. Verify all dependencies are correctly installed
 3. Ensure environment variables are set
 4. Check for TypeScript/JavaScript errors
@@ -209,18 +160,18 @@ If there are database connection problems:
 
 If Pi Network integration is not working:
 
-1. Verify PI_API_KEY and PI_SECRET are correctly set
-2. Check that the application is using the correct environment (sandbox vs production)
-3. Verify that Pi SDK is properly loaded (or mock auth is working)
-4. Check Pi Network Developer Portal for any issues with your app
+1. Verify that the application is using the correct environment (sandbox vs production)
+2. Check that Pi SDK is properly loaded (or mock auth is working)
+3. Verify environment detection is working correctly for Vercel domains
 
 ## Rollback Procedure
 
 If you need to rollback a deployment:
 
-1. In your deployment platform, find the previous working deployment
-2. Revert to that version
-3. Monitor the application to ensure it's working correctly
+1. In Vercel dashboard, go to your project deployments
+2. Find the previous working deployment
+3. Click "Rollback to this deployment"
+4. Monitor the application to ensure it's working correctly
 
 ## Scaling Considerations
 
