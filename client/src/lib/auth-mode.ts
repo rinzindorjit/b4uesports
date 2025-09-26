@@ -50,20 +50,21 @@ export function getAuthMode() {
 export function shouldUseMockAuth(): boolean {
   const mode = getAuthMode();
   console.log('shouldUseMockAuth check, mode:', mode);
-  // Use mock auth for testnet environments
-  return mode === 'netlify-testnet' || mode === 'vercel-sandbox' || mode === 'development-mock' || mode === 'pi-browser' || mode === 'localhost-development';
+  // Use mock auth only for development environments
+  // For production and testnet environments, use real authentication when possible
+  return mode === 'development-mock';
 }
 
 export function shouldInitializePiSDK(): boolean {
   const mode = getAuthMode();
   console.log('shouldInitializePiSDK check, mode:', mode);
-  // Initialize Pi SDK for all environments since this is a testnet application
-  return true;
+  // Initialize Pi SDK for all environments except development mock
+  return mode !== 'development-mock';
 }
 
 export function getPiSDKSandboxMode(): boolean {
   const mode = getAuthMode();
   console.log('getPiSDKSandboxMode check, mode:', mode);
-  // Always use sandbox mode for testnet development
-  return true;
+  // Use sandbox mode for testnet environments, production mode for production
+  return mode !== 'production';
 }

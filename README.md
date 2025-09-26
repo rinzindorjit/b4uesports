@@ -1,61 +1,68 @@
-# B4U Esports - Pi Network Gaming Marketplace
+# B4U Esports - Pi Network Integrated Marketplace & User Portal
 
-This is the official repository for B4U Esports, a gaming marketplace that allows users to purchase PUBG UC and Mobile Legends Diamonds using Pi coins.
+B4U Esports is a comprehensive e-commerce platform for gaming packages, integrated with Pi Network for seamless Pi currency transactions. The platform supports multiple games including PUBG Mobile and Mobile Legends: Bang Bang.
 
-## Table of Contents
+## Features
 
-- [Project Overview](#project-overview)
-- [Technology Stack](#technology-stack)
-- [Project Structure](#project-structure)
-- [Environment Setup](#environment-setup)
-- [Development](#development)
-- [Building for Production](#building-for-production)
-- [Deployment](#deployment)
-- [Authentication Flow](#authentication-flow)
-- [API Endpoints](#api-endpoints)
-- [Recent Improvements](#recent-improvements)
+1. **Multi-Game Support**: PUBG Mobile and Mobile Legends packages
+2. **Pi Network Integration**: Native Pi currency payments
+3. **Real-time Pricing**: Live Pi/USDT exchange rates from CoinGecko
+4. **User Profiles**: Account management with game account linking
+5. **Transaction History**: Complete purchase tracking
+6. **Admin Dashboard**: Package management and analytics
+7. **Email Notifications**: Purchase confirmations and admin alerts
+8. **Responsive Design**: Mobile-friendly interface
 
-## Project Overview
+## Pi Network Integration
 
-B4U Esports is a Pi Network integrated marketplace that allows users to purchase in-game currency for popular mobile games using Pi coins. The platform provides a secure and seamless payment experience integrated with Pi Network's payment system.
+### Authentication
 
-## Technology Stack
+The application supports two types of authentication:
 
-- **Frontend**: React with TypeScript, Vite, Tailwind CSS
-- **Backend**: Node.js with Express
-- **Database**: PostgreSQL (via Drizzle ORM)
-- **Deployment**: Vercel
-- **State Management**: React Context API
-- **Data Fetching**: TanStack Query (React Query)
-- **UI Components**: Radix UI, Shadcn UI
+1. **Real Pi Network Authentication** - For production and Pi Browser environments
+2. **Mock Authentication** - For development, testing, and Vercel deployments
 
-## Project Structure
+### Configuration
 
-```
-B4U Esports/
-├── client/                 # Frontend React application
-│   ├── src/
-│   │   ├── components/     # Reusable UI components
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── lib/            # Utility functions and SDK wrappers
-│   │   ├── pages/          # Page components
-│   │   ├── types/          # TypeScript type definitions
-│   │   └── App.tsx         # Main application component
-│   └── index.html          # Frontend entry point
-├── server/                 # Backend Express server
-│   ├── api/                # API route handlers
-│   ├── db/                 # Database schema and migrations
-│   └── index.ts            # Server entry point
-├── public/                 # Static assets
-├── dist/                   # Build output directory
-├── .env                    # Environment variables
-├── package.json            # Project dependencies and scripts
-└── vercel.json             # Vercel deployment configuration
+To configure Pi Network integration, you need to set the following environment variables in your `.env` file:
+
+```env
+# Pi Network Configuration
+PI_SECRET_KEY=your_actual_pi_secret_key_here
+PI_SERVER_API_KEY=your_actual_pi_server_api_key_here
+PI_APP_ID=your_actual_app_id_here
 ```
 
-## Environment Setup
+To obtain these credentials:
+1. Register your app at the [Pi Network Developer Portal](https://minepi.com)
+2. Create a new app and obtain your APP_ID
+3. Generate your SECRET_KEY and SERVER_API_KEY from the developer console
 
-### Required Environment Variables
+### Authentication Flow
+
+#### Pi Browser/Localhost
+- Uses real Pi Network authentication
+- Requests permissions for payments, username, and wallet address
+- Verifies access token with Pi Network backend
+
+#### Vercel Deployments
+- Uses mock authentication to avoid CORS issues
+- Generates mock user data and tokens for testing
+
+#### Production
+- Uses real Pi Network authentication
+- Requests permissions for payments, username, and wallet address
+- Verifies access token with Pi Network backend
+
+## Building for Production
+
+To build the application for production:
+
+```bash
+npm run build
+```
+
+## Environment Variables
 
 Create a `.env` file in the root directory with the following variables:
 
@@ -67,249 +74,67 @@ EMAILJS_ADMIN_TEMPLATE_ID=your_admin_template_id
 EMAILJS_PUBLIC_KEY=your_public_key
 ADMIN_EMAIL=admin@b4uesports.com
 
-# Database (PostgreSQL connection string)
+# Pi Network Configuration
+PI_SECRET_KEY=your_actual_pi_secret_key_here
+PI_SERVER_API_KEY=your_actual_pi_server_api_key_here
+PI_APP_ID=your_actual_app_id_here
+
+# Database
 DATABASE_URL=your_database_url
 
-# JWT (For token generation)
+# JWT
 JWT_SECRET=your_jwt_secret
 
-# Node Environment
+# CoinGecko API
+COINGECKO_API_KEY=your_coingecko_api_key
+
+# Other
 NODE_ENV=development
 ```
 
-Note: For Vercel deployments, Pi Network integration works in Testnet mode using mock authentication to avoid CORS issues. PI_API_KEY and PI_SECRET are not required in Testnet mode.
+## Development
 
-### Installation
+### Local Development
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/rinzindorjit/b4uesports.git
-   cd b4uesports
-   ```
-
-2. Install dependencies:
+1. Install dependencies:
    ```bash
    npm install
    ```
 
-3. Set up environment variables (copy `.env.example` to `.env` and fill in values)
+2. Start the development server:
+   ```bash
+   npm run dev
+   ```
 
-## Development
+3. Open [http://localhost:3005](http://localhost:3005) in your browser.
 
-### Running the Development Server
+### Testnet Mode
 
-```bash
-# Start the development server
-npm run dev
-```
-
-This will start both the frontend and backend servers. The frontend will be available at `http://localhost:3000` and the backend API at `http://localhost:3001`.
-
-### Development Environments
-
-The application supports different environments:
-
-1. **Localhost Development**: 
-   - URL: `http://localhost:3000`
-   - Pi SDK: Loaded in sandbox mode
-   - Authentication: Mock authentication available
-
-2. **Pi Browser Development**:
-   - URL: Any URL opened in Pi Browser
-   - Pi SDK: Loaded in sandbox mode
-   - Authentication: Real Pi Network authentication
-
-3. **Vercel Preview Deployments**:
-   - URL: `*.vercel.app`
-   - Pi SDK: Not loaded (CORS issues)
-   - Authentication: Mock authentication
-
-4. **Production**:
-   - URL: Production domain
-   - Pi SDK: Loaded in production mode
-   - Authentication: Real Pi Network authentication
-
-## Building for Production
-
-To build the application for production:
-
-```bash
-npm run build
-```
-
-This command will:
-1. Build the frontend using Vite
-2. Bundle the backend server using esbuild
-3. Output everything to the `dist/` directory
+For Pi Network testnet development, the application is configured to:
+1. Always load the Pi SDK from the sandbox domain (`https://sandbox.minepi.com/pi-sdk.js`)
+2. Initialize the Pi SDK in sandbox mode
+3. Use mock authentication for testing without PI_SECRET
+4. Handle CORS properly for the Pi Network sandbox environment
 
 ## Deployment
 
-This application is configured for deployment on Vercel.
+### Vercel
 
-### Vercel Deployment
+The application is configured for Vercel deployment with proper CORS handling.
 
-This application is configured for deployment on Vercel. The deployment process is automated through GitHub integration.
+### Netlify
 
-**Vercel Configuration** (`vercel.json`):
-```json
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
-  "buildCommand": "npm run vercel-build",
-  "outputDirectory": "dist",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
-    }
-  ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api" }
-  ]
-}
-```
-
-### Deployment Process
-
-1. Push changes to the `main` branch
-2. Vercel automatically builds and deploys the application
-3. The build output is served from the `dist/` directory
-
-### Environment Variables for Vercel
-
-Make sure to set all required environment variables in your Vercel project settings:
-
-```
-EMAILJS_SERVICE_ID=your_service_id
-EMAILJS_TEMPLATE_ID=your_template_id
-EMAILJS_ADMIN_TEMPLATE_ID=your_admin_template_id
-EMAILJS_PUBLIC_KEY=your_public_key
-ADMIN_EMAIL=admin@b4uesports.com
-DATABASE_URL=your_database_url
-JWT_SECRET=your_jwt_secret
-```
-
-### Important Notes for Vercel Deployment
-
-1. **Pi SDK Loading**: The Pi SDK is conditionally loaded to prevent CORS issues:
-   - Loaded for Pi Browser and localhost development
-   - Not loaded for Vercel deployments (uses mock authentication instead)
-
-2. **Environment Detection**: The application automatically detects the environment and adjusts its behavior accordingly.
-
-3. **Testnet Mode**: For Vercel deployments, Pi Network integration works in Testnet mode using mock authentication to avoid CORS issues.
-
-## Authentication Flow
-
-### Pi Network Authentication
-
-The authentication flow varies by environment:
-
-1. **Pi Browser/Localhost**:
-   - Uses real Pi Network authentication
-   - Requests permissions for payments, username, and wallet address
-   - Verifies access token with Pi Network backend
-
-2. **Vercel Deployments**:
-   - Uses mock authentication
-   - Generates mock user data and tokens
-   - Simulates successful authentication without Pi Network
-
-### Mock Authentication
-
-For development and testing environments where Pi Network is not available:
-- Generates mock user data
-- Creates mock JWT tokens
-- Simulates successful authentication flow
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/pi` - Authenticate with Pi Network or mock authentication
-
-### Packages
-- `GET /api/packages` - Get available top-up packages
-- `POST /api/packages` - Create new package (admin only)
-- `PUT /api/packages/:id` - Update package (admin only)
-- `DELETE /api/packages/:id` - Delete package (admin only)
-
-### Transactions
-- `GET /api/transactions` - Get user transaction history
-- `GET /api/transactions/admin` - Get all transactions (admin only)
-- `POST /api/transactions` - Create new transaction
-
-### Payments
-- `POST /api/payment/approve` - Approve Pi payment
-- `POST /api/payment/complete` - Complete Pi payment
-
-### Users
-- `GET /api/users/profile` - Get user profile
-- `PUT /api/users/profile` - Update user profile
-- `POST /api/users/game-account` - Add/update game account
-
-### Admin
-- `POST /api/admin/transactions/:id/complete` - Manually complete transaction
-- `GET /api/admin/stats` - Get platform statistics
-
-## Recent Improvements
-
-### October 2025
-1. **Fixed Inconsistent Pi Price Display**: Resolved issue where the live Pi price was showing different values between localhost and deployed domain by:
-   - Using a fixed fallback price instead of random values when the CoinGecko API is unavailable
-   - Adjusting React Query cache configuration to ensure proper data refresh
-   - Ensuring consistent data types between API responses and client expectations
-
-2. **Enhanced Cache Management**: Removed global `staleTime: Infinity` setting in React Query client to allow individual queries to manage their own cache behavior properly.
-
-### September 2025
-1. **Fixed CORS Issues**: Implemented conditional Pi SDK loading to prevent CORS errors on Vercel deployments
-2. **Enhanced Authentication**: Improved mock authentication flow for development environments
-3. **Environment Detection**: Better detection of different environments (Pi Browser, localhost, Vercel)
-4. **Loading State Management**: Fixed issues with authentication loading states getting stuck
-5. **Error Handling**: Improved error handling and user feedback for authentication failures
-
-### August 2025
-1. **UI/UX Improvements**: Enhanced dashboard and package selection interfaces
-2. **Performance Optimizations**: Improved loading times and reduced bundle size
-3. **Security Updates**: Enhanced JWT token handling and validation
+For Netlify deployment, use the testnet configuration.
 
 ## Troubleshooting
 
-### Common Issues
+If you encounter connection issues:
+1. Ensure the Pi SDK is properly loaded from the sandbox domain
+2. Check that Content Security Policy headers allow loading from sandbox.minepi.com
+3. Verify that the validation-key.txt file is accessible at the root of the domain
+4. Confirm that mock authentication is being used for testnet development
+5. Make sure your app is properly registered in the Pi Network developer console with the correct domain
 
-1. **Authentication Stuck on "Connecting..."**:
-   - Check browser console for errors
-   - Verify environment detection is working correctly
-   - Ensure Pi SDK is properly loaded (or mock auth is triggered)
+## License
 
-2. **CORS Errors**:
-   - Verify Pi SDK is not being loaded on Vercel deployments
-   - Check that conditional loading is working correctly
-
-3. **Environment Variables Not Loading**:
-   - Verify `.env` file is in the root directory
-   - Check that variables are correctly named
-   - For Vercel deployments, ensure variables are set in project settings
-
-### Testing Different Environments
-
-1. **Localhost**: Run `npm run dev` and open `http://localhost:3000`
-2. **Pi Browser**: Open your Vercel deployment URL in Pi Browser
-3. **Mock Authentication**: Available on Vercel deployments and can be tested in any browser
-
-## Support
-
-For issues and feature requests, please create a GitHub issue or contact the development team.
+This project is licensed under the MIT License.

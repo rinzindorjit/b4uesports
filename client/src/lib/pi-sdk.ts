@@ -7,7 +7,7 @@ declare global {
       authenticate: (
         scopes: string[], 
         onIncompletePaymentFound?: (payment: any) => void
-      ) => Promise<{ accessToken: string; user: { uid: string; username: string } }>;
+      ) => Promise<{ accessToken: string; user: { uid: string; username: string } } | null>;
       createPayment: (
         paymentData: {
           amount: number;
@@ -39,7 +39,6 @@ export class PiSDK {
   }
 
   init(sandbox: boolean = true): void {
-    // Always initialize Pi SDK for testnet/sandbox environments
     // Check if Pi SDK is available
     if (typeof window === 'undefined' || !window.Pi) {
       console.warn('Pi SDK not available - running in mock mode');
@@ -52,10 +51,10 @@ export class PiSDK {
     try {
       window.Pi.init({ 
         version: "2.0", 
-        sandbox: true // Always use sandbox for this webapp as it's for testnet purpose only
+        sandbox: sandbox // Use the provided sandbox mode
       });
       this.initialized = true;
-      console.log('Pi SDK initialized successfully with sandbox mode');
+      console.log('Pi SDK initialized successfully with sandbox mode:', sandbox);
     } catch (error) {
       console.error('Pi SDK initialization failed:', error);
       this.initialized = true; // Still mark as initialized to allow mock operations
@@ -71,7 +70,8 @@ export class PiSDK {
     
     if (!this.initialized) {
       // Try to initialize if not already done
-      this.init(true); // Always use sandbox mode
+      const sandboxMode = getPiSDKSandboxMode();
+      this.init(sandboxMode); // Use the proper sandbox mode
       if (!this.initialized) {
         throw new Error('Pi SDK not initialized');
       }

@@ -70,10 +70,11 @@ function isPiBrowser() {
 function isSandboxEnvironment() {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    // Always treat as sandbox for this application since it's a testnet app
-    return true; // Always return true for this testnet application
+    // Treat as sandbox for testnet environments
+    return hostname.includes('netlify.app') || hostname.includes('vercel.app') || 
+           (hostname === 'localhost' && window.location.port === '3005');
   }
-  return true;
+  return false;
 }
 
 export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
@@ -84,7 +85,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   useEffect(() => {
     // Initialize Pi SDK
-    const useMockAuth = true; // Always use mock auth for this testnet application
+    const useMockAuth = shouldUseMockAuth();
     const shouldInitPiSDK = shouldInitializePiSDK();
     const sandboxMode = getPiSDKSandboxMode();
     
@@ -128,8 +129,8 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       userAgent: window.navigator.userAgent
     });
     
-    // Use mock authentication for non-production environments or when Pi SDK is not available
-    if (useMockAuth || !isPiSDKAvailable) {
+    // Use mock authentication only for development mock environments
+    if (useMockAuth) {
       console.log('Using mock authentication flow');
       // In mock environments, we'll use a mock authentication flow
       setIsLoading(true);
@@ -264,9 +265,9 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     const isPreview = window.location.hostname === 'localhost' && window.location.port === '3005';
     const isPiBrowserEnv = isPiBrowser();
     const isNetlify = window.location.hostname.includes('netlify.app');
-    const isSandbox = window.location.hostname.includes('vercel.app');
+    const isSandbox = isSandboxEnvironment();
     
-    if (isPreview || isSandbox || isNetlify || isPiBrowserEnv) {
+    if (isPreview || isSandbox || isNetlify) {
       // Mock payment flow for preview mode, sandbox, or Pi Browser
       console.log('Mock payment initiated:', paymentData);
       

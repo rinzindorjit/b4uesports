@@ -4,15 +4,16 @@ const PI_API_BASE = 'https://api.minepi.com';
 // In sandbox mode, no API keys are required
 // For production mode, we would need PI_SERVER_API_KEY
 const SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
+const PI_APP_ID = process.env.PI_APP_ID;
 
-// Always run in mock mode for sandbox/testnet environments
-// Since we're using Pi Network testnet, we'll always use mock mode
-const IS_SANDBOX = true; // Always true for this testnet application
+// Only run in mock mode for sandbox environments when no API keys are provided
+// Since we're using Pi Network testnet, we'll use mock mode only when API keys are not set
+const IS_SANDBOX = !SERVER_API_KEY || !PI_APP_ID;
 
 if (IS_SANDBOX) {
-  console.log("Running in sandbox mode - no API keys required");
-} else if (!SERVER_API_KEY) {
-  console.warn("PI_SERVER_API_KEY environment variable not set - using mock mode");
+  console.log("Running in sandbox mode - no API keys provided, using mock mode");
+} else {
+  console.log("Running in production mode with Pi Network API keys");
 }
 
 export interface PiUser {
@@ -60,18 +61,22 @@ export interface PaymentDTO {
 
 export class PiNetworkService {
   private apiKey: string | null;
+  private appId: string | null;
   private isMockMode: boolean;
 
   constructor() {
     this.apiKey = SERVER_API_KEY || null;
-    // Always use mock mode for sandbox environments
-    this.isMockMode = IS_SANDBOX || !SERVER_API_KEY;
+    this.appId = PI_APP_ID || null;
+    // Use mock mode only when API keys are not provided
+    this.isMockMode = IS_SANDBOX || !SERVER_API_KEY || !PI_APP_ID;
     
     if (this.isMockMode) {
       console.log('PiNetworkService running in mock mode - no real API calls will be made');
       if (IS_SANDBOX) {
-        console.log('Sandbox mode: No API keys required for Pi Network operations');
+        console.log('Sandbox mode: No API keys provided for Pi Network operations');
       }
+    } else {
+      console.log('PiNetworkService running in production mode with real API keys');
     }
   }
 
@@ -89,6 +94,8 @@ export class PiNetworkService {
       const response = await axios.get(`${PI_API_BASE}/v2/me`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
       });
       return response.data;
