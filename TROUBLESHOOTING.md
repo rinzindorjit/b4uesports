@@ -41,9 +41,9 @@ curl -X GET https://sandbox.minepi.com/v2/payments \
 
 ### 2. Payment Creation Test
 ```bash
-curl -X POST https://b4uesports.vercel.app/api/pi/create-payment \
+curl -X POST https://b4uesports.vercel.app/api/pi?action=create-payment \
   -H "Content-Type: application/json" \
-  -d '{"paymentData":{"amount":1.0,"memo":"Test Payment","metadata":{"test":true}}}'
+  -d '{"amount":1.0,"memo":"Test Payment","metadata":{"test":true}}'
 ```
 
 ### 3. Diagnostic Test
