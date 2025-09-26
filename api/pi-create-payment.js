@@ -13,11 +13,18 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: "Amount and packageId required" });
   }
 
-  if (!process.env.PI_SERVER_API_KEY) {
-    return res.status(500).json({ message: "PI_SERVER_API_KEY not set" });
+  if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === 'your_actual_pi_server_api_key_here') {
+    console.error('PI_SERVER_API_KEY not configured properly');
+    return res.status(500).json({ 
+      message: 'PI_SERVER_API_KEY not configured properly', 
+      error: 'Missing PI_SERVER_API_KEY environment variable' 
+    });
   }
 
   try {
+    console.log("Creating payment with Pi Network, amount:", amount, "packageId:", packageId);
+    console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
+    
     const response = await fetch("https://sandbox.minepi.com/v2/payments", {
       method: "POST",
       headers: {
@@ -36,6 +43,21 @@ export default async function handler(req, res) {
       })
     });
 
+    console.log("Pi Network response status:", response.status);
+    console.log("Pi Network response headers:", [...response.headers.entries()]);
+    
+    // Check if the response is JSON before trying to parse it
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      console.error("Non-JSON response from Pi Network:", textResponse.substring(0, 500));
+      return res.status(response.status).json({ 
+        error: "Invalid response from Pi Network",
+        responsePreview: textResponse.substring(0, 500),
+        contentType: contentType
+      });
+    }
+
     const data = await response.json();
 
     if (!response.ok) {
@@ -52,6 +74,23 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Step 10 Exception:", error);
-    return res.status(500).json({ error: error.message });
+    console.error("Error stack:", error.stack);
+    
+    // If it's a fetch error, provide more details
+    if (error.type === 'system' || error.code) {
+      return res.status(500).json({ 
+        error: "Network error when calling Pi Network API",
+        details: {
+          type: error.type,
+          code: error.code,
+          message: error.message
+        }
+      });
+    }
+    
+    return res.status(500).json({ 
+      error: error.message,
+      stack: error.stack
+    });
   }
 }
