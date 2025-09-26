@@ -8,3 +8,5 @@ vite.config.ts.*
 # Test files
 *test*.js
 api/pi/create-payment.js
+
+.vercel
