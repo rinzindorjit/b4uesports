@@ -7,14 +7,10 @@ export default async function paymentApprovalHandler(request, response) {
     return response.status(405).json({ message: 'Method not allowed' });
   }
 
-  // Ensure sandbox mode
-  const piApiUrlBase = "https://sandbox.minepi.com/v2/payments";
-  console.log("Using Pi Testnet API URL base:", piApiUrlBase);
+  const piApiUrlBase = "https://sandbox.minepi.com/v2/payments"; // Always Testnet
 
   if (!process.env.PI_SERVER_API_KEY) {
-    return response.status(500).json({
-      error: "PI_SERVER_API_KEY missing",
-    });
+    return response.status(500).json({ error: "Missing PI_SERVER_API_KEY" });
   }
 
   const body = request.body || {};
@@ -26,7 +22,6 @@ export default async function paymentApprovalHandler(request, response) {
 
   try {
     const piApiUrl = `${piApiUrlBase}/${paymentId}/approve`;
-    console.log("Using Pi Testnet API URL:", piApiUrl);
 
     const piResponse = await fetch(piApiUrl, {
       method: "POST",
@@ -37,22 +32,20 @@ export default async function paymentApprovalHandler(request, response) {
       }
     });
 
-    console.log("Pi Testnet API response status:", piResponse.status);
+    const text = await piResponse.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
 
-    if (piResponse.status === 403) {
-      const text = await piResponse.text();
-      return response.status(403).json({
-        error: "Pi Testnet API access blocked",
-        message: "403 Forbidden — Check endpoint & headers",
-        response: text.substring(0, 500),
+    if (!piResponse.ok) {
+      return response.status(piResponse.status).json({
+        error: "Pi Testnet API error",
+        details: data,
       });
     }
 
-    const data = await piResponse.json();
-    return response.status(piResponse.ok ? 200 : piResponse.status).json(data);
+    return response.status(200).json(data);
 
   } catch (error) {
-    console.error("Testnet payment approval error:", error);
     return response.status(500).json({ error: error.message });
   }
 }

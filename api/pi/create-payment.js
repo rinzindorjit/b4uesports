@@ -7,14 +7,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  // Ensure sandbox mode
-  const piApiUrl = "https://sandbox.minepi.com/v2/payments";
-  console.log("Using Pi Testnet API URL:", piApiUrl);
+  const piApiUrl = "https://sandbox.minepi.com/v2/payments"; // Always Testnet
 
   if (!process.env.PI_SERVER_API_KEY) {
-    return res.status(500).json({
-      error: "PI_SERVER_API_KEY missing",
-    });
+    return res.status(500).json({ error: "Missing PI_SERVER_API_KEY" });
   }
 
   const paymentData = req.body?.paymentData;
@@ -37,22 +33,20 @@ export default async function handler(req, res) {
       }),
     });
 
-    console.log("Pi Testnet API response status:", response.status);
+    const text = await response.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text }; }
 
-    if (response.status === 403) {
-      const text = await response.text();
-      return res.status(403).json({
-        error: "Pi Testnet API access blocked",
-        message: "403 Forbidden — Check endpoint & headers",
-        response: text.substring(0, 500),
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error: "Pi Testnet API error",
+        details: data,
       });
     }
 
-    const data = await response.json();
-    return res.status(response.ok ? 200 : response.status).json(data);
+    return res.status(200).json(data);
 
   } catch (error) {
-    console.error("Testnet payment creation error:", error);
     return res.status(500).json({ error: error.message });
   }
 }
