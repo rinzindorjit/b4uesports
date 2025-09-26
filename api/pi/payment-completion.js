@@ -41,10 +41,16 @@ async function paymentCompletionHandler(request, response) {
     console.log("Completing payment with Pi Network, paymentId:", paymentId, "txid:", txid);
     console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
     
-    // Use the correct endpoint based on sandbox mode
-    const piApiUrl = process.env.PI_SANDBOX_MODE === 'true' 
+    // For Pi Network testing, we always use the sandbox endpoint unless explicitly set to false
+    // This is because Pi requires using sandbox.minepi.com for testnet even in production deployments
+    const useSandbox = process.env.PI_SANDBOX_MODE !== 'false';
+    
+    const piApiUrl = useSandbox 
       ? `https://sandbox.minepi.com/v2/payments/${paymentId}/complete` 
       : `https://api.minepi.com/v2/payments/${paymentId}/complete`;
+      
+    console.log(`Environment: PI_SANDBOX_MODE=${process.env.PI_SANDBOX_MODE}`);
+    console.log(`Using Pi API URL for completion: ${piApiUrl}`);
       
     const piResponse = await fetch(piApiUrl, {
       method: "POST",
