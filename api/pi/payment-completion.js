@@ -1,6 +1,5 @@
 // Pi Network payment completion endpoint for Vercel
-// Use built-in fetch when available (Node.js 18+ in Vercel)
-const fetch = globalThis.fetch || (await import('node-fetch')).default;
+import fetch from "node-fetch";
 import { withCORS } from '../utils/cors.js';
 
 export default withCORS(paymentCompletionHandler);
@@ -31,88 +30,66 @@ async function paymentCompletionHandler(request, response) {
       return response.status(400).json({ message: 'Payment ID and txid required' });
     }
 
-    if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === 'your_actual_pi_server_api_key_here') {
-      console.error('PI_SERVER_API_KEY not configured properly');
-      return response.status(500).json({ 
-        message: 'PI_SERVER_API_KEY not configured properly', 
-        error: 'Missing PI_SERVER_API_KEY environment variable' 
+    if (!process.env.PI_SERVER_API_KEY) {
+      console.error("Missing PI_SERVER_API_KEY in environment variables");
+      return response.status(500).json({
+        error: "Missing PI_SERVER_API_KEY",
+        message: "Please configure your PI_SERVER_API_KEY in .env"
       });
     }
 
     console.log("Completing payment with Pi Network, paymentId:", paymentId, "txid:", txid);
     console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
     
-    // For Pi Network, use sandbox endpoint when PI_SANDBOX_MODE is explicitly set to "true"
-    // This follows Pi Network's requirement for Testnet mode
-    const useSandbox = process.env.PI_SANDBOX_MODE === "true";
-    
-    const piApiUrl = useSandbox 
-      ? `https://sandbox.minepi.com/v2/payments/${paymentId}/complete` 
+    // Select correct endpoint based on sandbox mode
+    const piApiUrl = process.env.PI_SANDBOX_MODE === "true"
+      ? `https://sandbox.minepi.com/v2/payments/${paymentId}/complete`
       : `https://api.minepi.com/v2/payments/${paymentId}/complete`;
-      
-    console.log(`Environment: PI_SANDBOX_MODE=${process.env.PI_SANDBOX_MODE}`);
-    console.log(`Using Pi API URL for completion: ${piApiUrl}`);
-      
+
     const piResponse = await fetch(piApiUrl, {
       method: "POST",
       headers: {
         "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
         "Content-Type": "application/json",
-        "User-Agent": "B4U-Esports-App/1.0",
-        "Cache-Control": "no-cache"
+        "Accept": "application/json",
+        "User-Agent": "B4U-Esports-App/1.0"
       },
       body: JSON.stringify({
         txid: txid
       })
     });
 
-    console.log("Pi Network completion response status:", piResponse.status);
-    console.log("Pi Network completion response headers:", [...piResponse.headers.entries()]);
-    
-    // Check if the response is JSON before trying to parse it
-    const contentType = piResponse.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
+    console.log("Pi Network API status:", piResponse.status);
+
+    const contentType = piResponse.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
       const textResponse = await piResponse.text();
-      console.error("Non-JSON response from Pi Network:", textResponse.substring(0, 500));
-      return response.status(piResponse.status).json({ 
+      console.error("Non-JSON response from Pi Network:", textResponse);
+
+      return response.status(piResponse.status).json({
         error: "Invalid response from Pi Network",
-        responsePreview: textResponse.substring(0, 500),
-        contentType: contentType
+        message: textResponse
       });
     }
 
     const data = await piResponse.json();
 
     if (!piResponse.ok) {
-      console.error("Payment completion error:", data);
-      return response.status(piResponse.status).json({ error: data });
+      console.error("Pi Network API error:", data);
+      return response.status(piResponse.status).json({
+        error: "Pi Network API error",
+        details: data
+      });
     }
 
     console.log("Payment completed successfully:", data);
-
-    return response.status(200).json({
-      success: true,
-      paymentData: data
-    });
+    return response.status(200).json(data);
 
   } catch (error) {
-    console.error("Payment completion exception:", error);
-    console.error("Error stack:", error.stack);
-    
-    // If it's a fetch error, provide more details
-    if (error.type === 'system' || error.code) {
-      return response.status(500).json({ 
-        error: "Network error when calling Pi Network API",
-        details: {
-          type: error.type,
-          code: error.code,
-          message: error.message
-        }
-      });
-    }
-    
-    return response.status(500).json({ 
-      error: error.message,
+    console.error("Payment completion error:", error);
+    return response.status(500).json({
+      error: "Payment completion failed",
+      message: error.message,
       stack: error.stack
     });
   }
