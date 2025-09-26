@@ -55,6 +55,17 @@ B4U Esports is a comprehensive e-commerce platform for gaming packages, integrat
   - Ensure `api/_middleware.js` forwards requests to actual handlers (do not always return 200).
 
   ## Pi Network Integration
+
+### Pi Testnet Verification
+
+This application is configured for Pi Network Testnet verification. The following endpoints have been implemented:
+
+1. **Metadata Endpoint**: `/api/metadata.js` - Provides metadata for Pi Network
+2. **Payment Creation Endpoint**: `/api/pi-create-payment.js` - Step 10 handler (creates payment)
+3. **Payment Completion Endpoint**: `/api/mock-pi-payment.js` - Step 11 handler (completes payment)
+
+For detailed setup instructions for Pi Testnet verification, see [PI_TESTNET_SETUP.md](PI_TESTNET_SETUP.md).
+
 2. **Mock Authentication** - For development, testing, and Vercel deployments
 
 ### Configuration

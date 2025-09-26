@@ -4,7 +4,8 @@ import paymentsHandler from './pi/payments.js';
 import userHandler from './pi/user.js';
 import webhookHandler from './pi/webhook.js';
 import metadataHandler from './metadata.js';
-import mockPaymentHandler from './mock-pi-payment.js'; // Import the new mock payment handler
+import mockPaymentHandler from './mock-pi-payment.js';
+import createPaymentHandler from './pi/create-payment.js'; // Import the new payment creation handler
 import { withCORS, setCORSHeaders, handlePreflight } from './utils/cors.js';
 
 // Use built-in fetch when available (Node.js 18+ in Vercel)
@@ -503,6 +504,9 @@ async function apiHandler(request, response) {
     } else if (path === '/api/mock-pi-payment') {
       console.log('Routing to mock payment handler');
       return await mockPaymentHandler(request, response);
+    } else if (path === '/api/pi/create-payment') {
+      console.log('Routing to payment creation handler');
+      return await createPaymentHandler(request, response);
     } else if (path.startsWith('/api/')) {
       console.log('API endpoint not found:', path);
       response.status(404).json({ message: `API endpoint not found: ${path}` });
