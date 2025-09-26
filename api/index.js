@@ -111,10 +111,11 @@ async function handlePiBalance(request, response) {
 
 // Mock handler for packages
 async function handlePackages(request, response) {
-  // For mock purposes, return mock packages
+  // For mock purposes, return mock packages that match client-side DEFAULT_PACKAGES
   const mockPackages = [
+    // PUBG Packages
     {
-      id: 'pubg-1',
+      id: 'pubg-0',
       name: '60 UC',
       description: 'Perfect for beginners',
       usdtValue: '1.5000',
@@ -127,7 +128,7 @@ async function handlePackages(request, response) {
       updatedAt: new Date().toISOString()
     },
     {
-      id: 'pubg-2',
+      id: 'pubg-1',
       name: '325 UC',
       description: 'Great value for experienced players',
       usdtValue: '6.5000',
@@ -140,7 +141,112 @@ async function handlePackages(request, response) {
       updatedAt: new Date().toISOString()
     },
     {
-      id: 'mlbb-1',
+      id: 'pubg-2',
+      name: '660 UC',
+      description: 'Popular choice for regular players',
+      usdtValue: '12.0000',
+      piPrice: (12.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '660 UC',
+      game: 'pubg',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'pubg-3',
+      name: '1800 UC',
+      description: 'Best value for serious players',
+      usdtValue: '25.0000',
+      piPrice: (25.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '1800 UC',
+      game: 'pubg',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'pubg-4',
+      name: '3850 UC',
+      description: 'Premium package for top players',
+      usdtValue: '49.0000',
+      piPrice: (49.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '3850 UC',
+      game: 'pubg',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'pubg-5',
+      name: '8100 UC',
+      description: 'Ultimate package for pros',
+      usdtValue: '96.0000',
+      piPrice: (96.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '8100 UC',
+      game: 'pubg',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'pubg-6',
+      name: '16200 UC',
+      description: 'Maximum value package',
+      usdtValue: '186.0000',
+      piPrice: (186.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '16200 UC',
+      game: 'pubg',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'pubg-7',
+      name: '24300 UC',
+      description: 'Elite player package',
+      usdtValue: '278.0000',
+      piPrice: (278.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '24300 UC',
+      game: 'pubg',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'pubg-8',
+      name: '32400 UC',
+      description: 'Legendary package',
+      usdtValue: '369.0000',
+      piPrice: (369.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '32400 UC',
+      game: 'pubg',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'pubg-9',
+      name: '40500 UC',
+      description: 'Mythic package',
+      usdtValue: '459.0000',
+      piPrice: (459.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '40500 UC',
+      game: 'pubg',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    // MLBB Packages
+    {
+      id: 'mlbb-0',
       name: '56 Diamonds',
       description: 'Perfect for beginners',
       usdtValue: '3.0000',
@@ -153,13 +259,78 @@ async function handlePackages(request, response) {
       updatedAt: new Date().toISOString()
     },
     {
-      id: 'mlbb-2',
+      id: 'mlbb-1',
       name: '278 Diamonds',
       description: 'Great value for experienced players',
       usdtValue: '6.0000',
       piPrice: (6.0000 / 0.0009).toString(),
       currentPiPrice: 0.0009,
       gameCurrency: '278 Diamonds',
+      game: 'mlbb',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'mlbb-2',
+      name: '571 Diamonds',
+      description: 'Popular choice for regular players',
+      usdtValue: '11.0000',
+      piPrice: (11.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '571 Diamonds',
+      game: 'mlbb',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'mlbb-3',
+      name: '1783 Diamonds',
+      description: 'Best value for serious players',
+      usdtValue: '33.0000',
+      piPrice: (33.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '1783 Diamonds',
+      game: 'mlbb',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'mlbb-4',
+      name: '3005 Diamonds',
+      description: 'Premium package for top players',
+      usdtValue: '52.0000',
+      piPrice: (52.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '3005 Diamonds',
+      game: 'mlbb',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'mlbb-5',
+      name: '6012 Diamonds',
+      description: 'Ultimate package for pros',
+      usdtValue: '99.0000',
+      piPrice: (99.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '6012 Diamonds',
+      game: 'mlbb',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'mlbb-6',
+      name: '12000 Diamonds',
+      description: 'Maximum value package',
+      usdtValue: '200.0000',
+      piPrice: (200.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '12000 Diamonds',
       game: 'mlbb',
       isActive: true,
       createdAt: new Date().toISOString(),
@@ -177,7 +348,7 @@ async function handleTransactions(request, response) {
     {
       id: 'transaction-1',
       userId: 'user-123',
-      packageId: 'pubg-1',
+      packageId: 'pubg-0',
       paymentId: 'payment-123',
       piAmount: '1666.67',
       usdAmount: '1.5000',

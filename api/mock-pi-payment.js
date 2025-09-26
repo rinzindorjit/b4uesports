@@ -1,5 +1,5 @@
 // Mock Pi Payment endpoint for Vercel
-import { withCORS, setCORSHeaders, handlePreflight } from '../utils/cors.js';
+import { withCORS } from './utils/cors.js';
 
 export default withCORS(mockPaymentHandler);
 
