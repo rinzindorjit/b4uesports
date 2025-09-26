@@ -76,10 +76,10 @@ export default function handler(req, res) {
       max_amount: 10000
     },
     endpoints: {
-      authentication: "/api/pi/auth",
-      payment_create: "/api/pi-create-payment",
-      payment_complete: "/api/mock-pi-payment",
-      user_profile: "/api/pi/user"
+      authentication: "https://b4uesports.vercel.app/api/pi/auth",
+      payment_create: "https://b4uesports.vercel.app/api/pi-create-payment",
+      payment_complete: "https://b4uesports.vercel.app/api/mock-pi-payment",
+      user_profile: "https://b4uesports.vercel.app/api/pi/user"
     },
     contact: {
       support_email: "info@b4uesports.com",
@@ -108,17 +108,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: "Amount and packageId required" });
   }
 
-  // Validate PI_SERVER_API_KEY
-  if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === 'your_actual_pi_server_api_key_here') {
-    console.error('PI_SERVER_API_KEY not configured properly');
-    return res.status(500).json({ 
-      message: 'PI_SERVER_API_KEY not configured properly', 
-      error: 'Missing PI_SERVER_API_KEY environment variable' 
-    });
+  if (!process.env.PI_SERVER_API_KEY) {
+    return res.status(500).json({ message: "PI_SERVER_API_KEY not set" });
   }
 
   try {
-    console.log('Creating payment with Pi Network, amount:', amount, 'packageId:', packageId);
     const response = await fetch("https://sandbox.minepi.com/v2/payments", {
       method: "POST",
       headers: {
@@ -136,21 +130,23 @@ export default async function handler(req, res) {
         }
       })
     });
-    console.log('Pi payment creation response status:', response.status);
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Pi payment creation failed:', data);
+      console.error("Step 10 Error Response:", data);
       return res.status(response.status).json({ error: data });
     }
 
-    // Return payment ID to frontend for Step 11
-    console.log('Pi payment created successfully, paymentId:', data.identifier);
-    return res.status(200).json({ paymentId: data.identifier, paymentData: data });
+    console.log("Step 10 Payment Created:", data);
+
+    return res.status(200).json({
+      paymentId: data.identifier,
+      paymentData: data
+    });
 
   } catch (error) {
-    console.error('Payment creation error:', error);
+    console.error("Step 10 Exception:", error);
     return res.status(500).json({ error: error.message });
   }
 }
@@ -174,17 +170,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: "paymentId is required" });
   }
 
-  // Validate PI_SERVER_API_KEY
-  if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === 'your_actual_pi_server_api_key_here') {
-    console.error('PI_SERVER_API_KEY not configured properly');
-    return res.status(500).json({ 
-      message: 'PI_SERVER_API_KEY not configured properly', 
-      error: 'Missing PI_SERVER_API_KEY environment variable' 
-    });
+  if (!process.env.PI_SERVER_API_KEY) {
+    return res.status(500).json({ message: "PI_SERVER_API_KEY not set" });
   }
 
   try {
-    console.log('Completing payment with Pi Network, paymentId:', paymentId);
+    console.log("Step 11 starting for paymentId:", paymentId);
+
     const completionResponse = await fetch(
       `https://sandbox.minepi.com/v2/payments/${paymentId}/complete`,
       {
@@ -198,16 +190,16 @@ export default async function handler(req, res) {
         })
       }
     );
-    console.log('Pi payment completion response status:', completionResponse.status);
 
     const completionData = await completionResponse.json();
 
     if (!completionResponse.ok) {
-      console.error('Pi payment completion failed:', completionData);
+      console.error("Step 11 completion failed:", completionData);
       return res.status(completionResponse.status).json({ error: completionData });
     }
 
-    console.log('Pi payment completed successfully, paymentId:', paymentId);
+    console.log("Step 11 payment completed successfully:", completionData);
+
     return res.status(200).json({
       success: true,
       message: "Payment completed successfully",
@@ -215,7 +207,7 @@ export default async function handler(req, res) {
     });
 
   } catch (error) {
-    console.error('Payment completion error:', error);
+    console.error("Step 11 Exception:", error);
     return res.status(500).json({ error: error.message });
   }
 }

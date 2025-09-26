@@ -15,10 +15,10 @@ export default function handler(req, res) {
       max_amount: 10000
     },
     endpoints: {
-      authentication: "/api/pi/auth",
-      payment_create: "/api/pi-create-payment",
-      payment_complete: "/api/mock-pi-payment",
-      user_profile: "/api/pi/user"
+      authentication: "https://b4uesports.vercel.app/api/pi/auth",
+      payment_create: "https://b4uesports.vercel.app/api/pi-create-payment",
+      payment_complete: "https://b4uesports.vercel.app/api/mock-pi-payment",
+      user_profile: "https://b4uesports.vercel.app/api/pi/user"
     },
     contact: {
       support_email: "info@b4uesports.com",
