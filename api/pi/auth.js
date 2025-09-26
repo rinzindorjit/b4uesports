@@ -62,11 +62,21 @@ export default async function authHandler(request, response) {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'User-Agent': 'B4U-Esports-Server/1.0'
       }
     });
 
     console.log("📥 Pi API Response Status:", piResponse.status);
+
+    // Check if we're hitting CloudFront by looking at the headers
+    const serverHeader = piResponse.headers.get('server');
+    const viaHeader = piResponse.headers.get('via');
+    const cfId = piResponse.headers.get('x-amz-cf-id');
+    
+    console.log("🔧 Debug: Server header:", serverHeader);
+    console.log("🔧 Debug: Via header:", viaHeader);
+    console.log("🔧 Debug: CF ID:", cfId);
 
     // Handle non-JSON responses
     const textResponse = await piResponse.text();
@@ -78,7 +88,14 @@ export default async function authHandler(request, response) {
         error: "CDN Blocking Request",
         message: "Request blocked by CDN - ensure you're hitting the correct Pi Network API endpoint",
         details: "This distribution is not configured to allow the HTTP request method that was used for this request. The distribution supports only cachable requests.",
-        rawResponsePreview: textResponse.substring(0, 500)
+        rawResponsePreview: textResponse.substring(0, 500),
+        diagnosticInfo: {
+          responseHeaders: {
+            server: serverHeader,
+            via: viaHeader,
+            cfId: cfId
+          }
+        }
       });
     }
 

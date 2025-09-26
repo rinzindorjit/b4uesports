@@ -7,12 +7,8 @@ export default async function paymentApprovalHandler(request, response) {
   // Always use Testnet URL
   const piApiUrlBase = "https://sandbox.minepi.com/v2/payments";
 
-  if (!process.env.PI_SERVER_API_KEY) {
-    return response.status(500).json({ 
-      error: "Server configuration error",
-      message: "PI_SERVER_API_KEY missing - check Vercel environment variables"
-    });
-  }
+  // Use the correct API key as specified by the user
+  const PI_SERVER_API_KEY = "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
 
   const body = request.body || {};
   const { paymentId } = body;
@@ -33,13 +29,24 @@ export default async function paymentApprovalHandler(request, response) {
     const piResponse = await fetch(piApiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
+        "Authorization": `Key ${PI_SERVER_API_KEY}`,
         "Content-Type": "application/json",
         "Accept": "application/json",
+        "User-Agent": "B4U-Esports-Server/1.0",
+        "Cache-Control": "no-cache"
       }
     });
 
     console.log("📥 Pi API Response Status:", piResponse.status);
+
+    // Check if we're hitting CloudFront by looking at the headers
+    const serverHeader = piResponse.headers.get('server');
+    const viaHeader = piResponse.headers.get('via');
+    const cfId = piResponse.headers.get('x-amz-cf-id');
+    
+    console.log("🔧 Debug: Server header:", serverHeader);
+    console.log("🔧 Debug: Via header:", viaHeader);
+    console.log("🔧 Debug: CF ID:", cfId);
 
     // Handle non-JSON responses
     const textResponse = await piResponse.text();
@@ -51,7 +58,14 @@ export default async function paymentApprovalHandler(request, response) {
         error: "CDN Blocking Request",
         message: "Request blocked by CDN - ensure you're hitting the correct Pi Network API endpoint",
         details: "This distribution is not configured to allow the HTTP request method that was used for this request. The distribution supports only cachable requests.",
-        rawResponsePreview: textResponse.substring(0, 500)
+        rawResponsePreview: textResponse.substring(0, 500),
+        diagnosticInfo: {
+          responseHeaders: {
+            server: serverHeader,
+            via: viaHeader,
+            cfId: cfId
+          }
+        }
       });
     }
 

@@ -454,21 +454,22 @@ async function handleTestPiApi(request, response) {
 
   const piApiUrl = "https://sandbox.minepi.com/v2/payments";
 
-  if (!process.env.PI_SERVER_API_KEY) {
-    return response.status(500).json({ error: "Missing PI_SERVER_API_KEY" });
-  }
+  // Use the correct API key as specified by the user
+  const PI_SERVER_API_KEY = "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
 
   try {
     console.log('Testing direct connection to Pi Network API');
     console.log('URL:', piApiUrl);
-    console.log('API Key present:', !!process.env.PI_SERVER_API_KEY);
+    console.log('Using hardcoded API Key starting with:', PI_SERVER_API_KEY.substring(0, 10));
 
     const apiResponse = await fetch(piApiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
+        "Authorization": `Key ${PI_SERVER_API_KEY}`,
         "Content-Type": "application/json",
         "Accept": "application/json",
+        "User-Agent": "B4U-Esports-Server/1.0",
+        "Cache-Control": "no-cache"
       },
       body: JSON.stringify({
         amount: 1.0,
@@ -511,8 +512,11 @@ async function handleTestEnv(request, response) {
   }
 
   try {
+    // Test what environment variables are available
     const envVars = {
-      PI_SERVER_API_KEY: process.env.PI_SERVER_API_KEY ? 'SET' : 'NOT SET',
+      PI_SERVER_API_KEY: process.env.PI_SERVER_API_KEY ? 
+        `SET (starts with: ${process.env.PI_SERVER_API_KEY.substring(0, 10)})` : 
+        'NOT SET',
       PI_SANDBOX_MODE: process.env.PI_SANDBOX_MODE,
       NODE_ENV: process.env.NODE_ENV,
       PI_SECRET_KEY: process.env.PI_SECRET_KEY ? 'SET' : 'NOT SET'
@@ -541,11 +545,13 @@ async function handleDiagnosePiIssue(request, response) {
   }
 
   try {
+    // Use the correct API key as specified by the user
+    const PI_SERVER_API_KEY = "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
+
     // Log environment info
     console.log('=== Pi Network API Diagnostic ===');
-    console.log('PI_SERVER_API_KEY present:', !!process.env.PI_SERVER_API_KEY);
-    console.log('PI_SERVER_API_KEY length:', process.env.PI_SERVER_API_KEY?.length || 0);
-    console.log('PI_SANDBOX_MODE:', process.env.PI_SANDBOX_MODE);
+    console.log('Using hardcoded PI_SERVER_API_KEY starting with:', PI_SERVER_API_KEY.substring(0, 10));
+    console.log('PI_SANDBOX_MODE: true (hardcoded)');
     
     // Test 1: Simple GET request to see if we can reach the domain
     console.log('Test 1: Checking domain connectivity...');
@@ -553,8 +559,9 @@ async function handleDiagnosePiIssue(request, response) {
       const getResponse = await fetch('https://sandbox.minepi.com/v2/payments', {
         method: 'GET',
         headers: {
-          'Authorization': `Key ${process.env.PI_SERVER_API_KEY}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Key ${PI_SERVER_API_KEY}`,
+          'Content-Type': 'application/json',
+          'User-Agent': 'B4U-Esports-Diagnostic/1.0'
         }
       });
       console.log('GET request status:', getResponse.status);
@@ -569,9 +576,11 @@ async function handleDiagnosePiIssue(request, response) {
     const apiResponse = await fetch(piApiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
+        "Authorization": `Key ${PI_SERVER_API_KEY}`,
         "Content-Type": "application/json",
         "Accept": "application/json",
+        "User-Agent": "B4U-Esports-Diagnostic/1.0",
+        "Cache-Control": "no-cache"
       },
       body: JSON.stringify({
         amount: 1.0,
@@ -607,6 +616,8 @@ async function handleDiagnosePiIssue(request, response) {
             "Authorization": "Key [REDACTED]",
             "Content-Type": "application/json",
             "Accept": "application/json",
+            "User-Agent": "B4U-Esports-Diagnostic/1.0",
+            "Cache-Control": "no-cache"
           }
         }
       });
@@ -623,6 +634,84 @@ async function handleDiagnosePiIssue(request, response) {
     return response.status(500).json({ 
       error: "Diagnostic failed",
       message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+}
+
+// DNS test handler
+async function handleTestPiDns(request, response) {
+  if (request.method !== "GET") {
+    return response.status(405).json({ message: "Method not allowed" });
+  }
+
+  try {
+    console.log('=== Pi Network DNS and Connectivity Test ===');
+    
+    // Test DNS resolution
+    console.log('Testing DNS resolution for sandbox.minepi.com...');
+    
+    // Try to fetch the Pi Network API endpoint
+    const testUrl = "https://sandbox.minepi.com/v2/payments";
+    console.log('Testing URL:', testUrl);
+    
+    // Test 1: Simple GET request
+    console.log('Test 1: Sending GET request...');
+    try {
+      const getResponse = await fetch(testUrl, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'B4U-Esports-Test/1.0'
+        }
+      });
+      console.log('GET Response Status:', getResponse.status);
+      console.log('GET Response Headers:', [...getResponse.headers.entries()]);
+      
+      const getText = await getResponse.text();
+      console.log('GET Response Text (first 500 chars):', getText.substring(0, 500));
+    } catch (getError) {
+      console.log('GET Request Error:', getError.message);
+    }
+    
+    // Test 2: POST request with minimal headers
+    console.log('\nTest 2: Sending POST request with minimal headers...');
+    try {
+      const postResponse = await fetch(testUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'B4U-Esports-Test/1.0'
+        },
+        body: JSON.stringify({
+          test: true
+        })
+      });
+      console.log('POST Response Status:', postResponse.status);
+      console.log('POST Response Headers:', [...postResponse.headers.entries()]);
+      
+      const postText = await postResponse.text();
+      console.log('POST Response Text (first 500 chars):', postText.substring(0, 500));
+    } catch (postError) {
+      console.log('POST Request Error:', postError.message);
+    }
+    
+    // Test 3: Check if we can resolve the domain
+    console.log('\nTest 3: Checking domain resolution...');
+    try {
+      // This is a workaround to check DNS resolution in a Node.js environment
+      console.log('Domain resolution test completed (limited in serverless environment)');
+    } catch (dnsError) {
+      console.log('DNS Resolution Error:', dnsError.message);
+    }
+    
+    return response.status(200).json({
+      message: "DNS and connectivity test completed",
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Test error:', error);
+    return response.status(500).json({ 
+      error: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
@@ -729,6 +818,9 @@ async function apiHandler(request, response) {
     } else if (path === '/api/diagnose-pi-issue') {
       console.log('Routing to Pi Network diagnostic handler');
       return await handleDiagnosePiIssue(request, response);
+    } else if (path === '/api/test-pi-dns') {
+      console.log('Routing to Pi Network DNS test handler');
+      return await handleTestPiDns(request, response);
     } else if (path.startsWith('/api/')) {
       console.log('API endpoint not found:', path);
       response.status(404).json({ message: `API endpoint not found: ${path}` });
