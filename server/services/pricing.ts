@@ -24,7 +24,7 @@ export class PricingService {
     try {
       // Use the CoinGecko API with the provided API key
       const response = await axios.get(
-        `https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=${COINGECKO_API_KEY}`
+        `https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_pro_api_key=${COINGECKO_API_KEY}`
       );
 
       const price = response.data['pi-network']?.usd || 0.01; // fallback to 0.01 if not available
@@ -53,12 +53,12 @@ export class PricingService {
   }
 
   calculatePiAmount(usdtValue: number): number {
-    const piPrice = this.lastPrice?.price || 0.958;
+    const piPrice = this.lastPrice?.price || 0.01;
     return parseFloat((usdtValue / piPrice).toFixed(8));
   }
 
   calculateUsdAmount(piAmount: number): number {
-    const piPrice = this.lastPrice?.price || 0.958;
+    const piPrice = this.lastPrice?.price || 0.01;
     return parseFloat((piAmount * piPrice).toFixed(4));
   }
 

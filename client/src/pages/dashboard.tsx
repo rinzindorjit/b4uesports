@@ -178,10 +178,7 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
-    if (isPreviewMode) {
-      setLocation('/');
-      return;
-    }
+    // Always call logout regardless of preview mode
     logout();
     setLocation('/');
   };
