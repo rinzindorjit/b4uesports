@@ -12,9 +12,9 @@ export default async function handler(req, res) {
 
   console.log("Creating Pi payment...");
 
-  // For Pi Network testing, we always use the sandbox endpoint regardless of NODE_ENV
-  // This is because Pi requires using sandbox.minepi.com for testnet even in production deployments
-  const useSandbox = process.env.PI_SANDBOX_MODE !== 'false';
+  // For Pi Network, use sandbox endpoint when PI_SANDBOX_MODE is explicitly set to "true"
+  // This follows Pi Network's requirement for Testnet mode
+  const useSandbox = process.env.PI_SANDBOX_MODE === "true";
   
   // Testnet uses sandbox.minepi.com, Mainnet uses api.minepi.com
   const piApiUrl = useSandbox
