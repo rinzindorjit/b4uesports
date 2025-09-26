@@ -133,8 +133,8 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
           }
           
           console.log('Payment approved:', approvalData);
-        } catch (approvalError) {
-          throw new Error(`Payment approval failed: ${approvalError.message}`);
+        } catch (approvalError: any) {
+          throw new Error(`Payment approval failed: ${approvalError.message || approvalError}`);
         }
         
         // Step 2: Simulate onReadyForServerCompletion callback
@@ -171,8 +171,8 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
           setPassphrase('');
           setIsProcessing(false);
           return;
-        } catch (completionError) {
-          throw new Error(`Payment completion failed: ${completionError.message}`);
+        } catch (completionError: any) {
+          throw new Error(`Payment completion failed: ${completionError.message || completionError}`);
         }
       }
       
@@ -218,11 +218,11 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               title: "Payment Approved",
               description: `Payment ${paymentId} approved by server`,
             });
-          } catch (error) {
+          } catch (error: any) {
             console.error('Payment approval failed:', error);
             toast({
               title: "Payment Approval Failed",
-              description: `⚠️ Payment approval failed: ${error.message}. Please retry.`,
+              description: `⚠️ Payment approval failed: ${error.message || error}. Please retry.`,
               variant: "destructive",
             });
             setIsProcessing(false);
@@ -257,11 +257,11 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
             onClose();
             setStep('confirm');
             setPassphrase('');
-          } catch (error) {
+          } catch (error: any) {
             console.error('Payment completion failed:', error);
             toast({
               title: "Payment Completion Failed",
-              description: `⚠️ Payment completion failed: ${error.message}. Please retry.`,
+              description: `⚠️ Payment completion failed: ${error.message || error}. Please retry.`,
               variant: "destructive",
             });
             setIsProcessing(false);
