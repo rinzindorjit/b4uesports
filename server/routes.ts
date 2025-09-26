@@ -366,12 +366,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const file = (req as any).files[0];
           // In a real implementation, you would upload to cloud storage and save the URL
           // For now, we'll just generate a placeholder URL
-          updateData.profileImageUrl = `/uploads/profile-${userId}-${Date.now()}.${file.originalname.split('.').pop()}`;
+          updateData.profileImageUrl = `/uploads/profile-${userId || 'mock-user'}-${Date.now()}.${file.originalname.split('.').pop()}`;
           
           // Move the file to the uploads directory with the new name
           const fs = require('fs');
           const path = require('path');
-          const uploadPath = path.join(__dirname, '../uploads', `profile-${userId}-${Date.now()}.${file.originalname.split('.').pop()}`);
+          const uploadPath = path.join(__dirname, '../uploads', `profile-${userId || 'mock-user'}-${Date.now()}.${file.originalname.split('.').pop()}`);
           
           // Ensure uploads directory exists
           const uploadsDir = path.join(__dirname, '../uploads');
