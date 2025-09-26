@@ -52,7 +52,8 @@ export default async function handler(req, res) {
         Authorization: `Key ${process.env.PI_SERVER_API_KEY}`,
         "Content-Type": "application/json",
         Accept: "application/json",
-        "User-Agent": "B4U-Esports-App/1.0"
+        "User-Agent": "B4U-Esports-App/1.0",
+        "Cache-Control": "no-cache"
       },
       body: JSON.stringify({
         amount: paymentData.amount,

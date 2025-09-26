@@ -56,7 +56,9 @@ async function paymentApprovalHandler(request, response) {
       method: "POST",
       headers: {
         "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "B4U-Esports-App/1.0",
+        "Cache-Control": "no-cache"
       }
     });
 
