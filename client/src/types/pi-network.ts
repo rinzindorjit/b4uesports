@@ -74,6 +74,7 @@ export interface Package {
 
 export interface User {
   id: string;
+  piUID?: string; // Add piUID property
   username: string;
   email: string;
   phone: string;

@@ -106,61 +106,74 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
         // Use mock payment flow with real Pi payment creation
         console.log('Using mock payment flow with real Pi payment creation');
         
-        // Step 1: Create a real payment with Pi Network first
-        const createPaymentResponse = await fetch('/api/pi/create-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token || 'mock-token'}`
-          },
-          body: JSON.stringify({
-            amount: pkg.piPrice || 0,
-            packageId: pkg.id,
-            gameAccount: editableGameAccount,
-            userUid: user?.piUID || user?.id // Include the user's UID
-          })
-        });
+        // For mock payments, we'll use the existing flow but remove the direct API call
+        // The payment should be created using the Pi SDK which will trigger the callbacks
+        // that call our backend endpoints for approval and completion
         
-        const createPaymentData = await createPaymentResponse.json();
+        // Since we're in mock mode, we'll simulate the Pi SDK flow
+        const mockPaymentId = 'mock-payment-' + Date.now();
         
-        if (!createPaymentResponse.ok) {
-          throw new Error(createPaymentData.message || 'Failed to create payment');
+        // Step 1: Simulate onReadyForServerApproval callback
+        try {
+          const approvalResponse = await fetch('/api/payment/approve', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token || 'mock-token'}`
+            },
+            body: JSON.stringify({
+              paymentId: mockPaymentId
+            })
+          });
+          
+          const approvalData = await approvalResponse.json();
+          
+          if (!approvalResponse.ok) {
+            throw new Error(approvalData.message || 'Failed to approve payment');
+          }
+          
+          console.log('Payment approved:', approvalData);
+        } catch (approvalError) {
+          throw new Error(`Payment approval failed: ${approvalError.message}`);
         }
         
-        const realPaymentId = createPaymentData.paymentId;
-        console.log('Created Pi payment with ID:', realPaymentId);
-        
-        // Step 2: Call our mock completion endpoint with the real payment ID
-        const response = await fetch('/api/mock-pi-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token || 'mock-token'}`
-          },
-          body: JSON.stringify({
-            packageId: pkg.id,
-            gameAccount: editableGameAccount,
-            paymentId: realPaymentId // Pass the real payment ID
-          })
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.message || 'Mock payment failed');
+        // Step 2: Simulate onReadyForServerCompletion callback
+        const mockTxid = 'mock-tx-' + Date.now();
+        try {
+          const completionResponse = await fetch('/api/payment/complete', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token || 'mock-token'}`
+            },
+            body: JSON.stringify({
+              paymentId: mockPaymentId,
+              txid: mockTxid
+            })
+          });
+          
+          const completionData = await completionResponse.json();
+          
+          if (!completionResponse.ok) {
+            throw new Error(completionData.message || 'Failed to complete payment');
+          }
+          
+          console.log('Payment completed:', completionData);
+          
+          toast({
+            title: "Payment Completed",
+            description: `✅ Payment confirmed! Transaction ID: ${completionData.transactionId || mockTxid}`,
+          });
+          
+          // Close modal and reset
+          onClose();
+          setStep('confirm');
+          setPassphrase('');
+          setIsProcessing(false);
+          return;
+        } catch (completionError) {
+          throw new Error(`Payment completion failed: ${completionError.message}`);
         }
-        
-        toast({
-          title: "Payment Completed",
-          description: `✅ Payment confirmed! Transaction ID: ${data.transactionId}`,
-        });
-        
-        // Close modal and reset
-        onClose();
-        setStep('confirm');
-        setPassphrase('');
-        setIsProcessing(false);
-        return;
       }
       
       // Create payment with Pi Network (real payment flow)
@@ -181,20 +194,78 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
       };
 
       createPayment(paymentData, {
-        onReadyForServerApproval: (paymentId: string) => {
-          toast({
-            title: "Payment Approved",
-            description: `Payment ${paymentId} approved by server`,
-          });
+        onReadyForServerApproval: async (paymentId: string) => {
+          try {
+            // Call our backend to approve the payment
+            const response = await fetch('/api/payment/approve', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token || 'mock-token'}`
+              },
+              body: JSON.stringify({
+                paymentId: paymentId
+              })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.message || 'Failed to approve payment');
+            }
+            
+            toast({
+              title: "Payment Approved",
+              description: `Payment ${paymentId} approved by server`,
+            });
+          } catch (error) {
+            console.error('Payment approval failed:', error);
+            toast({
+              title: "Payment Approval Failed",
+              description: `⚠️ Payment approval failed: ${error.message}. Please retry.`,
+              variant: "destructive",
+            });
+            setIsProcessing(false);
+          }
         },
-        onReadyForServerCompletion: (paymentId: string, txid: string) => {
-          toast({
-            title: "Payment Completed",
-            description: `✅ Payment confirmed! Transaction ID: ${txid}`,
-          });
-          onClose();
-          setStep('confirm');
-          setPassphrase('');
+        onReadyForServerCompletion: async (paymentId: string, txid: string) => {
+          try {
+            // Call our backend to complete the payment
+            const response = await fetch('/api/payment/complete', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token || 'mock-token'}`
+              },
+              body: JSON.stringify({
+                paymentId: paymentId,
+                txid: txid
+              })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.message || 'Failed to complete payment');
+            }
+            
+            toast({
+              title: "Payment Completed",
+              description: `✅ Payment confirmed! Transaction ID: ${txid}`,
+            });
+            
+            onClose();
+            setStep('confirm');
+            setPassphrase('');
+          } catch (error) {
+            console.error('Payment completion failed:', error);
+            toast({
+              title: "Payment Completion Failed",
+              description: `⚠️ Payment completion failed: ${error.message}. Please retry.`,
+              variant: "destructive",
+            });
+            setIsProcessing(false);
+          }
         },
         onCancel: (paymentId: string) => {
           toast({

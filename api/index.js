@@ -6,6 +6,8 @@ import webhookHandler from './pi/webhook.js';
 import metadataHandler from './metadata.js';
 import mockPaymentHandler from './mock-pi-payment.js';
 import createPaymentHandler from './pi-create-payment.js'; // Import the new payment creation handler
+import paymentApprovalHandler from './pi/payment-approval.js'; // Import the new payment approval handler
+import paymentCompletionHandler from './pi/payment-completion.js'; // Import the new payment completion handler
 import { withCORS, setCORSHeaders, handlePreflight } from './utils/cors.js';
 
 // Use built-in fetch when available (Node.js 18+ in Vercel)
@@ -494,10 +496,10 @@ async function apiHandler(request, response) {
       return await handleTransactions(request, response);
     } else if (path === '/api/payment/approve') {
       console.log('Routing to payment approval handler');
-      return await handlePaymentApproval(request, response);
+      return await paymentApprovalHandler(request, response);
     } else if (path === '/api/payment/complete') {
       console.log('Routing to payment completion handler');
-      return await handlePaymentCompletion(request, response);
+      return await paymentCompletionHandler(request, response);
     } else if (path === '/api/admin/analytics') {
       console.log('Routing to analytics handler');
       return await handleAnalytics(request, response);
