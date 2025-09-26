@@ -137,8 +137,8 @@ async function paymentApprovalHandler(request, response) {
     console.log("Approving payment with Pi Network, paymentId:", paymentId);
     console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
     
-    // Use the correct endpoint based on sandbox mode
-    const piApiUrl = process.env.PI_SANDBOX_MODE === 'true' 
+    // Use the correct endpoint based on sandbox mode - CONSISTENT WITH OTHER FILES
+    const piApiUrl = process.env.PI_SANDBOX_MODE === "true" 
       ? `https://sandbox.minepi.com/v2/payments/${paymentId}/approve` 
       : `https://api.minepi.com/v2/payments/${paymentId}/approve`;
       
@@ -250,8 +250,8 @@ async function paymentCompletionHandler(request, response) {
     console.log("Completing payment with Pi Network, paymentId:", paymentId, "txid:", txid);
     console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
     
-    // Use the correct endpoint based on sandbox mode
-    const piApiUrl = process.env.PI_SANDBOX_MODE === 'true' 
+    // Use the correct endpoint based on sandbox mode - CONSISTENT WITH OTHER FILES
+    const piApiUrl = process.env.PI_SANDBOX_MODE === "true" 
       ? `https://sandbox.minepi.com/v2/payments/${paymentId}/complete` 
       : `https://api.minepi.com/v2/payments/${paymentId}/complete`;
       

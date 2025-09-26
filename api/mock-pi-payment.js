@@ -25,8 +25,8 @@ export default async function handler(req, res) {
     console.log("Step 11 starting for paymentId:", paymentId);
     console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
 
-    // Use the correct endpoint based on sandbox mode
-    const piApiUrl = process.env.PI_SANDBOX_MODE === 'true' 
+    // Use the correct endpoint based on sandbox mode - CONSISTENT WITH OTHER FILES
+    const piApiUrl = process.env.PI_SANDBOX_MODE === "true" 
       ? `https://sandbox.minepi.com/v2/payments/${paymentId}/complete` 
       : `https://api.minepi.com/v2/payments/${paymentId}/complete`;
       

@@ -107,8 +107,8 @@ async function authHandler(request, response) {
     // Verify the access token with Pi Network
     console.log('Verifying access token with Pi Network');
     
-    // Use sandbox endpoint for testnet mode
-    const piApiUrl = process.env.PI_SANDBOX_MODE === 'true' 
+    // Use sandbox endpoint for testnet mode - CONSISTENT WITH OTHER FILES
+    const piApiUrl = process.env.PI_SANDBOX_MODE === "true" 
       ? 'https://sandbox.minepi.com/v2/me' 
       : 'https://api.minepi.com/v2/me';
       
