@@ -83,7 +83,7 @@ export default function handler(req, res) {
     },
     contact: {
       support_email: "info@b4uesports.com",
-      website: "https://b4uesports.com"
+      website: "https://b4uesports.vercel.app" // Updated to correct URL
     },
     last_updated: new Date().toISOString()
   });

@@ -10,6 +10,7 @@ const __dirname = dirname(__filename);
 // Import API handlers
 import mockPaymentHandler from './api/mock-pi-payment.js';
 import createPaymentHandler from './api/pi-create-payment.js';
+import metadataHandler from './api/metadata.js'; // Add metadata handler
 
 // Load environment variables
 import dotenv from 'dotenv';
@@ -23,6 +24,37 @@ app.use(cors());
 app.use(express.json());
 
 // API routes
+app.get('/api/metadata', (req, res) => {
+  // Mock the Vercel request/response objects
+  const mockRequest = {
+    method: req.method,
+    headers: req.headers,
+    body: req.body,
+    url: req.url
+  };
+  
+  const mockResponse = {
+    statusCode: 200,
+    headers: {},
+    setHeader(key, value) {
+      this.headers[key] = value;
+    },
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(data) {
+      res.status(this.statusCode).json(data);
+    },
+    end() {
+      res.status(this.statusCode).end();
+    }
+  };
+  
+  // Call the metadata handler
+  metadataHandler(mockRequest, mockResponse);
+});
+
 app.post('/api/mock-pi-payment', (req, res) => {
   // Mock the Vercel request/response objects
   const mockRequest = {
