@@ -1,25 +1,32 @@
 // /api/mock-pi-payment.js
-// Use built-in fetch (Node.js 18+) or node-fetch
-const fetch = globalThis.fetch || (await import("node-fetch")).default;
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const piApiUrlBase = "https://sandbox.minepi.com/v2/payments"; // Always Testnet
+  // Always use Testnet URL
+  const piApiUrlBase = "https://sandbox.minepi.com/v2/payments";
 
   if (!process.env.PI_SERVER_API_KEY) {
-    return res.status(500).json({ error: "Missing PI_SERVER_API_KEY" });
+    return res.status(500).json({ 
+      error: "Server configuration error",
+      message: "PI_SERVER_API_KEY missing - check Vercel environment variables"
+    });
   }
 
   const { paymentId } = req.body;
   if (!paymentId) {
-    return res.status(400).json({ error: "Payment ID missing" });
+    return res.status(400).json({ 
+      error: "Invalid request", 
+      message: "Payment ID is required" 
+    });
   }
 
   try {
     const piApiUrl = `${piApiUrlBase}/${paymentId}/complete`;
+    
+    console.log("🔄 Completing mock payment with Pi Network Testnet API...");
+    console.log("🌐 URL:", piApiUrl);
 
     const completionResponse = await fetch(piApiUrl, {
       method: "POST",
@@ -33,20 +40,53 @@ export default async function handler(req, res) {
       })
     });
 
-    const text = await completionResponse.text();
-    let data;
-    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    console.log("📥 Pi API Response Status:", completionResponse.status);
 
-    if (!completionResponse.ok) {
-      return res.status(completionResponse.status).json({
-        error: "Pi Testnet API error",
-        details: data,
+    // Handle non-JSON responses
+    const textResponse = await completionResponse.text();
+    
+    // Check if response is HTML (indicating CDN error)
+    if (textResponse.startsWith('<!DOCTYPE') || textResponse.includes('<HTML')) {
+      console.error("❌ CDN BLOCK DETECTED - Response is HTML instead of JSON");
+      return res.status(403).json({
+        error: "CDN Blocking Request",
+        message: "Request blocked by CDN - ensure you're hitting the correct Pi Network API endpoint",
+        details: "This distribution is not configured to allow the HTTP request method that was used for this request. The distribution supports only cachable requests.",
+        rawResponsePreview: textResponse.substring(0, 500)
       });
     }
 
+    // Try to parse JSON response
+    let data;
+    try {
+      data = JSON.parse(textResponse);
+    } catch (parseError) {
+      console.error("❌ Failed to parse JSON response:", parseError.message);
+      return res.status(500).json({
+        error: "Invalid API Response",
+        message: "Pi Network API returned non-JSON response",
+        rawResponse: textResponse.substring(0, 1000)
+      });
+    }
+
+    if (!completionResponse.ok) {
+      console.error(`❌ Pi API Error ${completionResponse.status}:`, data);
+      return res.status(completionResponse.status).json({
+        error: "Pi Network API Error",
+        message: `API returned status ${completionResponse.status}`,
+        details: data
+      });
+    }
+
+    console.log("✅ Mock payment completed successfully:", data);
     return res.status(200).json(data);
 
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    console.error("💥 Mock payment completion failed:", error);
+    return res.status(500).json({ 
+      error: "Mock Payment Completion Failed",
+      message: error.message,
+      ...(process.env.NODE_ENV === 'development' ? { stack: error.stack } : {})
+    });
   }
 }

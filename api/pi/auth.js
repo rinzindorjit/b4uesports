@@ -1,7 +1,4 @@
 // Pi Network authentication endpoint for Vercel
-// Use built-in fetch (Node.js 18+) or node-fetch
-const fetch = globalThis.fetch || (await import("node-fetch")).default;
-
 export default async function authHandler(request, response) {
   if (request.method !== 'POST') {
     return response.status(405).json({ message: 'Method not allowed' });
@@ -58,6 +55,9 @@ export default async function authHandler(request, response) {
     // Verify the access token with Pi Network
     const piApiUrl = "https://sandbox.minepi.com/v2/me"; // Always Testnet
 
+    console.log("🔄 Authenticating user with Pi Network Testnet API...");
+    console.log("🌐 URL:", piApiUrl);
+
     const piResponse = await fetch(piApiUrl, {
       method: 'GET',
       headers: {
@@ -66,14 +66,41 @@ export default async function authHandler(request, response) {
       }
     });
 
-    const text = await piResponse.text();
+    console.log("📥 Pi API Response Status:", piResponse.status);
+
+    // Handle non-JSON responses
+    const textResponse = await piResponse.text();
+    
+    // Check if response is HTML (indicating CDN error)
+    if (textResponse.startsWith('<!DOCTYPE') || textResponse.includes('<HTML')) {
+      console.error("❌ CDN BLOCK DETECTED - Response is HTML instead of JSON");
+      return response.status(403).json({
+        error: "CDN Blocking Request",
+        message: "Request blocked by CDN - ensure you're hitting the correct Pi Network API endpoint",
+        details: "This distribution is not configured to allow the HTTP request method that was used for this request. The distribution supports only cachable requests.",
+        rawResponsePreview: textResponse.substring(0, 500)
+      });
+    }
+
+    // Try to parse JSON response
     let data;
-    try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    try {
+      data = JSON.parse(textResponse);
+    } catch (parseError) {
+      console.error("❌ Failed to parse JSON response:", parseError.message);
+      return response.status(500).json({
+        error: "Invalid API Response",
+        message: "Pi Network API returned non-JSON response",
+        rawResponse: textResponse.substring(0, 1000)
+      });
+    }
 
     if (!piResponse.ok) {
+      console.error(`❌ Pi API Error ${piResponse.status}:`, data);
       return response.status(piResponse.status).json({
-        error: "Pi Testnet API error",
-        details: data,
+        error: "Pi Network API Error",
+        message: `API returned status ${piResponse.status}`,
+        details: data
       });
     }
 
@@ -100,16 +127,19 @@ export default async function authHandler(request, response) {
     // Generate a JWT token for our application
     const token = 'mock-jwt-token-' + Date.now() + '-' + piUser.uid;
 
+    console.log("✅ Authentication successful for user:", user.username);
     response.status(200).json({
       user: user,
       token: token
     });
   } catch (error) {
+    console.error("💥 Authentication failed:", error);
     // Ensure we always send a response
     if (!response.headersSent) {
       response.status(500).json({ 
         message: 'Authentication failed', 
-        error: error.message
+        error: error.message,
+        ...(process.env.NODE_ENV === 'development' ? { stack: error.stack } : {})
       });
     }
   }

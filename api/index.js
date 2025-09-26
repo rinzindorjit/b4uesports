@@ -421,7 +421,215 @@ async function handleAnalytics(request, response) {
   response.status(200).json(mockAnalytics);
 }
 
-export default withCORS(apiHandler);
+// Test handler for fetch
+async function handleTestFetch(request, response) {
+  if (request.method !== "GET") {
+    return response.status(405).json({ message: "Method not allowed" });
+  }
+
+  try {
+    // Test if fetch is available
+    if (typeof fetch === 'undefined') {
+      return response.status(500).json({ error: "Fetch is not available" });
+    }
+
+    // Test a simple fetch request
+    const apiResponse = await fetch('https://httpbin.org/get');
+    const data = await apiResponse.json();
+
+    return response.status(200).json({
+      message: "Fetch is working correctly",
+      data: data
+    });
+  } catch (error) {
+    return response.status(500).json({ error: error.message });
+  }
+}
+
+// Test handler for Pi Network API
+async function handleTestPiApi(request, response) {
+  if (request.method !== "POST") {
+    return response.status(405).json({ message: "Method not allowed" });
+  }
+
+  const piApiUrl = "https://sandbox.minepi.com/v2/payments";
+
+  if (!process.env.PI_SERVER_API_KEY) {
+    return response.status(500).json({ error: "Missing PI_SERVER_API_KEY" });
+  }
+
+  try {
+    console.log('Testing direct connection to Pi Network API');
+    console.log('URL:', piApiUrl);
+    console.log('API Key present:', !!process.env.PI_SERVER_API_KEY);
+
+    const apiResponse = await fetch(piApiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        amount: 1.0,
+        memo: "Test Payment",
+        metadata: { test: true },
+      }),
+    });
+
+    console.log('Response status:', apiResponse.status);
+    console.log('Response headers:', [...apiResponse.headers.entries()]);
+
+    const text = await apiResponse.text();
+    console.log('Response text:', text.substring(0, 500));
+
+    let data;
+    try { 
+      data = JSON.parse(text); 
+    } catch { 
+      data = { raw: text }; 
+    }
+
+    return response.status(apiResponse.status).json({
+      message: "Direct API test completed",
+      status: apiResponse.status,
+      data: data
+    });
+  } catch (error) {
+    console.error('Test error:', error);
+    return response.status(500).json({ 
+      error: error.message,
+      stack: error.stack
+    });
+  }
+}
+
+// Test handler for environment variables
+async function handleTestEnv(request, response) {
+  if (request.method !== "GET") {
+    return response.status(405).json({ message: "Method not allowed" });
+  }
+
+  try {
+    const envVars = {
+      PI_SERVER_API_KEY: process.env.PI_SERVER_API_KEY ? 'SET' : 'NOT SET',
+      PI_SANDBOX_MODE: process.env.PI_SANDBOX_MODE,
+      NODE_ENV: process.env.NODE_ENV,
+      PI_SECRET_KEY: process.env.PI_SECRET_KEY ? 'SET' : 'NOT SET'
+    };
+
+    // Log to console for debugging
+    console.log('Environment variables:', envVars);
+
+    return response.status(200).json({
+      message: "Environment variables check completed",
+      envVars: envVars
+    });
+  } catch (error) {
+    console.error('Test error:', error);
+    return response.status(500).json({ 
+      error: error.message,
+      stack: error.stack
+    });
+  }
+}
+
+// Diagnostic handler for Pi Network issues
+async function handleDiagnosePiIssue(request, response) {
+  if (request.method !== "POST") {
+    return response.status(405).json({ message: "Method not allowed" });
+  }
+
+  try {
+    // Log environment info
+    console.log('=== Pi Network API Diagnostic ===');
+    console.log('PI_SERVER_API_KEY present:', !!process.env.PI_SERVER_API_KEY);
+    console.log('PI_SERVER_API_KEY length:', process.env.PI_SERVER_API_KEY?.length || 0);
+    console.log('PI_SANDBOX_MODE:', process.env.PI_SANDBOX_MODE);
+    
+    // Test 1: Simple GET request to see if we can reach the domain
+    console.log('Test 1: Checking domain connectivity...');
+    try {
+      const getResponse = await fetch('https://sandbox.minepi.com/v2/payments', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Key ${process.env.PI_SERVER_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log('GET request status:', getResponse.status);
+    } catch (getError) {
+      console.log('GET request error:', getError.message);
+    }
+
+    // Test 2: Actual POST request with proper error handling
+    console.log('Test 2: Sending POST request to Pi Network API...');
+    const piApiUrl = "https://sandbox.minepi.com/v2/payments";
+    
+    const apiResponse = await fetch(piApiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        amount: 1.0,
+        memo: "Diagnostic Test Payment",
+        metadata: { test: true, timestamp: Date.now() },
+      }),
+    });
+
+    console.log('Pi API Response Status:', apiResponse.status);
+    console.log('Pi API Response Headers:', [...apiResponse.headers.entries()]);
+    
+    const text = await apiResponse.text();
+    console.log('Pi API Response Text (first 1000 chars):', text.substring(0, 1000));
+    
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.log('Response is not JSON:', parseError.message);
+      data = { rawResponse: text.substring(0, 1000) };
+    }
+
+    if (apiResponse.status === 403) {
+      console.log('❌ 403 ERROR DETECTED - This is the main issue');
+      return response.status(403).json({
+        error: "Pi Network API Access Blocked",
+        message: "403 Forbidden - Check if request is hitting CDN instead of API server",
+        response: data,
+        diagnostic: {
+          url: piApiUrl,
+          method: "POST",
+          headers: {
+            "Authorization": "Key [REDACTED]",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          }
+        }
+      });
+    }
+
+    return response.status(apiResponse.ok ? 200 : apiResponse.status).json({
+      message: "Diagnostic completed",
+      status: apiResponse.status,
+      data: data
+    });
+
+  } catch (error) {
+    console.error('❌ Diagnostic error:', error);
+    return response.status(500).json({ 
+      error: "Diagnostic failed",
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+}
+
+// Remove the CORS wrapper to avoid interference
+export default apiHandler;
 
 async function apiHandler(request, response) {
   console.log('=== DEBUG API REQUEST ===');
@@ -509,6 +717,18 @@ async function apiHandler(request, response) {
     } else if (path === '/api/pi/create-payment') {
       console.log('Routing to payment creation handler');
       return await createPaymentHandler(request, response);
+    } else if (path === '/api/test-fetch') {
+      console.log('Routing to test fetch handler');
+      return await handleTestFetch(request, response);
+    } else if (path === '/api/test-pi-api') {
+      console.log('Routing to test Pi API handler');
+      return await handleTestPiApi(request, response);
+    } else if (path === '/api/test-env') {
+      console.log('Routing to test environment variables handler');
+      return await handleTestEnv(request, response);
+    } else if (path === '/api/diagnose-pi-issue') {
+      console.log('Routing to Pi Network diagnostic handler');
+      return await handleDiagnosePiIssue(request, response);
     } else if (path.startsWith('/api/')) {
       console.log('API endpoint not found:', path);
       response.status(404).json({ message: `API endpoint not found: ${path}` });
