@@ -7,10 +7,15 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const { amount, packageId, gameAccount } = req.body;
+  const { amount, packageId, gameAccount, userUid } = req.body;
 
   if (!amount || !packageId) {
     return res.status(400).json({ message: "Amount and packageId required" });
+  }
+
+  // For Pi Network payments, we need the user's UID
+  if (!userUid) {
+    return res.status(400).json({ message: "User UID required for Pi Network payment" });
   }
 
   if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === 'your_actual_pi_server_api_key_here') {
@@ -22,7 +27,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log("Creating payment with Pi Network, amount:", amount, "packageId:", packageId);
+    console.log("Creating payment with Pi Network, amount:", amount, "packageId:", packageId, "userUid:", userUid);
     console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
     
     // Use the correct endpoint based on sandbox mode
@@ -38,6 +43,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         amount: amount,
+        user_uid: userUid, // Include the user's UID as required by Pi Network API
         currency: "PI",
         memo: `Purchase ${packageId}`,
         metadata: {

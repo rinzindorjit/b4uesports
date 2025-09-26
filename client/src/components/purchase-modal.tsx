@@ -116,7 +116,8 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
           body: JSON.stringify({
             amount: pkg.piPrice || 0,
             packageId: pkg.id,
-            gameAccount: editableGameAccount
+            gameAccount: editableGameAccount,
+            userUid: user?.piUID || user?.id // Include the user's UID
           })
         });
         
