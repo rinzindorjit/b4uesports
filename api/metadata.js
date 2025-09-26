@@ -17,6 +17,8 @@ export default function handler(req, res) {
       min_amount: 0.1,
       max_amount: 10000
     },
+    // For Pi Testnet, we use direct domain access rather than app ID
+    // Testnet relies on domain registration in the developer console
     endpoints: {
       authentication: `${backendUrl}/api/pi/auth`,
       payment_create: `${backendUrl}/api/pi-create-payment`,

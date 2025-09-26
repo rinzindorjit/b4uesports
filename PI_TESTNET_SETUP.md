@@ -16,15 +16,18 @@ The following three files have been implemented to work with Pi Network's Testne
 
 Update your `.env` file with your actual Pi Network API keys:
 
-```env
-PI_SECRET_KEY=your_actual_pi_secret_key_here
+```
+# PI_SECRET_KEY is actually your App ID from the Pi Developer Portal
+PI_SECRET_KEY=your_actual_app_id_here
 PI_SERVER_API_KEY=your_actual_pi_server_api_key_here
-PI_APP_ID=your_actual_app_id_here
 ```
 
 You can get these values from the [Pi Developer Portal](https://developers.minepi.com/).
 
-**Important**: Make sure to replace `your_actual_pi_server_api_key_here` with your actual server API key. The endpoints will not work if this is not properly configured.
+**Important**: 
+- `PI_SECRET_KEY` is actually your **App ID** (not a secret key)
+- `PI_SERVER_API_KEY` is your server API key used for backend authentication
+- Make sure to replace `your_actual_pi_server_api_key_here` with your actual server API key. The endpoints will not work if this is not properly configured.
 
 ### 2. Deploy to Vercel
 

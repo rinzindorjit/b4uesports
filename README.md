@@ -74,15 +74,15 @@ To configure Pi Network integration, you need to set the following environment v
 
 ```env
 # Pi Network Configuration
-PI_SECRET_KEY=your_actual_pi_secret_key_here
+# PI_SECRET_KEY is actually your App ID from the Pi Developer Portal
+PI_SECRET_KEY=your_actual_app_id_here
 PI_SERVER_API_KEY=your_actual_pi_server_api_key_here
-PI_APP_ID=your_actual_app_id_here
 ```
 
 To obtain these credentials:
 1. Register your app at the [Pi Network Developer Portal](https://minepi.com)
-2. Create a new app and obtain your APP_ID
-3. Generate your SECRET_KEY and SERVER_API_KEY from the developer console
+2. Create a new app and obtain your App ID (this is the PI_SECRET_KEY)
+3. Generate your SERVER_API_KEY from the developer console
 
 ### Authentication Flow
 
