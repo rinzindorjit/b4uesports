@@ -1,5 +1,6 @@
 // /api/pi/create-payment.js
-// This endpoint confirms payments created by the Pi SDK on the client side
+// This endpoint handles payment creation for Pi Network
+// Works in both Testnet (sandbox) and Mainnet
 
 import fetch from "node-fetch";
 
@@ -8,24 +9,38 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  if (!process.env.PI_SERVER_API_KEY) {
-    console.error("Missing PI_SERVER_API_KEY");
-    return res.status(500).json({ error: "Server API key not configured" });
+  console.log("Creating Pi payment...");
+
+  // Environment check
+  const isDev = process.env.NODE_ENV !== "production";
+
+  // Testnet uses sandbox.minepi.com, Mainnet uses api.minepi.com
+  const piApiUrl = isDev
+    ? "https://sandbox.minepi.com/v2/payments"
+    : "https://api.minepi.com/v2/payments";
+
+  console.log(`Using Pi API URL: ${piApiUrl}`);
+
+  // Check API key
+  if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === "your_actual_pi_server_api_key_here") {
+    console.error("Missing PI_SERVER_API_KEY in environment variables.");
+    return res.status(500).json({
+      error: "Missing PI_SERVER_API_KEY",
+      message: "Please set PI_SERVER_API_KEY in your environment variables"
+    });
   }
 
   try {
-    const { paymentId } = req.body;
+    const paymentData = req.body?.paymentData;
 
-    if (!paymentId) {
-      return res.status(400).json({ error: "Missing paymentId" });
+    if (!paymentData || !paymentData.amount) {
+      return res.status(400).json({
+        error: "Invalid payment data",
+        message: "Payment amount and memo are required"
+      });
     }
 
-    // Use the correct endpoint based on sandbox mode
-    const piApiUrl = process.env.PI_SANDBOX_MODE === 'true' 
-      ? `https://sandbox.minepi.com/v2/payments/${paymentId}/approve` 
-      : `https://api.minepi.com/v2/payments/${paymentId}/approve`;
-
-    console.log(`Approving payment: ${paymentId}`);
+    console.log("Payment data:", paymentData);
 
     const response = await fetch(piApiUrl, {
       method: "POST",
@@ -33,26 +48,48 @@ export default async function handler(req, res) {
         Authorization: `Key ${process.env.PI_SERVER_API_KEY}`,
         "Content-Type": "application/json",
         Accept: "application/json",
+        "User-Agent": "B4U-Esports-App/1.0"
       },
+      body: JSON.stringify({
+        amount: paymentData.amount,
+        memo: paymentData.memo || "",
+        metadata: paymentData.metadata || {}
+      })
     });
+
+    console.log("Pi API status:", response.status);
+
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const textResponse = await response.text();
+      console.error("Non-JSON response from Pi:", textResponse.substring(0, 500));
+
+      if (response.status === 403) {
+        return res.status(403).json({
+          error: "Pi Network API access blocked",
+          message: "Check if you are calling the correct Pi API endpoint",
+          details: textResponse.substring(0, 500)
+        });
+      }
+
+      return res.status(response.status).json({
+        error: "Invalid Pi Network response",
+        responsePreview: textResponse.substring(0, 500)
+      });
+    }
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Pi API error:", data);
-      return res.status(response.status).json({
-        error: "Pi API error",
-        details: data,
-      });
+      console.error("Pi Network API error:", data);
+      return res.status(response.status).json({ error: "Pi Network API error", details: data });
     }
 
-    console.log("Payment approved successfully:", data);
+    console.log("Payment created:", data);
     return res.status(200).json(data);
+
   } catch (error) {
-    console.error("Payment approval error:", error);
-    return res.status(500).json({
-      error: "Payment approval failed",
-      message: error.message,
-    });
+    console.error("Payment creation error:", error);
+    return res.status(500).json({ error: "Payment creation failed", message: error.message });
   }
 }
