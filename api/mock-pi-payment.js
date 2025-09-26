@@ -8,7 +8,8 @@ export default async function handler(req, res) {
   const piApiUrlBase = "https://sandbox.minepi.com/v2/payments";
 
   // Use the correct API key as specified by the user
-  const PI_SERVER_API_KEY = "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
+  // First check if it's set in environment variables, otherwise use hardcoded
+  const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY || "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
 
   const { paymentId } = req.body;
   if (!paymentId) {
@@ -23,6 +24,7 @@ export default async function handler(req, res) {
     
     console.log("🔄 Completing mock payment with Pi Network Testnet API...");
     console.log("🌐 URL:", piApiUrl);
+    console.log("🔑 Using API Key starting with:", PI_SERVER_API_KEY.substring(0, 10));
 
     const completionResponse = await fetch(piApiUrl, {
       method: "POST",

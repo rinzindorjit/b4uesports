@@ -3,7 +3,6 @@ import authHandler from './pi/auth.js';
 import paymentsHandler from './pi/payments.js';
 import userHandler from './pi/user.js';
 import webhookHandler from './pi/webhook.js';
-import metadataHandler from './metadata.js';
 import mockPaymentHandler from './mock-pi-payment.js';
 import createPaymentHandler from './pi/create-payment.js'; // Import the new payment creation handler
 import paymentApprovalHandler from './pi/payment-approval.js'; // Import the new payment approval handler
@@ -421,6 +420,41 @@ async function handleAnalytics(request, response) {
   response.status(200).json(mockAnalytics);
 }
 
+// Mock handler for metadata
+async function handleMetadata(request, response) {
+  // Use the current Vercel deployment URL for the backend URL
+  const backendUrl = 'https://b4uesports.vercel.app';
+  
+  response.status(200).json({
+    application: {
+      name: "B4U Esports",
+      description: "Pi Network Integrated Marketplace for Gaming Currency",
+      version: "1.0.0",
+      platform: "Pi Network",
+      category: "Gaming"
+    },
+    payment: {
+      currency: "PI",
+      supported_operations: ["buy_gaming_currency", "deposit", "withdrawal"],
+      min_amount: 0.1,
+      max_amount: 10000
+    },
+    // For Pi Testnet, we use direct domain access rather than app ID
+    // Testnet relies on domain registration in the developer console
+    endpoints: {
+      authentication: `${backendUrl}/api/pi/auth`,
+      payment_create: `${backendUrl}/api/payment/approve`,
+      payment_complete: `${backendUrl}/api/payment/complete`,
+      user_profile: `${backendUrl}/api/pi/user`
+    },
+    contact: {
+      support_email: "info@b4uesports.com",
+      website: "https://b4uesports.vercel.app"
+    },
+    last_updated: new Date().toISOString()
+  });
+}
+
 // Test handler for fetch
 async function handleTestFetch(request, response) {
   if (request.method !== "GET") {
@@ -772,7 +806,7 @@ async function apiHandler(request, response) {
       return await webhookHandler(request, response);
     } else if (path === '/api/metadata') {
       console.log('Routing to metadata handler');
-      return await metadataHandler(request, response);
+      return await handleMetadata(request, response);
     } else if (path === '/api/profile') {
       console.log('Routing to profile handler');
       return await handleProfileUpdate(request, response);

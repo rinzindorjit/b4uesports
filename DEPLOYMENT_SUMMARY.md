@@ -142,3 +142,40 @@ For any issues not covered in this document, refer to:
 - Pi Network Developer Documentation
 - Vercel Deployment Documentation
 - The troubleshooting guide included in this deployment
+
+# Deployment Summary
+
+## Overview
+This document provides a summary of the B4U Esports deployment, including all files and their purposes.
+
+## Serverless Functions (9 total)
+1. **[api/diagnose-pi-issue.js](file:///c:/Users/HP/B4U%20Esports/api/diagnose-pi-issue.js)** - Diagnostic endpoint for Pi Network integration issues
+2. **[api/mock-pi-payment.js](file:///c:/Users/HP/B4U%20Esports/api/mock-pi-payment.js)** - Mock payment processing for testing
+3. **[api/pi/auth.js](file:///c:/Users/HP/B4U%20Esports/api/pi/auth.js)** - Pi Network authentication endpoint
+4. **[api/pi/create-payment.js](file:///c:/Users/HP/B4U%20Esports/api/pi/create-payment.js)** - Payment creation with Pi Network
+5. **[api/pi/payment-approval.js](file:///c:/Users/HP/B4U%20Esports/api/pi/payment-approval.js)** - Payment approval endpoint
+6. **[api/pi/payment-completion.js](file:///c:/Users/HP/B4U%20Esports/api/pi/payment-completion.js)** - Payment completion endpoint
+7. **[api/pi/payments.js](file:///c:/Users/HP/B4U%20Esports/api/pi/payments.js)** - Payment management
+8. **[api/pi/user.js](file:///c:/Users/HP/B4U%20Esports/api/pi/user.js)** - User management
+9. **[api/pi/webhook.js](file:///c:/Users/HP/B4U%20Esports/api/pi/webhook.js)** - Pi Network webhook handling
+
+## Consolidated Functions (Moved to api/index.js)
+1. **Metadata Handler** - Moved from api/metadata.js to inline function in api/index.js
+
+## Removed Functions
+1. **[api/pi/mock-payment.js](file:///c:/Users/HP/B4U%20Esports/api/pi/mock-payment.js)** - Removed duplicate functionality (already in api/mock-pi-payment.js)
+2. **[api/metadata.js](file:///c:/Users/HP/B4U%20Esports/api/metadata.js)** - Moved inline to api/index.js
+
+## Configuration Files
+1. **[vercel.json](file:///c:/Users/HP/B4U%20Esports/vercel.json)** - Vercel deployment configuration
+2. **[package.json](file:///c:/Users/HP/B4U%20Esports/package.json)** - Node.js package configuration
+
+## Testing Endpoints
+1. **Pi Network Diagnostic**: `curl -X POST https://b4uesports.vercel.app/api/diagnose-pi-issue`
+2. **Environment Variables Check**: `curl https://b4uesports.vercel.app/api/test-env`
+
+## Notes
+- All Pi Network integration endpoints now use the correct sandbox URL: `https://sandbox.minepi.com/v2/payments`
+- All handlers use the hardcoded API key: `2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya`
+- Enhanced error handling detects CDN blocking issues
+- Application now stays within Vercel's 12 Serverless Functions limit

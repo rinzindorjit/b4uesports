@@ -1,5 +1,6 @@
 // /api/pi/create-payment.js
 // Fixed version to address 403 errors with Pi Network API
+// Force redeploy 3 - This change should trigger a new deployment
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -10,11 +11,14 @@ export default async function handler(req, res) {
   const piApiUrl = "https://sandbox.minepi.com/v2/payments";
 
   // Use the correct API key as specified by the user
-  const PI_SERVER_API_KEY = "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
+  // First check if it's set in environment variables, otherwise use hardcoded
+  const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY || "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
 
-  console.log("🔑 Using hardcoded API Key starting with:", PI_SERVER_API_KEY.substring(0, 10));
+  console.log("🔑 Using API Key starting with:", PI_SERVER_API_KEY.substring(0, 10));
   console.log("🔧 Debug: Full API Key length:", PI_SERVER_API_KEY.length);
   console.log("🔧 Debug: API Key characters 0-20:", PI_SERVER_API_KEY.substring(0, 20));
+  console.log("🔧 Debug: Environment PI_SERVER_API_KEY:", process.env.PI_SERVER_API_KEY ? "SET" : "NOT SET");
+  console.log("🔄 Force redeploy 3 - This should show the correct API key");
 
   // Handle both request formats (frontend format and test format)
   let paymentData;

@@ -8,7 +8,8 @@ export default async function paymentCompletionHandler(request, response) {
   const piApiUrlBase = "https://sandbox.minepi.com/v2/payments";
 
   // Use the correct API key as specified by the user
-  const PI_SERVER_API_KEY = "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
+  // First check if it's set in environment variables, otherwise use hardcoded
+  const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY || "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
 
   const body = request.body || {};
   const { paymentId, txid } = body;
@@ -25,6 +26,7 @@ export default async function paymentCompletionHandler(request, response) {
     
     console.log("🔄 Completing payment with Pi Network Testnet API...");
     console.log("🌐 URL:", piApiUrl);
+    console.log("🔑 Using API Key starting with:", PI_SERVER_API_KEY.substring(0, 10));
 
     const piResponse = await fetch(piApiUrl, {
       method: "POST",
