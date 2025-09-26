@@ -1,5 +1,8 @@
 // /api/metadata.js
 export default function handler(req, res) {
+  // Use the specific Pi Network subdomain for the backend URL
+  const backendUrl = 'https://esportshub6671.b4uesports.vercel.app';
+  
   res.status(200).json({
     application: {
       name: "B4U Esports",
@@ -15,10 +18,10 @@ export default function handler(req, res) {
       max_amount: 10000
     },
     endpoints: {
-      authentication: "https://b4uesports.vercel.app/api/pi/auth",
-      payment_create: "https://b4uesports.vercel.app/api/pi-create-payment",
-      payment_complete: "https://b4uesports.vercel.app/api/mock-pi-payment",
-      user_profile: "https://b4uesports.vercel.app/api/pi/user"
+      authentication: `${backendUrl}/api/pi/auth`,
+      payment_create: `${backendUrl}/api/pi-create-payment`,
+      payment_complete: `${backendUrl}/api/mock-pi-payment`,
+      user_profile: `${backendUrl}/api/pi/user`
     },
     contact: {
       support_email: "info@b4uesports.com",

@@ -25,7 +25,12 @@ export default async function handler(req, res) {
     console.log("Creating payment with Pi Network, amount:", amount, "packageId:", packageId);
     console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
     
-    const response = await fetch("https://sandbox.minepi.com/v2/payments", {
+    // Use the correct endpoint based on sandbox mode
+    const piApiUrl = process.env.PI_SANDBOX_MODE === 'true' 
+      ? 'https://sandbox.minepi.com/v2/payments' 
+      : 'https://api.minepi.com/v2/payments';
+      
+    const response = await fetch(piApiUrl, {
       method: "POST",
       headers: {
         "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
