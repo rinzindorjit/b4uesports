@@ -5,7 +5,7 @@ import userHandler from './pi/user.js';
 import webhookHandler from './pi/webhook.js';
 import metadataHandler from './metadata.js';
 import mockPaymentHandler from './mock-pi-payment.js';
-import createPaymentHandler from './pi/create-payment.js'; // Import the new payment creation handler
+import createPaymentHandler from './pi-create-payment.js'; // Import the new payment creation handler
 import { withCORS, setCORSHeaders, handlePreflight } from './utils/cors.js';
 
 // Use built-in fetch when available (Node.js 18+ in Vercel)

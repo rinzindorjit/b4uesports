@@ -9,6 +9,7 @@ async function authHandler(request, response) {
   console.log('=== AUTH API ENDPOINT CALLED ===');
   console.log('Request method:', request.method);
   console.log('Request headers:', request.headers);
+  console.log('Process env keys:', Object.keys(process.env).filter(key => key.includes('PI')));
   
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
@@ -39,6 +40,9 @@ async function authHandler(request, response) {
     // In Vercel, the request body is already parsed as JSON
     // So we don't need to parse it again
     const body = request.body || {};
+    
+    console.log('Parsed body:', body);
+    console.log('Body type:', typeof body);
     
     console.log('Body:', body);
     console.log('Body type:', typeof body);
@@ -97,10 +101,18 @@ async function authHandler(request, response) {
       console.log('Invalid access token format');
       return response.status(400).json({ message: 'Invalid access token format' });
     }
+    
+    console.log('PI_SANDBOX_MODE:', process.env.PI_SANDBOX_MODE);
 
     // Verify the access token with Pi Network
     console.log('Verifying access token with Pi Network');
-    const piResponse = await fetch('https://api.minepi.com/v2/me', {
+    
+    // Use sandbox endpoint for testnet mode
+    const piApiUrl = process.env.PI_SANDBOX_MODE === 'true' 
+      ? 'https://sandbox.minepi.com/v2/me' 
+      : 'https://api.minepi.com/v2/me';
+      
+    const piResponse = await fetch(piApiUrl, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -160,13 +172,21 @@ async function authHandler(request, response) {
     console.error('Error stack:', error.stack);
     
     // Ensure we always send a response
-    if (!response.headersSent) {
-      response.status(500).json({ 
-        message: 'Authentication failed', 
-        error: error.message,
-        // Don't expose the full stack trace in production
-        ...(process.env.NODE_ENV === 'development' ? { stack: error.stack } : {})
-      });
+    try {
+      if (!response.headersSent) {
+        response.status(500).json({ 
+          message: 'Authentication failed', 
+          error: error.message,
+          // Don't expose the full stack trace in production
+          ...(process.env.NODE_ENV === 'development' ? { stack: error.stack } : {})
+        });
+      }
+    } catch (responseError) {
+      console.error('Error sending response:', responseError);
+      // Last resort response
+      if (!response.headersSent) {
+        response.status(500).send('Authentication failed');
+      }
     }
   } finally {
     console.log('=== AUTH API ENDPOINT FINISHED ===');
