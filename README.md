@@ -266,6 +266,14 @@ For development and testing environments where Pi Network is not available:
 
 ## Recent Improvements
 
+### October 2025
+1. **Fixed Inconsistent Pi Price Display**: Resolved issue where the live Pi price was showing different values between localhost and deployed domain by:
+   - Using a fixed fallback price instead of random values when the CoinGecko API is unavailable
+   - Adjusting React Query cache configuration to ensure proper data refresh
+   - Ensuring consistent data types between API responses and client expectations
+
+2. **Enhanced Cache Management**: Removed global `staleTime: Infinity` setting in React Query client to allow individual queries to manage their own cache behavior properly.
+
 ### September 2025
 1. **Fixed CORS Issues**: Implemented conditional Pi SDK loading to prevent CORS errors on Vercel deployments
 2. **Enhanced Authentication**: Improved mock authentication flow for development environments

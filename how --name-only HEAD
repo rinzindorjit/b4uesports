@@ -1,0 +1,5 @@
+[33m432a4bb[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Fix Pi Network validation key accessibility and Vercel deployment configuration
+[33mbe03b61[m Initial commit
+[33m471fafb[m Fix Pi Browser compatibility issues by updating CSP headers and CORS configuration to prevent ERR_BLOCKED_BY_RESPONSE errors
+[33mae67a21[m Add debugging logs to client-side Pi price hooks and components to troubleshoot blank live price display
+[33mbe6df3b[m Add debugging logs to pricing service and CORS support to fix blank live price display

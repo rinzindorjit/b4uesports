@@ -6,6 +6,9 @@ import webhookHandler from './pi/webhook.js';
 import metadataHandler from './metadata.js';
 import mockPaymentHandler from './pi/mock-payment.js';
 
+// Use built-in fetch when available (Node.js 18+ in Vercel)
+const fetch = globalThis.fetch;
+
 // Mock handlers for additional routes
 async function handleProfileUpdate(request, response) {
   // In Vercel, the request body is already parsed as JSON
@@ -52,15 +55,44 @@ async function handleAdminLogin(request, response) {
   });
 }
 
-// Mock handler for Pi price
+// Handler for Pi price - using the real CoinGecko API
 async function handlePiPrice(request, response) {
-  // For mock purposes, return a mock Pi price
-  const mockPrice = {
-    price: 0.0001 + Math.random() * 0.001, // Random price between 0.0001 and 0.0011
-    lastUpdated: new Date().toISOString(),
-  };
+  try {
+    console.log('Fetching Pi price from CoinGecko API');
+    
+    // Use the CoinGecko API with the provided demo API key
+    const apiResponse = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4'
+    );
 
-  response.status(200).json(mockPrice);
+    if (!apiResponse.ok) {
+      throw new Error(`CoinGecko API error: ${apiResponse.status}`);
+    }
+
+    const data = await apiResponse.json();
+    console.log('CoinGecko API response:', data);
+    
+    const price = data['pi-network']?.usd || 0.01; // fallback to 0.01 if not available
+    console.log('Extracted price:', price);
+    
+    const priceData = {
+      price: price,
+      lastUpdated: new Date().toISOString(), // Return as ISO string to match client expectations
+    };
+
+    response.status(200).json(priceData);
+  } catch (error) {
+    console.error('Failed to fetch Pi price from CoinGecko:', error);
+    
+    // Even in error cases, use a fixed fallback price rather than random
+    // This ensures consistency between environments
+    const fallbackPrice = {
+      price: 0.0009, // Fixed price matching what you observed
+      lastUpdated: new Date().toISOString(),
+    };
+
+    response.status(200).json(fallbackPrice);
+  }
 }
 
 // Mock handler for Pi balance

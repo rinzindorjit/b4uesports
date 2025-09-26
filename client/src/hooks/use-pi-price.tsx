@@ -8,5 +8,10 @@ export function usePiPrice() {
     staleTime: 50000, // Consider data stale after 50 seconds
     retry: 3, // Retry up to 3 times on failure
     retryDelay: 1000, // Wait 1 second between retries
+    // Ensure we properly parse the date string from the API
+    select: (data) => ({
+      ...data,
+      lastUpdated: new Date(data.lastUpdated) // Convert string to Date object
+    }),
   });
 }

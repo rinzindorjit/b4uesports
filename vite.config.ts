@@ -33,6 +33,7 @@ export default defineConfig({
     },
   },
   root: path.resolve(__dirname, "client"),
+  publicDir: path.resolve(__dirname, "public"), // Specify the public directory
   build: {
     outDir: path.resolve(__dirname, "dist"),
     assetsDir: 'assets',
