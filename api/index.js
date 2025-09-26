@@ -1,6 +1,5 @@
 // Main API handler for Vercel
 import mockPaymentHandler from './mock-pi-payment.js';
-import { withCORS, setCORSHeaders, handlePreflight } from './utils/cors.js';
 
 // Use built-in fetch when available (Node.js 18+ in Vercel)
 const fetch = globalThis.fetch;
@@ -515,6 +514,41 @@ async function handleTestEnv(request, response) {
   }
 }
 
+// Test handler for auth endpoint
+async function handleTestAuth(request, response) {
+  if (request.method !== "POST") {
+    return response.status(405).json({ message: "Method not allowed" });
+  }
+
+  console.log('=== Test Auth Endpoint ===');
+  console.log('Request body:', request.body);
+  
+  // Simulate a successful auth response
+  const mockUser = {
+    id: 'test-user-' + Date.now(),
+    piUID: 'test-pi-uid',
+    username: 'test_user',
+    email: 'test@example.com',
+    phone: '+1234567890',
+    country: 'US',
+    language: 'en',
+    walletAddress: 'test-wallet-address',
+    gameAccounts: {},
+    profileImageUrl: null,
+    isProfileVerified: true,
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  const mockToken = 'test-jwt-token-' + Date.now();
+
+  return response.status(200).json({
+    user: mockUser,
+    token: mockToken
+  });
+}
+
 // Diagnostic handler for Pi Network issues
 async function handleDiagnosePiIssue(request, response) {
   if (request.method !== "POST") {
@@ -721,6 +755,7 @@ async function apiHandler(request, response) {
   try {
     const url = new URL(request.url, `http://${request.headers.host}`);
     const path = url.pathname;
+    const searchParams = url.searchParams;
     
     console.log('API request received:', { 
       method: request.method, 
@@ -734,10 +769,20 @@ async function apiHandler(request, response) {
     console.log('Request body type:', typeof request.body);
     
     // Route to appropriate handler based on path
-    if (path === '/api/pi') {
+    if (path === '/api/auth/pi') {
+      console.log('Routing to auth-pi test handler');
+      const authPiHandler = (await import('./auth-pi.js')).default;
+      return await authPiHandler(request, response);
+    } else if (path === '/api/pi') {
       // Import and use the consolidated Pi API handler
       const piHandler = (await import('./pi.js')).default;
-      return await piHandler(request, response);
+      
+      // For /api/pi, pass through the query parameters
+      const modifiedRequest = {
+        ...request,
+        query: Object.fromEntries(searchParams)
+      };
+      return await piHandler(modifiedRequest, response);
     } else if (path === '/api/metadata') {
       console.log('Routing to metadata handler');
       return await handleMetadata(request, response);
@@ -774,6 +819,9 @@ async function apiHandler(request, response) {
     } else if (path === '/api/test-env') {
       console.log('Routing to test environment variables handler');
       return await handleTestEnv(request, response);
+    } else if (path === '/api/test-auth') {
+      console.log('Routing to test auth handler');
+      return await handleTestAuth(request, response);
     } else if (path === '/api/diagnose-pi-issue') {
       console.log('Routing to Pi Network diagnostic handler');
       return await handleDiagnosePiIssue(request, response);

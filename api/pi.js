@@ -26,8 +26,179 @@ export default async function handler(req, res) {
       }
 
       case "auth": {
-        console.log("=== AUTH API ENDPOINT FINISHED ===");
-        return res.status(200).json({ success: true, user: body.user || {} });
+        if (method !== "POST") {
+          return res.status(405).json({ message: "Method not allowed" });
+        }
+
+        console.log("=== AUTH API ENDPOINT STARTED ===");
+        console.log("Request body:", body);
+        console.log("Request headers:", req.headers);
+
+        try {
+          // Check if body exists and is properly parsed
+          if (!body) {
+            console.error("❌ Request body is missing or undefined");
+            return res.status(400).json({ 
+              message: 'Request body is required', 
+              error: 'Missing request body' 
+            });
+          }
+
+          // Check if this is a mock request (for Pi Browser development)
+          if (body.isMockAuth) {
+            console.log("Handling mock authentication");
+            // Create mock user data
+            const mockUser = {
+              id: 'mock-user-' + Date.now(),
+              piUID: 'mock-pi-uid-' + Date.now(),
+              username: 'pi_user_' + Math.floor(Math.random() * 10000),
+              email: 'piuser@example.com',
+              phone: '+1234567890',
+              country: 'US',
+              language: 'en',
+              walletAddress: 'GAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+              gameAccounts: {
+                pubg: { ign: 'PiPlayer', uid: 'PID123456789' },
+                mlbb: { userId: 'MLBB987654321', zoneId: 'ZONE1234' }
+              },
+              profileImageUrl: null,
+              isProfileVerified: true,
+              isActive: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+
+            // Generate a mock JWT token
+            const mockToken = 'mock-jwt-token-' + Date.now();
+
+            console.log("=== MOCK AUTH API ENDPOINT FINISHED ===");
+            return res.status(200).json({
+              user: mockUser,
+              token: mockToken
+            });
+          }
+
+          // For non-mock requests, we need an access token
+          const { accessToken } = body;
+
+          if (!accessToken) {
+            console.error("❌ Access token is missing from request body");
+            return res.status(400).json({ message: 'Access token required' });
+          }
+
+          // Validate access token format (basic validation)
+          if (typeof accessToken !== 'string' || accessToken.length < 10) {
+            console.error("❌ Invalid access token format");
+            return res.status(400).json({ message: 'Invalid access token format' });
+          }
+
+          // Verify the access token with Pi Network
+          const piApiUrl = "https://sandbox.minepi.com/v2/me"; // Always Testnet
+
+          console.log("🔄 Authenticating user with Pi Network Testnet API...");
+          console.log("🌐 URL:", piApiUrl);
+          console.log("🔑 Access token (first 20 chars):", accessToken.substring(0, 20));
+
+          const piResponse = await fetch(piApiUrl, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+              'User-Agent': 'B4U-Esports-Server/1.0'
+            }
+          });
+
+          console.log("📥 Pi API Response Status:", piResponse.status);
+
+          // Check if we're hitting CloudFront by looking at the headers
+          const serverHeader = piResponse.headers.get('server');
+          const viaHeader = piResponse.headers.get('via');
+          const cfId = piResponse.headers.get('x-amz-cf-id');
+          
+          console.log("🔧 Debug: Server header:", serverHeader);
+          console.log("🔧 Debug: Via header:", viaHeader);
+          console.log("🔧 Debug: CF ID:", cfId);
+
+          // Handle non-JSON responses
+          const textResponse = await piResponse.text();
+          
+          // Check if response is HTML (indicating CDN error)
+          if (textResponse.startsWith('<!DOCTYPE') || textResponse.includes('<HTML')) {
+            console.error("❌ CDN BLOCK DETECTED - Response is HTML instead of JSON");
+            return res.status(403).json({
+              error: "CDN Blocking Request",
+              message: "Request blocked by CDN - ensure you're hitting the correct Pi Network API endpoint",
+              details: "This distribution is not configured to allow the HTTP request method that was used for this request. The distribution supports only cachable requests.",
+              rawResponsePreview: textResponse.substring(0, 500),
+              diagnosticInfo: {
+                responseHeaders: {
+                  server: serverHeader,
+                  via: viaHeader,
+                  cfId: cfId
+                }
+              }
+            });
+          }
+
+          // Try to parse JSON response
+          let data;
+          try {
+            data = JSON.parse(textResponse);
+          } catch (parseError) {
+            console.error("❌ Failed to parse JSON response:", parseError.message);
+            return res.status(500).json({
+              error: "Invalid API Response",
+              message: "Pi Network API returned non-JSON response",
+              rawResponse: textResponse.substring(0, 1000)
+            });
+          }
+
+          if (!piResponse.ok) {
+            console.error(`❌ Pi API Error ${piResponse.status}:`, data);
+            return res.status(piResponse.status).json({
+              error: "Pi Network API Error",
+              message: `API returned status ${piResponse.status}`,
+              details: data
+            });
+          }
+
+          const piUser = data;
+
+          // Create or update user in our database
+          const user = {
+            id: 'user-' + piUser.uid,
+            piUID: piUser.uid,
+            username: piUser.username,
+            email: piUser.email || '',
+            phone: piUser.phone || '',
+            country: piUser.country || 'US',
+            language: piUser.language || 'en',
+            walletAddress: piUser.walletAddress || '',
+            gameAccounts: {},
+            profileImageUrl: piUser.profileImageUrl || null,
+            isProfileVerified: !!(piUser.email && piUser.phone),
+            isActive: true,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+
+          // Generate a JWT token for our application
+          const token = 'mock-jwt-token-' + Date.now() + '-' + piUser.uid;
+
+          console.log("✅ Authentication successful for user:", user.username);
+          console.log("=== AUTH API ENDPOINT FINISHED ===");
+          return res.status(200).json({
+            user: user,
+            token: token
+          });
+        } catch (error) {
+          console.error("💥 Authentication failed:", error);
+          return res.status(500).json({ 
+            message: 'Authentication failed', 
+            error: error.message,
+            ...(process.env.NODE_ENV === 'development' ? { stack: error.stack } : {})
+          });
+        }
       }
 
       case "create-payment": {
@@ -188,6 +359,15 @@ export default async function handler(req, res) {
         
         // Acknowledge the webhook
         return res.status(200).json({ success: true });
+      }
+
+      case "test": {
+        // Simple test endpoint
+        return res.status(200).json({ 
+          message: "Pi API handler is working correctly",
+          action: "test",
+          timestamp: new Date().toISOString()
+        });
       }
 
       default:
