@@ -752,7 +752,6 @@ async function handleTestPiDns(request, response) {
 }
 
 // Remove the CORS wrapper to avoid interference
-export default apiHandler;
 
 async function apiHandler(request, response) {
   console.log('=== DEBUG API REQUEST ===');
