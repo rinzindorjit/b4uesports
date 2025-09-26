@@ -1,4 +1,5 @@
 // /api/mock-pi-payment.js
+// Use built-in fetch (Node.js 18+) or node-fetch
 const fetch = globalThis.fetch || (await import("node-fetch")).default;
 
 export default async function handler(req, res) {
@@ -6,83 +7,53 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  console.log("🔹 Completing mock Pi payment...");
-  console.log("PI_SANDBOX_MODE:", process.env.PI_SANDBOX_MODE);
-  console.log("PI_SERVER_API_KEY:", process.env.PI_SERVER_API_KEY ? "✅ SET" : "❌ MISSING");
-
-  const isSandbox = process.env.PI_SANDBOX_MODE === "true";
-  const piApiUrlBase = isSandbox
-    ? "https://sandbox.minepi.com/v2/payments"
-    : "https://api.minepi.com/v2/payments";
+  // Ensure sandbox mode
+  const piApiUrlBase = "https://sandbox.minepi.com/v2/payments";
+  console.log("Using Pi Testnet API URL base:", piApiUrlBase);
 
   if (!process.env.PI_SERVER_API_KEY) {
     return res.status(500).json({
-      error: "PI_SERVER_API_KEY is not configured",
-      message: "Please set PI_SERVER_API_KEY in your environment variables"
+      error: "PI_SERVER_API_KEY missing",
     });
   }
 
   const { paymentId } = req.body;
   if (!paymentId) {
-    return res.status(400).json({ 
-      error: "Invalid payment data",
-      message: "Payment ID is required" 
-    });
+    return res.status(400).json({ error: "Payment ID missing" });
   }
-
-  console.log("Completing payment with Pi Network, paymentId:", paymentId);
 
   try {
     const piApiUrl = `${piApiUrlBase}/${paymentId}/complete`;
-    console.log("Using Pi API URL:", piApiUrl);
+    console.log("Using Pi Testnet API URL:", piApiUrl);
 
     const completionResponse = await fetch(piApiUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`, // SERVER API KEY here
+        "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "User-Agent": "B4U-Esports-App/1.0"
       },
       body: JSON.stringify({
         txid: "mock-tx-" + Date.now()
       })
     });
 
-    console.log("Pi Network API status:", completionResponse.status);
+    console.log("Pi Testnet API response status:", completionResponse.status);
 
-    const contentType = completionResponse.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const textResponse = await completionResponse.text();
-      console.error("❌ Non-JSON response from Pi Network:", textResponse.substring(0, 500));
-
-      return res.status(completionResponse.status).json({
-        error: "Invalid response from Pi Network",
-        message: textResponse
+    if (completionResponse.status === 403) {
+      const text = await completionResponse.text();
+      return res.status(403).json({
+        error: "Pi Testnet API access blocked",
+        message: "403 Forbidden — Check endpoint & headers",
+        response: text.substring(0, 500),
       });
     }
 
     const completionData = await completionResponse.json();
-    if (!completionResponse.ok) {
-      console.error("❌ Pi Network API error:", completionData);
-      return res.status(completionResponse.status).json({
-        error: "Pi Network API error",
-        details: completionData
-      });
-    }
-
-    console.log("✅ Payment completed successfully:", completionData);
-    return res.status(200).json({
-      success: true,
-      message: "Payment completed successfully",
-      completionData
-    });
+    return res.status(completionResponse.ok ? 200 : completionResponse.status).json(completionData);
 
   } catch (error) {
-    console.error("❌ Payment completion failed:", error);
-    return res.status(500).json({
-      error: "Payment completion failed",
-      message: error.message
-    });
+    console.error("Testnet payment completion error:", error);
+    return res.status(500).json({ error: error.message });
   }
 }

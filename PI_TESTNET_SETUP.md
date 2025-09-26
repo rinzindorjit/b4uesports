@@ -95,7 +95,8 @@ export default function handler(req, res) {
 This endpoint approves a payment with the Pi Network.
 
 ```
-import fetch from "node-fetch";
+// Pi Network payment approval endpoint for Vercel
+const fetch = globalThis.fetch;
 import { withCORS } from '../utils/cors.js';
 
 export default withCORS(paymentApprovalHandler);
@@ -150,6 +151,12 @@ async function paymentApprovalHandler(request, response) {
       const piApiUrl = `${piApiUrlBase}/${paymentId}/approve`;
       console.log("Using Pi API URL:", piApiUrl);
 
+      console.log("Making request to Pi Network with headers:");
+      console.log("- Authorization: Key ***" + process.env.PI_SERVER_API_KEY.slice(-4));
+      console.log("- Content-Type: application/json");
+      console.log("- Accept: application/json");
+      console.log("- User-Agent: B4U-Esports-App/1.0");
+
       const piResponse = await fetch(piApiUrl, {
         method: "POST",
         headers: {
@@ -161,6 +168,7 @@ async function paymentApprovalHandler(request, response) {
       });
 
       console.log("Pi Network API status:", piResponse.status);
+      console.log("Pi Network API headers:", [...piResponse.headers.entries()]);
 
       const contentType = piResponse.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
@@ -189,7 +197,8 @@ async function paymentApprovalHandler(request, response) {
       console.error("❌ Payment approval failed:", error);
       return response.status(500).json({
         error: "Payment approval failed",
-        message: error.message
+        message: error.message,
+        stack: error.stack
       });
     }
   } catch (error) {
@@ -222,8 +231,7 @@ This endpoint completes the payment with the Pi Network.
 
 ```
 // Pi Network payment completion endpoint for Vercel
-// Use built-in fetch when available (Node.js 18+ in Vercel) to avoid compatibility issues
-const fetch = globalThis.fetch || (await import("node-fetch")).default;
+const fetch = globalThis.fetch;
 import { withCORS } from '../utils/cors.js';
 
 export default withCORS(paymentCompletionHandler);
@@ -278,6 +286,12 @@ async function paymentCompletionHandler(request, response) {
       const piApiUrl = `${piApiUrlBase}/${paymentId}/complete`;
       console.log("Using Pi API URL:", piApiUrl);
 
+      console.log("Making request to Pi Network with headers:");
+      console.log("- Authorization: Key ***" + process.env.PI_SERVER_API_KEY.slice(-4));
+      console.log("- Content-Type: application/json");
+      console.log("- Accept: application/json");
+      console.log("- User-Agent: B4U-Esports-App/1.0");
+
       const piResponse = await fetch(piApiUrl, {
         method: "POST",
         headers: {
@@ -292,6 +306,7 @@ async function paymentCompletionHandler(request, response) {
       });
 
       console.log("Pi Network API status:", piResponse.status);
+      console.log("Pi Network API headers:", [...piResponse.headers.entries()]);
 
       const contentType = piResponse.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
@@ -320,7 +335,8 @@ async function paymentCompletionHandler(request, response) {
       console.error("❌ Payment completion failed:", error);
       return response.status(500).json({
         error: "Payment completion failed",
-        message: error.message
+        message: error.message,
+        stack: error.stack
       });
     }
   } catch (error) {
