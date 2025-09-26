@@ -4,3 +4,7 @@ dist/
 vite.config.ts.*
 *.tar.gz
 .vercel
+
+# Test files
+*test*.js
+api/pi/create-payment.js
