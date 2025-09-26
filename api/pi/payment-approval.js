@@ -1,5 +1,6 @@
 // Pi Network payment approval endpoint for Vercel
-import fetch from "node-fetch";
+// Use built-in fetch when available (Node.js 18+ in Vercel)
+const fetch = globalThis.fetch || (await import('node-fetch')).default;
 import { withCORS } from '../utils/cors.js';
 
 export default withCORS(paymentApprovalHandler);

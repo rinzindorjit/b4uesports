@@ -2,7 +2,8 @@
 // This endpoint handles payment creation for Pi Network
 // Works in both Testnet (sandbox) and Mainnet
 
-import fetch from "node-fetch";
+// Use built-in fetch when available (Node.js 18+ in Vercel)
+const fetch = globalThis.fetch || (await import('node-fetch')).default;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -21,8 +22,6 @@ export default async function handler(req, res) {
     : "https://api.minepi.com/v2/payments";
     
   console.log(`Environment: NODE_ENV=${process.env.NODE_ENV}, PI_SANDBOX_MODE=${process.env.PI_SANDBOX_MODE}`);
-  console.log(`Using Pi API URL: ${piApiUrl}`);
-
   console.log(`Using Pi API URL: ${piApiUrl}`);
 
   // Check API key
