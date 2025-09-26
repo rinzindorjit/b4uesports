@@ -97,6 +97,8 @@ export class PiSDK {
           throw new Error('Authentication cancelled by user');
         } else if (error.message.includes('scopes')) {
           throw new Error('Required permissions not granted');
+        } else if (error.message.includes('domain') || error.message.includes('validation')) {
+          throw new Error('App validation failed - check Pi Network developer console configuration');
         } else {
           throw new Error(`Authentication failed: ${error.message}`);
         }
