@@ -18,42 +18,86 @@ export default async function handler(req, res) {
   console.log("This endpoint should not be called directly in production");
   console.log("Payments should be created using the client-side Pi SDK");
 
-  // For testnet/debugging purposes, we can create a mock response
-  // In production, this should never be called directly
-  const isTestnet = process.env.PI_SANDBOX_MODE === 'true' || process.env.NODE_ENV !== 'production';
-  
-  if (isTestnet) {
-    console.log("Testnet mode: Returning mock payment response");
-    
-    // Return a mock payment object for testing
-    const mockPayment = {
-      identifier: 'mock-payment-' + Date.now(),
-      user_uid: req.body?.user_uid || 'mock-user-uid',
-      amount: req.body?.amount || 1,
-      memo: req.body?.memo || 'Mock payment',
-      metadata: req.body?.metadata || {},
-      from_address: 'mock-from-address',
-      to_address: 'mock-to-address',
-      direction: 'user_to_app',
-      created_at: new Date().toISOString(),
-      network: process.env.PI_SANDBOX_MODE === 'true' ? 'Pi Testnet' : 'Pi Network',
-      status: {
-        developer_approved: false,
-        transaction_verified: false,
-        developer_completed: false,
-        cancelled: false,
-        user_cancelled: false
-      },
-      transaction: null
-    };
+  // Check if PI_SERVER_API_KEY is configured
+  if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === 'your_actual_pi_server_api_key_here') {
+    console.error('PI_SERVER_API_KEY not configured properly');
+    return res.status(500).json({ 
+      message: 'PI_SERVER_API_KEY not configured properly', 
+      error: 'Missing PI_SERVER_API_KEY environment variable' 
+    });
+  }
 
-    return res.status(200).json(mockPayment);
-  } else {
-    // In production, return an error indicating this endpoint should not be used
-    return res.status(400).json({ 
-      message: "Payments should be created using the client-side Pi SDK",
-      error: "Incorrect payment creation method",
-      details: "Use the Pi.createPayment() function in the client-side SDK instead of calling this endpoint directly"
+  try {
+    // Use the correct Pi Network API endpoint
+    // According to the analysis, we should use https://api.minepi.com/v2/payments for both testnet and mainnet
+    const piApiUrl = 'https://api.minepi.com/v2/payments';
+    
+    // Prepare the payment data from the request body
+    const paymentData = req.body?.paymentData || {};
+    
+    console.log('Creating payment with data:', paymentData);
+    
+    // Make the API call to Pi Network with proper headers
+    const response = await fetch(piApiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Key ${process.env.PI_SERVER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        // Add User-Agent header to avoid being treated as a browser request
+        'User-Agent': 'B4U-Esports-App/1.0'
+      },
+      body: JSON.stringify({
+        amount: paymentData.amount,
+        memo: paymentData.memo,
+        metadata: paymentData.metadata
+      })
+    });
+    
+    console.log('Pi Network API response status:', response.status);
+    
+    // Check if the response is JSON before trying to parse it
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      console.error('Non-JSON response from Pi Network:', textResponse.substring(0, 500));
+      
+      // If we get a 403 error, it's likely due to hitting the CDN instead of the API
+      if (response.status === 403) {
+        return res.status(403).json({
+          error: 'Pi Network API access blocked',
+          message: 'This distribution is not configured to allow the HTTP request method that was used for this request. The distribution supports only cachable requests.',
+          details: 'Make sure you are calling https://api.minepi.com/v2/payments and not sandbox.minepi.com',
+          responsePreview: textResponse.substring(0, 500)
+        });
+      }
+      
+      return res.status(response.status).json({
+        error: 'Invalid response from Pi Network',
+        responsePreview: textResponse.substring(0, 500),
+        contentType: contentType
+      });
+    }
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      console.error('Pi Network API error:', data);
+      return res.status(response.status).json({
+        error: 'Pi Network API error',
+        details: data
+      });
+    }
+    
+    console.log('Payment created successfully:', data);
+    return res.status(200).json(data);
+    
+  } catch (error) {
+    console.error('Payment creation error:', error);
+    return res.status(500).json({
+      error: 'Payment creation failed',
+      message: error.message,
+      stack: error.stack
     });
   }
 }
