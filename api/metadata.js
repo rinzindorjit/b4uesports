@@ -21,8 +21,8 @@ export default function handler(req, res) {
     // Testnet relies on domain registration in the developer console
     endpoints: {
       authentication: `${backendUrl}/api/pi/auth`,
-      payment_create: `${backendUrl}/api/pi-create-payment`,
-      payment_complete: `${backendUrl}/api/mock-pi-payment`,
+      payment_create: `${backendUrl}/api/payment/approve`, // Updated to correct endpoint
+      payment_complete: `${backendUrl}/api/payment/complete`, // Updated to correct endpoint
       user_profile: `${backendUrl}/api/pi/user`
     },
     contact: {

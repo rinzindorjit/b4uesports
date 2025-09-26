@@ -7,8 +7,8 @@ This document explains how to set up the Pi Testnet verification for your B4U Es
 The following three files have been implemented to work with Pi Network's Testnet verification process:
 
 1. **[api/metadata.js](file:///c:/Users/HP/B4U%20Esports/api/metadata.js)** - Pi's metadata endpoint
-2. **[api/pi-create-payment.js](file:///c:/Users/HP/B4U%20Esports/api/pi-create-payment.js)** - Step 10 handler (creates payment)
-3. **[api/mock-pi-payment.js](file:///c:/Users/HP/B4U%20Esports/api/mock-pi-payment.js)** - Step 11 handler (completes payment)
+2. **[api/pi/payment-approval.js](file:///c:/Users/HP/B4U%20Esports/api/pi/payment-approval.js)** - Step 10 handler (approves payment)
+3. **[api/pi/payment-completion.js](file:///c:/Users/HP/B4U%20Esports/api/pi/payment-completion.js)** - Step 11 handler (completes payment)
 
 ## Setup Instructions
 
@@ -16,26 +16,23 @@ The following three files have been implemented to work with Pi Network's Testne
 
 Update your `.env` file with your actual Pi Network API keys:
 
-```
-# PI_SECRET_KEY is actually your App ID from the Pi Developer Portal
-PI_SECRET_KEY=your_actual_app_id_here
+```env
+PI_SECRET_KEY=your_actual_pi_secret_key_here
 PI_SERVER_API_KEY=your_actual_pi_server_api_key_here
+PI_APP_ID=your_actual_app_id_here
 ```
 
 You can get these values from the [Pi Developer Portal](https://developers.minepi.com/).
 
-**Important**: 
-- `PI_SECRET_KEY` is actually your **App ID** (not a secret key)
-- `PI_SERVER_API_KEY` is your server API key used for backend authentication
-- Make sure to replace `your_actual_pi_server_api_key_here` with your actual server API key. The endpoints will not work if this is not properly configured.
+**Important**: Make sure to replace `your_actual_pi_server_api_key_here` with your actual server API key. The endpoints will not work if this is not properly configured.
 
 ### 2. Deploy to Vercel
 
 Deploy your application to Vercel. The endpoints will be available at:
 
 - Metadata endpoint: `https://your-app.vercel.app/api/metadata`
-- Payment creation endpoint: `https://your-app.vercel.app/api/pi-create-payment`
-- Payment completion endpoint: `https://your-app.vercel.app/api/mock-pi-payment`
+- Payment approval endpoint: `https://your-app.vercel.app/api/payment/approve`
+- Payment completion endpoint: `https://your-app.vercel.app/api/payment/complete`
 
 ### 3. Configure Pi Developer Portal
 
@@ -52,9 +49,9 @@ In the Pi Developer Portal, set up your app with the following configuration:
 
 The payment flow works as follows:
 
-1. Frontend calls `/api/pi-create-payment` (Step 10) → Creates a payment in Pi Testnet
-2. Pi returns a `paymentId` to the frontend
-3. Frontend calls `/api/mock-pi-payment` with that `paymentId` (Step 11) → Completes the payment in Pi Testnet
+1. Frontend uses `Pi.createPayment()` to create a payment in Pi Testnet
+2. Pi calls the `payment_create` endpoint (our approval endpoint) when the user confirms the payment
+3. Pi calls the `payment_complete` endpoint (our completion endpoint) after the blockchain transaction is submitted
 
 ## File Details
 
@@ -80,8 +77,8 @@ export default function handler(req, res) {
     },
     endpoints: {
       authentication: "https://b4uesports.vercel.app/api/pi/auth",
-      payment_create: "https://b4uesports.vercel.app/api/pi-create-payment",
-      payment_complete: "https://b4uesports.vercel.app/api/mock-pi-payment",
+      payment_create: "https://b4uesports.vercel.app/api/payment/approve",
+      payment_complete: "https://b4uesports.vercel.app/api/payment/complete",
       user_profile: "https://b4uesports.vercel.app/api/pi/user"
     },
     contact: {
@@ -93,125 +90,231 @@ export default function handler(req, res) {
 }
 ```
 
-### 2. Payment Creation Endpoint ([api/pi-create-payment.js](file:///c:/Users/HP/B4U%20Esports/api/pi-create-payment.js)) - Step 10
+### 2. Payment Approval Endpoint ([api/pi/payment-approval.js](file:///c:/Users/HP/B4U%20Esports/api/pi/payment-approval.js)) - Step 10
 
-This endpoint creates a payment with the Pi Network.
+This endpoint approves a payment with the Pi Network.
 
 ```javascript
 import fetch from "node-fetch";
+import { withCORS } from '../utils/cors.js';
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
+export default withCORS(paymentApprovalHandler);
+
+async function paymentApprovalHandler(request, response) {
+  // Set CORS headers
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    response.status(200).end();
+    return;
   }
-
-  const { amount, packageId, gameAccount } = req.body;
-
-  if (!amount || !packageId) {
-    return res.status(400).json({ message: "Amount and packageId required" });
-  }
-
-  if (!process.env.PI_SERVER_API_KEY) {
-    return res.status(500).json({ message: "PI_SERVER_API_KEY not set" });
+  
+  if (request.method !== 'POST') {
+    return response.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
-    const response = await fetch("https://sandbox.minepi.com/v2/payments", {
+    // In Vercel, the request body is already parsed as JSON
+    const body = request.body || {};
+    
+    const { paymentId } = body;
+    
+    if (!paymentId) {
+      return response.status(400).json({ message: 'Payment ID required' });
+    }
+
+    if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === 'your_actual_pi_server_api_key_here') {
+      console.error('PI_SERVER_API_KEY not configured properly');
+      return response.status(500).json({ 
+        message: 'PI_SERVER_API_KEY not configured properly', 
+        error: 'Missing PI_SERVER_API_KEY environment variable' 
+      });
+    }
+
+    console.log("Approving payment with Pi Network, paymentId:", paymentId);
+    console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
+    
+    // Use the correct endpoint based on sandbox mode
+    const piApiUrl = process.env.PI_SANDBOX_MODE === 'true' 
+      ? `https://sandbox.minepi.com/v2/payments/${paymentId}/approve` 
+      : `https://api.minepi.com/v2/payments/${paymentId}/approve`;
+      
+    const piResponse = await fetch(piApiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    console.log("Pi Network approval response status:", piResponse.status);
+    console.log("Pi Network approval response headers:", [...piResponse.headers.entries()]);
+    
+    // Check if the response is JSON before trying to parse it
+    const contentType = piResponse.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await piResponse.text();
+      console.error("Non-JSON response from Pi Network:", textResponse.substring(0, 500));
+      return response.status(piResponse.status).json({ 
+        error: "Invalid response from Pi Network",
+        responsePreview: textResponse.substring(0, 500),
+        contentType: contentType
+      });
+    }
+
+    const data = await piResponse.json();
+
+    if (!piResponse.ok) {
+      console.error("Payment approval error:", data);
+      return response.status(piResponse.status).json({ error: data });
+    }
+
+    console.log("Payment approved successfully:", data);
+
+    return response.status(200).json({
+      success: true,
+      paymentData: data
+    });
+
+  } catch (error) {
+    console.error("Payment approval exception:", error);
+    console.error("Error stack:", error.stack);
+    
+    // If it's a fetch error, provide more details
+    if (error.type === 'system' || error.code) {
+      return response.status(500).json({ 
+        error: "Network error when calling Pi Network API",
+        details: {
+          type: error.type,
+          code: error.code,
+          message: error.message
+        }
+      });
+    }
+    
+    return response.status(500).json({ 
+      error: error.message,
+      stack: error.stack
+    });
+  }
+}
+```
+
+### 3. Payment Completion Endpoint ([api/pi/payment-completion.js](file:///c:/Users/HP/B4U%20Esports/api/pi/payment-completion.js)) - Step 11
+
+This endpoint completes the payment with the Pi Network.
+
+```javascript
+import fetch from "node-fetch";
+import { withCORS } from '../utils/cors.js';
+
+export default withCORS(paymentCompletionHandler);
+
+async function paymentCompletionHandler(request, response) {
+  // Set CORS headers
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    response.status(200).end();
+    return;
+  }
+  
+  if (request.method !== 'POST') {
+    return response.status(405).json({ message: 'Method not allowed' });
+  }
+
+  try {
+    // In Vercel, the request body is already parsed as JSON
+    const body = request.body || {};
+    
+    const { paymentId, txid } = body;
+    
+    if (!paymentId || !txid) {
+      return response.status(400).json({ message: 'Payment ID and txid required' });
+    }
+
+    if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === 'your_actual_pi_server_api_key_here') {
+      console.error('PI_SERVER_API_KEY not configured properly');
+      return response.status(500).json({ 
+        message: 'PI_SERVER_API_KEY not configured properly', 
+        error: 'Missing PI_SERVER_API_KEY environment variable' 
+      });
+    }
+
+    console.log("Completing payment with Pi Network, paymentId:", paymentId, "txid:", txid);
+    console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
+    
+    // Use the correct endpoint based on sandbox mode
+    const piApiUrl = process.env.PI_SANDBOX_MODE === 'true' 
+      ? `https://sandbox.minepi.com/v2/payments/${paymentId}/complete` 
+      : `https://api.minepi.com/v2/payments/${paymentId}/complete`;
+      
+    const piResponse = await fetch(piApiUrl, {
       method: "POST",
       headers: {
         "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        amount: amount,
-        currency: "PI",
-        memo: `Purchase ${packageId}`,
-        metadata: {
-          type: "buy_gaming_currency",
-          packageId: packageId,
-          gameAccount: gameAccount || {}
-        }
+        txid: txid
       })
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error("Step 10 Error Response:", data);
-      return res.status(response.status).json({ error: data });
+    console.log("Pi Network completion response status:", piResponse.status);
+    console.log("Pi Network completion response headers:", [...piResponse.headers.entries()]);
+    
+    // Check if the response is JSON before trying to parse it
+    const contentType = piResponse.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await piResponse.text();
+      console.error("Non-JSON response from Pi Network:", textResponse.substring(0, 500));
+      return response.status(piResponse.status).json({ 
+        error: "Invalid response from Pi Network",
+        responsePreview: textResponse.substring(0, 500),
+        contentType: contentType
+      });
     }
 
-    console.log("Step 10 Payment Created:", data);
+    const data = await piResponse.json();
 
-    return res.status(200).json({
-      paymentId: data.identifier,
+    if (!piResponse.ok) {
+      console.error("Payment completion error:", data);
+      return response.status(piResponse.status).json({ error: data });
+    }
+
+    console.log("Payment completed successfully:", data);
+
+    return response.status(200).json({
+      success: true,
       paymentData: data
     });
 
   } catch (error) {
-    console.error("Step 10 Exception:", error);
-    return res.status(500).json({ error: error.message });
-  }
-}
-```
-
-### 3. Payment Completion Endpoint ([api/mock-pi-payment.js](file:///c:/Users/HP/B4U%20Esports/api/mock-pi-payment.js)) - Step 11
-
-This endpoint completes the payment with the Pi Network.
-
-```javascript
-import fetch from "node-fetch";
-
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" });
-  }
-
-  const { paymentId } = req.body;
-
-  if (!paymentId) {
-    return res.status(400).json({ message: "paymentId is required" });
-  }
-
-  if (!process.env.PI_SERVER_API_KEY) {
-    return res.status(500).json({ message: "PI_SERVER_API_KEY not set" });
-  }
-
-  try {
-    console.log("Step 11 starting for paymentId:", paymentId);
-
-    const completionResponse = await fetch(
-      `https://sandbox.minepi.com/v2/payments/${paymentId}/complete`,
-      {
-        method: "POST",
-        headers: {
-          "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          txid: "mock-tx-" + Date.now()
-        })
-      }
-    );
-
-    const completionData = await completionResponse.json();
-
-    if (!completionResponse.ok) {
-      console.error("Step 11 completion failed:", completionData);
-      return res.status(completionResponse.status).json({ error: completionData });
+    console.error("Payment completion exception:", error);
+    console.error("Error stack:", error.stack);
+    
+    // If it's a fetch error, provide more details
+    if (error.type === 'system' || error.code) {
+      return response.status(500).json({ 
+        error: "Network error when calling Pi Network API",
+        details: {
+          type: error.type,
+          code: error.code,
+          message: error.message
+        }
+      });
     }
-
-    console.log("Step 11 payment completed successfully:", completionData);
-
-    return res.status(200).json({
-      success: true,
-      message: "Payment completed successfully",
-      completionData
+    
+    return response.status(500).json({ 
+      error: error.message,
+      stack: error.stack
     });
-
-  } catch (error) {
-    console.error("Step 11 Exception:", error);
-    return res.status(500).json({ error: error.message });
   }
 }
 ```
@@ -224,7 +327,7 @@ export default async function handler(req, res) {
 
 2. **CORS Issues**: The endpoints include proper CORS headers for Pi Browser compatibility.
 
-3. **Payment Creation Fails**: Ensure you're using the correct Pi Network sandbox endpoint: `https://sandbox.minepi.com/v2/payments`
+3. **Payment Approval Fails**: Ensure you're using the correct Pi Network sandbox endpoint: `https://sandbox.minepi.com/v2/payments/{paymentId}/approve`
 
 4. **Payment Completion Fails**: Ensure you're using the correct Pi Network sandbox endpoint: `https://sandbox.minepi.com/v2/payments/{paymentId}/complete`
 
@@ -242,10 +345,15 @@ Then use tools like Postman or curl to test the endpoints:
 # Test metadata endpoint
 curl http://localhost:3000/api/metadata
 
-# Test payment creation (requires valid body and headers)
-curl -X POST http://localhost:3000/api/pi-create-payment \
+# Test payment approval (requires valid body and headers)
+curl -X POST http://localhost:3000/api/payment/approve \
   -H "Content-Type: application/json" \
-  -d '{"amount": 10, "packageId": "test-package"}'
+  -d '{"paymentId": "test-payment-id"}'
+  
+# Test payment completion (requires valid body and headers)
+curl -X POST http://localhost:3000/api/payment/complete \
+  -H "Content-Type: application/json" \
+  -d '{"paymentId": "test-payment-id", "txid": "test-txid"}'
 ```
 
 ## Deployment
