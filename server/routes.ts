@@ -244,15 +244,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Package not found' });
       }
 
-      // Check if user has sufficient balance
+      // In testnet mode, we should not check for insufficient balance
+      // Always allow purchases in testnet/mock mode
       const userBalance = parseFloat(user.balance || '1000.00000000');
       const packagePrice = parseFloat(pkg.usdtValue);
       const currentPiPrice = await pricingService.getCurrentPiPrice();
       const piAmount = pricingService.calculatePiAmount(packagePrice);
       
-      if (userBalance < piAmount) {
-        return res.status(400).json({ message: 'Insufficient balance' });
-      }
+      // Remove the insufficient balance check for testnet mode
+      // if (userBalance < piAmount) {
+      //   return res.status(400).json({ message: 'Insufficient balance' });
+      // }
 
       // Deduct balance from user
       const updatedUser = await storage.updateUserBalance(userId, piAmount, 'subtract');

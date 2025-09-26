@@ -99,7 +99,7 @@ async function handlePiPrice(request, response) {
 async function handlePiBalance(request, response) {
   // For mock purposes, return a mock Pi balance
   const mockBalance = {
-    balance: Math.random() * 1000 + 100, // Random balance between 100-1100 Pi
+    balance: 1000.00000000, // Fixed balance for testnet
     currency: 'π',
     lastUpdated: new Date().toISOString(),
     isTestnet: true
@@ -113,26 +113,52 @@ async function handlePackages(request, response) {
   // For mock purposes, return mock packages
   const mockPackages = [
     {
-      id: 'package-1',
-      name: 'Starter Pack',
+      id: 'pubg-1',
+      name: '60 UC',
       description: 'Perfect for beginners',
-      usdtValue: '5.00',
-      piPrice: (5.00 / 0.0005).toString(), // Assuming 0.0005 USD per Pi
-      currentPiPrice: 0.0005,
-      gameCurrency: '1000 UC',
+      usdtValue: '1.5000',
+      piPrice: (1.5000 / 0.0009).toString(), // Using fixed price
+      currentPiPrice: 0.0009,
+      gameCurrency: '60 UC',
       game: 'pubg',
       isActive: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
     {
-      id: 'package-2',
-      name: 'Pro Pack',
+      id: 'pubg-2',
+      name: '325 UC',
       description: 'Great value for experienced players',
-      usdtValue: '10.00',
-      piPrice: (10.00 / 0.0005).toString(),
-      currentPiPrice: 0.0005,
-      gameCurrency: '2500 Diamonds',
+      usdtValue: '6.5000',
+      piPrice: (6.5000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '325 UC',
+      game: 'pubg',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'mlbb-1',
+      name: '56 Diamonds',
+      description: 'Perfect for beginners',
+      usdtValue: '3.0000',
+      piPrice: (3.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '56 Diamonds',
+      game: 'mlbb',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'mlbb-2',
+      name: '278 Diamonds',
+      description: 'Great value for experienced players',
+      usdtValue: '6.0000',
+      piPrice: (6.0000 / 0.0009).toString(),
+      currentPiPrice: 0.0009,
+      gameCurrency: '278 Diamonds',
       game: 'mlbb',
       isActive: true,
       createdAt: new Date().toISOString(),
@@ -150,11 +176,11 @@ async function handleTransactions(request, response) {
     {
       id: 'transaction-1',
       userId: 'user-123',
-      packageId: 'package-1',
+      packageId: 'pubg-1',
       paymentId: 'payment-123',
-      piAmount: '10000',
-      usdAmount: '5.00',
-      piPriceAtTime: '0.0005',
+      piAmount: '1666.67',
+      usdAmount: '1.5000',
+      piPriceAtTime: '0.0009',
       status: 'completed',
       gameAccount: {
         ign: 'PlayerOne',
@@ -257,7 +283,7 @@ export default async function handler(request, response) {
     console.log('Request body type:', typeof request.body);
     
     // Route to appropriate handler based on path
-    if (path === '/api/pi/auth') {
+    if (path === '/api/pi/auth' || path === '/api/auth/pi') {
       console.log('Routing to auth handler');
       return await authHandler(request, response);
     } else if (path === '/api/pi/payments') {
@@ -272,9 +298,6 @@ export default async function handler(request, response) {
     } else if (path === '/api/metadata') {
       console.log('Routing to metadata handler');
       return await metadataHandler(request, response);
-    } else if (path === '/api/auth/pi') {
-      console.log('Routing to auth/pi handler - using Pi auth handler');
-      return await authHandler(request, response);
     } else if (path === '/api/profile') {
       console.log('Routing to profile handler');
       return await handleProfileUpdate(request, response);

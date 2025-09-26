@@ -74,15 +74,17 @@ export default async function handler(request, response) {
         balance: '1000.00000000'
       };
       
-      // Mock Pi price
-      const currentPiPrice = 0.0001 + Math.random() * 0.001; // Random price between 0.0001 and 0.0011
+      // Mock Pi price - use a fixed price for consistency
+      const currentPiPrice = 0.0009; // Fixed price matching what you observed
       const piAmount = parseFloat(pkg.usdtValue) / currentPiPrice;
       
-      // Check if user has sufficient balance
+      // In testnet mode, we should not check for insufficient balance
+      // Always allow purchases in testnet/mock mode
       const userBalance = parseFloat(user.balance || '1000.00000000');
-      if (userBalance < piAmount) {
-        return response.status(400).json({ message: 'Insufficient balance' });
-      }
+      // Remove the insufficient balance check for testnet mode
+      // if (userBalance < piAmount) {
+      //   return response.status(400).json({ message: 'Insufficient balance' });
+      // }
       
       // Mock deduct balance from user (in a real implementation, this would update the database)
       const newBalance = userBalance - piAmount;

@@ -386,32 +386,42 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                 </CardContent>
               </Card>
 
-              <div className="space-y-2">
-                <Label>Pi Wallet Passphrase</Label>
-                <div className="relative">
-                  <Input
-                    type={showPassphrase ? "text" : "password"}
-                    value={passphrase}
-                    onChange={(e) => setPassphrase(e.target.value)}
-                    placeholder="Enter your secure Pi wallet passphrase"
-                    disabled={isProcessing}
-                    data-testid="payment-passphrase"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-1 top-1/2 transform -translate-y-1/2"
-                    onClick={() => setShowPassphrase(!showPassphrase)}
-                    data-testid="toggle-passphrase"
-                  >
-                    <i className={`fas ${showPassphrase ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                  </Button>
+              {/* In testnet mode, we don't require a passphrase for mock payments */}
+              {process.env.NODE_ENV !== 'production' ? (
+                <div className="bg-green-500/20 border border-green-500 rounded-lg p-4">
+                  <p className="text-sm text-green-300">
+                    <i className="fas fa-info-circle mr-2"></i>
+                    Testnet Mode: This is a mock payment. No real passphrase required.
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  This passphrase secures your Pi Network transactions
-                </p>
-              </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label>Pi Wallet Passphrase</Label>
+                  <div className="relative">
+                    <Input
+                      type={showPassphrase ? "text" : "password"}
+                      value={passphrase}
+                      onChange={(e) => setPassphrase(e.target.value)}
+                      placeholder="Enter your secure Pi wallet passphrase"
+                      disabled={isProcessing}
+                      data-testid="payment-passphrase"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-1 top-1/2 transform -translate-y-1/2"
+                      onClick={() => setShowPassphrase(!showPassphrase)}
+                      data-testid="toggle-passphrase"
+                    >
+                      <i className={`fas ${showPassphrase ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    This passphrase secures your Pi Network transactions
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="bg-blue-500/20 border border-blue-500 rounded-lg p-4 mb-6">

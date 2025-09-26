@@ -48,11 +48,20 @@ To obtain these credentials:
 #### Vercel Deployments
 - Uses mock authentication to avoid CORS issues
 - Generates mock user data and tokens for testing
+- No real Pi balance checking in testnet mode
 
 #### Production
 - Uses real Pi Network authentication
 - Requests permissions for payments, username, and wallet address
 - Verifies access token with Pi Network backend
+
+## Testnet Mode
+
+In testnet mode (Vercel deployments), the application:
+- Uses mock payments with no real Pi deductions
+- Always allows purchases (no insufficient balance errors)
+- Does not require passphrases for transactions
+- Shows "Testnet" labels throughout the UI
 
 ## Building for Production
 
@@ -115,12 +124,13 @@ For Pi Network testnet development, the application is configured to:
 2. Initialize the Pi SDK in sandbox mode
 3. Use mock authentication for testing without PI_SECRET
 4. Handle CORS properly for the Pi Network sandbox environment
+5. Allow all purchases in testnet mode (no insufficient balance errors)
 
 ## Deployment
 
 ### Vercel
 
-The application is configured for Vercel deployment with proper CORS handling.
+The application is configured for Vercel deployment with proper CORS handling and middleware support.
 
 ### Netlify
 

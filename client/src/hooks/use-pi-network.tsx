@@ -266,8 +266,10 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     const isPiBrowserEnv = isPiBrowser();
     const isNetlify = window.location.hostname.includes('netlify.app');
     const isSandbox = isSandboxEnvironment();
+    const isVercel = window.location.hostname.includes('vercel.app');
     
-    if (isPreview || isSandbox || isNetlify) {
+    // In testnet/preview/sandbox environments, always use mock payments
+    if (isPreview || isSandbox || isNetlify || isVercel || process.env.NODE_ENV !== 'production') {
       // Mock payment flow for preview mode, sandbox, or Pi Browser
       console.log('Mock payment initiated:', paymentData);
       
@@ -373,9 +375,8 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       // Try to reinitialize Pi SDK and retry
       try {
         const isProduction = process.env.NODE_ENV === 'production';
-        const isDevelopment = process.env.NODE_ENV === 'development';
         // For sandbox mode (Vercel deployments), we also use sandbox mode
-        const useSandbox = isDevelopment || !isProduction || window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app');
+        const useSandbox = !isProduction || window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app');
         piSDK.init(useSandbox);
         piSDK.createPayment(enhancedPaymentData, enhancedCallbacks);
       } catch (retryError) {
