@@ -19,12 +19,17 @@ async function mockPaymentHandler(request, response) {
     if (request.method === 'POST') {
       // In Vercel, the request body is already parsed as JSON
       const body = request.body || {};
-      const { packageId, gameAccount } = body;
+      const { packageId, gameAccount, paymentId, action } = body;
       
       // Get authorization header
       // In mock mode, we don't require a valid token
       const authHeader = request.headers.authorization;
       const token = authHeader ? authHeader.replace('Bearer ', '') : 'mock-token';
+      
+      // For mock payment flow, we need a real payment ID from Pi
+      if (!paymentId) {
+        return response.status(400).json({ message: 'Payment ID is required' });
+      }
       
       // Validate input
       if (!packageId) {
@@ -82,7 +87,7 @@ async function mockPaymentHandler(request, response) {
       // Create a mock payment with Pi Network
       // This simulates what would happen in a real payment flow
       const mockPayment = {
-        identifier: 'mock-payment-' + Date.now(),
+        identifier: paymentId, // Use the real payment ID from Pi
         user_uid: 'mock-user-uid',
         amount: piAmount,
         memo: `Mock payment for ${pkg.name}`,
@@ -119,37 +124,9 @@ async function mockPaymentHandler(request, response) {
           });
         }
         
-        console.log('Calling Pi approval endpoint for payment:', mockPayment.identifier);
-        
-        // Call Pi's approval endpoint
-        const approvalResponse = await fetch(
-          `https://api.minepi.com/v2/payments/${mockPayment.identifier}/approve`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Key ${process.env.PI_SERVER_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              txid: 'mock-tx-' + Date.now()
-            })
-          }
-        );
-        
-        console.log('Pi approval response status:', approvalResponse.status);
-        
-        if (!approvalResponse.ok) {
-          const errorText = await approvalResponse.text();
-          console.error('Pi approval failed:', errorText);
-          return response.status(500).json({ 
-            message: 'Pi approval failed', 
-            error: errorText 
-          });
-        }
-        
         console.log('Calling Pi completion endpoint for payment:', mockPayment.identifier);
         
-        // Call Pi's completion endpoint
+        // Call Pi's completion endpoint directly with the real payment ID
         const completionResponse = await fetch(
           `https://api.minepi.com/v2/payments/${mockPayment.identifier}/complete`,
           {
@@ -174,6 +151,9 @@ async function mockPaymentHandler(request, response) {
             error: errorText 
           });
         }
+        
+        const completeData = await completionResponse.json();
+        console.log('Pi completion response:', completeData);
         
         // Update the payment status to completed
         mockPayment.status.developer_completed = true;

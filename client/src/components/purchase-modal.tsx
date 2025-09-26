@@ -103,39 +103,132 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
     try {
       // Always use mock payment flow for Vercel deployments, preview mode, or Pi Browser
       if (useMockPayment) {
-        // Use mock payment flow
-        console.log('Using mock payment flow');
+        // Use mock payment flow with real Pi payment
+        console.log('Using mock payment flow with real Pi payment');
         
-        const response = await fetch('/api/mock-pi-payment', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            // In mock mode, we don't require a valid token
-            'Authorization': `Bearer ${token || 'mock-token'}`
-          },
-          body: JSON.stringify({
-            packageId: pkg.id,
-            gameAccount: editableGameAccount
-          })
-        });
+        // Create a real payment with Pi Network first
+        let realPaymentId = null;
         
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.message || 'Mock payment failed');
+        // Create payment with Pi Network (real payment flow)
+        if (user) {
+          const paymentData = {
+            amount: pkg.piPrice || 0,
+            memo: `${pkg.name} - ${gameName}`,
+            metadata: {
+              type: 'backend' as const,
+              userId: user.id,
+              packageId: pkg.id,
+              gameAccount: editableGameAccount,
+              passphrase: passphrase ? await bcrypt.hash(passphrase, 10) : null, // Hash passphrase if provided
+            },
+          };
+
+          // Create a promise to capture the payment ID
+          const paymentPromise = new Promise<string>((resolve, reject) => {
+            createPayment(paymentData, {
+              onReadyForServerApproval: (paymentId: string) => {
+                console.log('Payment approved, payment ID:', paymentId);
+                // In mock mode, we don't need to call the approval endpoint
+                // Just resolve with the payment ID
+                resolve(paymentId);
+              },
+              onReadyForServerCompletion: (paymentId: string, txid: string) => {
+                console.log('Payment ready for completion, payment ID:', paymentId);
+                // In mock mode, we'll handle completion through our mock endpoint
+                resolve(paymentId);
+              },
+              onCancel: (paymentId: string) => {
+                toast({
+                  title: "Payment Cancelled",
+                  description: "❌ Payment canceled. No Pi deducted.",
+                  variant: "destructive",
+                });
+                reject(new Error('Payment cancelled'));
+              },
+              onError: (error: Error) => {
+                toast({
+                  title: "Payment Failed",
+                  description: `⚠️ Payment failed: ${error.message}. Please retry.`,
+                  variant: "destructive",
+                });
+                reject(error);
+              },
+            });
+          });
+
+          try {
+            realPaymentId = await paymentPromise;
+          } catch (paymentError) {
+            throw paymentError;
+          }
         }
         
-        toast({
-          title: "Payment Completed",
-          description: `✅ Payment confirmed! Transaction ID: ${data.transactionId}`,
-        });
-        
-        // Close modal and reset
-        onClose();
-        setStep('confirm');
-        setPassphrase('');
-        setIsProcessing(false);
-        return;
+        // If we have a real payment ID, call our mock endpoint
+        if (realPaymentId) {
+          const response = await fetch('/api/mock-pi-payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              // In mock mode, we don't require a valid token
+              'Authorization': `Bearer ${token || 'mock-token'}`
+            },
+            body: JSON.stringify({
+              packageId: pkg.id,
+              gameAccount: editableGameAccount,
+              paymentId: realPaymentId // Pass the real payment ID
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'Mock payment failed');
+          }
+          
+          toast({
+            title: "Payment Completed",
+            description: `✅ Payment confirmed! Transaction ID: ${data.transactionId}`,
+          });
+          
+          // Close modal and reset
+          onClose();
+          setStep('confirm');
+          setPassphrase('');
+          setIsProcessing(false);
+          return;
+        } else {
+          // Fallback to original mock payment if no real payment ID
+          const response = await fetch('/api/mock-pi-payment', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              // In mock mode, we don't require a valid token
+              'Authorization': `Bearer ${token || 'mock-token'}`
+            },
+            body: JSON.stringify({
+              packageId: pkg.id,
+              gameAccount: editableGameAccount
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'Mock payment failed');
+          }
+          
+          toast({
+            title: "Payment Completed",
+            description: `✅ Payment confirmed! Transaction ID: ${data.transactionId}`,
+          });
+          
+          // Close modal and reset
+          onClose();
+          setStep('confirm');
+          setPassphrase('');
+          setIsProcessing(false);
+          return;
+        }
       }
       
       // Create payment with Pi Network (real payment flow)
