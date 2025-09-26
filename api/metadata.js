@@ -21,13 +21,13 @@ export default function handler(req, res) {
     // Testnet relies on domain registration in the developer console
     endpoints: {
       authentication: `${backendUrl}/api/pi/auth`,
-      payment_create: `${backendUrl}/api/payment/approve`,
-      payment_complete: `${backendUrl}/api/payment/complete`,
+      payment_create: `${backendUrl}/api/pi/payments`,
+      payment_complete: `${backendUrl}/api/pi/payments`,
       user_profile: `${backendUrl}/api/pi/user`
     },
     contact: {
       support_email: "info@b4uesports.com",
-      website: "https://b4uesports.vercel.app" // Updated to correct URL
+      website: "https://b4uesports.vercel.app"
     },
     last_updated: new Date().toISOString()
   });
