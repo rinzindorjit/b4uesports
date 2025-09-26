@@ -9,7 +9,7 @@ const __dirname = dirname(__filename);
 
 // Import API handlers
 import mockPaymentHandler from './api/mock-pi-payment.js';
-import createPaymentHandler from './api/pi-create-payment.js';
+// import createPaymentHandler from './api/pi-create-payment.js'; // Deprecated
 import metadataHandler from './api/metadata.js'; // Add metadata handler
 
 // Load environment variables
@@ -86,36 +86,36 @@ app.post('/api/mock-pi-payment', (req, res) => {
   mockPaymentHandler(mockRequest, mockResponse);
 });
 
-app.post('/api/pi-create-payment', (req, res) => {
-  // Mock the Vercel request/response objects
-  const mockRequest = {
-    method: req.method,
-    headers: req.headers,
-    body: req.body,
-    url: req.url
-  };
-  
-  const mockResponse = {
-    statusCode: 200,
-    headers: {},
-    setHeader(key, value) {
-      this.headers[key] = value;
-    },
-    status(code) {
-      this.statusCode = code;
-      return this;
-    },
-    json(data) {
-      res.status(this.statusCode).json(data);
-    },
-    end() {
-      res.status(this.statusCode).end();
-    }
-  };
-  
-  // Call the create payment handler
-  createPaymentHandler(mockRequest, mockResponse);
-});
+// app.post('/api/pi-create-payment', (req, res) => {
+//   // Mock the Vercel request/response objects
+//   const mockRequest = {
+//     method: req.method,
+//     headers: req.headers,
+//     body: req.body,
+//     url: req.url
+//   };
+//   
+//   const mockResponse = {
+//     statusCode: 200,
+//     headers: {},
+//     setHeader(key, value) {
+//       this.headers[key] = value;
+//     },
+//     status(code) {
+//       this.statusCode = code;
+//       return this;
+//     },
+//     json(data) {
+//       res.status(this.statusCode).json(data);
+//     },
+//     end() {
+//       res.status(this.statusCode).end();
+//     }
+//   };
+//   
+//   // Call the create payment handler
+//   createPaymentHandler(mockRequest, mockResponse);
+// });
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
