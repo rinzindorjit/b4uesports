@@ -11,11 +11,12 @@ export default async function handler(req, res) {
 
   console.log("Creating Pi payment...");
 
-  // Environment check
-  const isDev = process.env.NODE_ENV !== "production";
+  // Environment check - use PI_SANDBOX_MODE if set, otherwise check NODE_ENV
+  const useSandbox = process.env.PI_SANDBOX_MODE === 'true' || 
+                    (process.env.NODE_ENV !== "production" && process.env.PI_SANDBOX_MODE !== 'false');
 
   // Testnet uses sandbox.minepi.com, Mainnet uses api.minepi.com
-  const piApiUrl = isDev
+  const piApiUrl = useSandbox
     ? "https://sandbox.minepi.com/v2/payments"
     : "https://api.minepi.com/v2/payments";
 
