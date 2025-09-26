@@ -19,12 +19,17 @@ import { useMemo } from 'react';
 
 export default function Dashboard() {
   const { user, isAuthenticated, logout, token } = usePiNetwork();
-  const { data: piPrice } = usePiPrice();
+  const { data: piPrice, error, isLoading } = usePiPrice();
   const { data: piBalance, refetch: refetchBalance } = usePiBalance();
   const [, setLocation] = useLocation();
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+
+  // Log piPrice data for debugging
+  console.log('Dashboard PiPrice data:', piPrice);
+  console.log('Dashboard PiPrice error:', error);
+  console.log('Dashboard PiPrice loading:', isLoading);
 
   // Create mock packages for preview with all the specified packages
   const mockPackages = useMemo(() => {

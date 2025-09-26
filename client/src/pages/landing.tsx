@@ -13,8 +13,13 @@ import { useMemo } from 'react';
 
 export default function Landing() {
   const { authenticate, isAuthenticated, isLoading: piLoading } = usePiNetwork();
-  const { data: piPrice } = usePiPrice();
+  const { data: piPrice, error, isLoading } = usePiPrice();
   const [, setLocation] = useLocation();
+
+  // Log piPrice data for debugging
+  console.log('PiPrice data:', piPrice);
+  console.log('PiPrice error:', error);
+  console.log('PiPrice loading:', isLoading);
 
   // Create mock packages for preview
   const mockPackages = useMemo(() => {
