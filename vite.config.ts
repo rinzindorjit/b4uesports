@@ -54,6 +54,6 @@ export default defineConfig({
       }
     }
   },
-  // Base public path for Netlify deployment
-  base: './',
+  // Base public path - use '/' for Vercel deployment, './' for local
+  base: process.env.VERCEL ? '/' : './',
 });
