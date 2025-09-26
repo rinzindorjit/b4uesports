@@ -71,7 +71,16 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
     // Only require passphrase in production mode
     const isTestnetMode = process.env.NODE_ENV !== 'production';
     
-    if (!isTestnetMode && !passphrase) {
+    // In testnet mode, we don't require a passphrase for mock payments
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '5173';
+    const isPiBrowserEnv = typeof window !== 'undefined' && 
+      (window.navigator.userAgent.includes('PiBrowser') || window.navigator.userAgent.includes('Pi Network'));
+    const isVercel = window.location.hostname.includes('vercel.app');
+    
+    // Always use mock payment flow for Vercel deployments, preview mode, or Pi Browser
+    const useMockPayment = isPreview || isVercel || isPiBrowserEnv || isTestnetMode;
+    
+    if (!useMockPayment && !isTestnetMode && !passphrase) {
       toast({
         title: "Error",
         description: "Please enter your passphrase",
@@ -92,14 +101,8 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
     setIsProcessing(true);
 
     try {
-      // Check if we're in mock mode (Vercel deployment, preview, or Pi Browser)
-      const isPreview = window.location.hostname === 'localhost' && window.location.port === '5173';
-      const isPiBrowserEnv = typeof window !== 'undefined' && 
-        (window.navigator.userAgent.includes('PiBrowser') || window.navigator.userAgent.includes('Pi Network'));
-      const isVercel = window.location.hostname.includes('vercel.app');
-      
       // Always use mock payment flow for Vercel deployments, preview mode, or Pi Browser
-      if (isPreview || isVercel || isPiBrowserEnv || isTestnetMode) {
+      if (useMockPayment) {
         // Use mock payment flow
         console.log('Using mock payment flow');
         
@@ -107,7 +110,8 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            // In mock mode, we don't require a valid token
+            'Authorization': `Bearer ${token || 'mock-token'}`
           },
           body: JSON.stringify({
             packageId: pkg.id,
@@ -208,6 +212,13 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
       return `${editableGameAccount.userId || 'Not set'}:${editableGameAccount.zoneId || 'Not set'}`;
     }
   };
+
+  // Determine if we should show the passphrase input
+  const isPreview = window.location.hostname === 'localhost' && window.location.port === '5173';
+  const isPiBrowserEnv = typeof window !== 'undefined' && 
+    (window.navigator.userAgent.includes('PiBrowser') || window.navigator.userAgent.includes('Pi Network'));
+  const isVercel = window.location.hostname.includes('vercel.app');
+  const useMockPayment = isPreview || isVercel || isPiBrowserEnv || process.env.NODE_ENV !== 'production';
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -390,7 +401,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               </Card>
 
               {/* In testnet mode, we don't require a passphrase for mock payments */}
-              {process.env.NODE_ENV !== 'production' ? (
+              {useMockPayment ? (
                 <div className="bg-green-500/20 border border-green-500 rounded-lg p-4">
                   <p className="text-sm text-green-300">
                     <i className="fas fa-info-circle mr-2"></i>
@@ -449,7 +460,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                 <Button 
                   onClick={handleProcessPayment} 
                   className="flex-1"
-                  disabled={isProcessing || (!passphrase && process.env.NODE_ENV === 'production')}
+                  disabled={isProcessing || (!useMockPayment && !passphrase && process.env.NODE_ENV === 'production')}
                   data-testid="process-payment"
                 >
                   {isProcessing ? (

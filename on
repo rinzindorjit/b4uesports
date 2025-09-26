@@ -1,5 +1,0 @@
-[33maec3c63[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Update Vercel configuration to include static files in deployment
-[33mfaa2dc8[m Update Vercel configuration to serve index.html for all non-API routes
-[33md78fa60[m Simplify Vercel configuration to route all requests through API handler
-[33m7f3743c[m Simplify API handler to return JSON for all non-API routes
-[33m87c1357[m Update Vercel configuration to properly serve static files and include dist directory

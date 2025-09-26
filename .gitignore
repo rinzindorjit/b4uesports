@@ -1,7 +1,6 @@
 node_modules
 .DS_Store
-server/public
+dist/
 vite.config.ts.*
 *.tar.gz
-# dist/  <-- Removed this line as it was causing deployment issues
 .vercel

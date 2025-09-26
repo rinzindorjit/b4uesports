@@ -64,9 +64,9 @@ async function mockPaymentHandler(request, response) {
         return response.status(404).json({ message: 'Package not found' });
       }
       
-      // Mock user data
+      // Mock user data - create consistent mock user for mock payments
       const user = {
-        id: 'mock-user-' + Date.now(),
+        id: 'mock-user-' + (Math.floor(Date.now() / 1000)), // Use seconds instead of milliseconds for consistency
         username: 'mock_user',
         email: 'mock@example.com',
         balance: '1000.00000000'
@@ -121,7 +121,7 @@ async function mockPaymentHandler(request, response) {
         success: true,
         message: "Mock payment processed successfully",
         transactionId: transaction.id,
-        newBalance: newBalance
+        newBalance: newBalance.toString()
       });
     } else {
       response.status(405).json({ message: 'Method not allowed' });
