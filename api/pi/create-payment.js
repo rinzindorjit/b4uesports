@@ -1,5 +1,6 @@
 // /api/pi/create-payment.js
-import fetch from "node-fetch";
+// Use built-in fetch when available (Node.js 18+ in Vercel) to avoid compatibility issues
+const fetch = globalThis.fetch || (await import("node-fetch")).default;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -7,20 +8,22 @@ export default async function handler(req, res) {
   }
 
   console.log("Creating Pi payment...");
+  console.log("PI_SANDBOX_MODE:", process.env.PI_SANDBOX_MODE);
+  console.log("PI_SANDBOX_MODE type:", typeof process.env.PI_SANDBOX_MODE);
+  console.log("PI_SANDBOX_MODE truthy:", !!process.env.PI_SANDBOX_MODE);
+  console.log("All env keys:", Object.keys(process.env).filter(key => key.includes('PI')));
 
-  if (!process.env.PI_SERVER_API_KEY) {
-    console.error("Missing PI_SERVER_API_KEY in environment variables");
-    return res.status(500).json({
-      error: "Missing PI_SERVER_API_KEY",
-      message: "Please configure your PI_SERVER_API_KEY in .env"
-    });
-  }
+  // Log the API key (first 4 characters only for security)
+  console.log("PI_SERVER_API_KEY configured:", !!process.env.PI_SERVER_API_KEY);
 
   try {
     // Select correct endpoint based on sandbox mode
-    const piApiUrl = process.env.PI_SANDBOX_MODE === "true"
+    // Using the user's suggested approach to ensure we're using the correct endpoint
+    const piApiUrl = process.env.PI_SANDBOX_MODE 
       ? "https://sandbox.minepi.com/v2/payments"
       : "https://api.minepi.com/v2/payments";
+
+    console.log("Using Pi API URL:", piApiUrl);
 
     const paymentData = req.body?.paymentData || {};
 
@@ -42,11 +45,12 @@ export default async function handler(req, res) {
     });
 
     console.log("Pi Network API status:", response.status);
+    console.log("Pi Network API headers:", [...response.headers.entries()]);
 
     const contentType = response.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       const textResponse = await response.text();
-      console.error("Non-JSON response from Pi Network:", textResponse);
+      console.error("Non-JSON response from Pi Network:", textResponse.substring(0, 500));
 
       return res.status(response.status).json({
         error: "Invalid response from Pi Network",

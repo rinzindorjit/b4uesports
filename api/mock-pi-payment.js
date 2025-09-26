@@ -1,6 +1,6 @@
 // /api/mock-pi-payment.js
-
-import fetch from "node-fetch";
+// Use built-in fetch when available (Node.js 18+ in Vercel) to avoid compatibility issues
+const fetch = globalThis.fetch || (await import("node-fetch")).default;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -13,23 +13,20 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: "paymentId is required" });
   }
 
-  if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === 'your_actual_pi_server_api_key_here') {
-    console.error('PI_SERVER_API_KEY not configured properly');
-    return res.status(500).json({ 
-      message: 'PI_SERVER_API_KEY not configured properly', 
-      error: 'Missing PI_SERVER_API_KEY environment variable' 
-    });
-  }
+  console.log("Step 11 starting for paymentId:", paymentId);
+  console.log("PI_SERVER_API_KEY configured:", !!process.env.PI_SERVER_API_KEY);
+  console.log("PI_SANDBOX_MODE:", process.env.PI_SANDBOX_MODE);
+  console.log("PI_SANDBOX_MODE type:", typeof process.env.PI_SANDBOX_MODE);
+  console.log("PI_SANDBOX_MODE truthy:", !!process.env.PI_SANDBOX_MODE);
 
   try {
-    console.log("Step 11 starting for paymentId:", paymentId);
-    console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
-
-    // Use the correct endpoint based on sandbox mode - CONSISTENT WITH OTHER FILES
-    const piApiUrl = process.env.PI_SANDBOX_MODE === "true" 
+    // Use the correct endpoint based on sandbox mode - using user's suggested approach
+    const piApiUrl = process.env.PI_SANDBOX_MODE 
       ? `https://sandbox.minepi.com/v2/payments/${paymentId}/complete` 
       : `https://api.minepi.com/v2/payments/${paymentId}/complete`;
       
+    console.log("Using Pi API URL:", piApiUrl);
+
     const completionResponse = await fetch(
       piApiUrl,
       {

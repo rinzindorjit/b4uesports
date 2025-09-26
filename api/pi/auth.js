@@ -1,5 +1,5 @@
 // Pi Network authentication endpoint for Vercel
-// Use built-in fetch when available (Node.js 18+ in Netlify) to avoid compatibility issues
+// Use built-in fetch when available (Node.js 18+ in Vercel) to avoid compatibility issues
 const fetch = globalThis.fetch;
 import { withCORS, setCORSHeaders, handlePreflight } from '../utils/cors.js';
 
@@ -10,6 +10,10 @@ async function authHandler(request, response) {
   console.log('Request method:', request.method);
   console.log('Request headers:', request.headers);
   console.log('Process env keys:', Object.keys(process.env).filter(key => key.includes('PI')));
+  console.log('PI_SANDBOX_MODE:', process.env.PI_SANDBOX_MODE);
+  console.log('PI_SANDBOX_MODE type:', typeof process.env.PI_SANDBOX_MODE);
+  console.log('PI_SANDBOX_MODE truthy:', !!process.env.PI_SANDBOX_MODE);
+  console.log('PI_SERVER_API_KEY configured:', !!process.env.PI_SERVER_API_KEY);
   
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
@@ -107,10 +111,12 @@ async function authHandler(request, response) {
     // Verify the access token with Pi Network
     console.log('Verifying access token with Pi Network');
     
-    // Use sandbox endpoint for testnet mode - CONSISTENT WITH OTHER FILES
-    const piApiUrl = process.env.PI_SANDBOX_MODE === "true" 
+    // Use sandbox endpoint for testnet mode - using user's suggested approach
+    const piApiUrl = process.env.PI_SANDBOX_MODE 
       ? 'https://sandbox.minepi.com/v2/me' 
       : 'https://api.minepi.com/v2/me';
+      
+    console.log("Using Pi API URL:", piApiUrl);
       
     const piResponse = await fetch(piApiUrl, {
       method: 'GET',
@@ -121,10 +127,11 @@ async function authHandler(request, response) {
     });
 
     console.log('Pi Network response status:', piResponse.status);
+    console.log('Pi Network response headers:', [...piResponse.headers.entries()]);
     
     if (!piResponse.ok) {
       const errorText = await piResponse.text();
-      console.log('Pi Network verification failed:', errorText);
+      console.log('Pi Network verification failed:', errorText.substring(0, 500));
       return response.status(401).json({ 
         message: 'Pi Network authentication failed',
         error: errorText 

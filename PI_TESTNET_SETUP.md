@@ -94,7 +94,7 @@ export default function handler(req, res) {
 
 This endpoint approves a payment with the Pi Network.
 
-```javascript
+```
 import fetch from "node-fetch";
 import { withCORS } from '../utils/cors.js';
 
@@ -126,7 +126,7 @@ async function paymentApprovalHandler(request, response) {
       return response.status(400).json({ message: 'Payment ID required' });
     }
 
-    if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === 'your_actual_pi_server_api_key_here') {
+    if (!process.env.PI_SERVER_API_KEY) {
       console.error('PI_SERVER_API_KEY not configured properly');
       return response.status(500).json({ 
         message: 'PI_SERVER_API_KEY not configured properly', 
@@ -135,10 +135,11 @@ async function paymentApprovalHandler(request, response) {
     }
 
     console.log("Approving payment with Pi Network, paymentId:", paymentId);
-    console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
+    console.log("PI_SERVER_API_KEY configured:", !!process.env.PI_SERVER_API_KEY);
+    console.log("PI_SANDBOX_MODE:", process.env.PI_SANDBOX_MODE);
     
-    // Use the correct endpoint based on sandbox mode - CONSISTENT WITH OTHER FILES
-    const piApiUrl = process.env.PI_SANDBOX_MODE === "true" 
+    // Use the correct endpoint based on sandbox mode - using user's suggested approach
+    const piApiUrl = process.env.PI_SANDBOX_MODE 
       ? `https://sandbox.minepi.com/v2/payments/${paymentId}/approve` 
       : `https://api.minepi.com/v2/payments/${paymentId}/approve`;
       
@@ -207,8 +208,10 @@ async function paymentApprovalHandler(request, response) {
 
 This endpoint completes the payment with the Pi Network.
 
-```javascript
-import fetch from "node-fetch";
+```
+// Pi Network payment completion endpoint for Vercel
+// Use built-in fetch when available (Node.js 18+ in Vercel) to avoid compatibility issues
+const fetch = globalThis.fetch || (await import("node-fetch")).default;
 import { withCORS } from '../utils/cors.js';
 
 export default withCORS(paymentCompletionHandler);
@@ -239,7 +242,7 @@ async function paymentCompletionHandler(request, response) {
       return response.status(400).json({ message: 'Payment ID and txid required' });
     }
 
-    if (!process.env.PI_SERVER_API_KEY || process.env.PI_SERVER_API_KEY === 'your_actual_pi_server_api_key_here') {
+    if (!process.env.PI_SERVER_API_KEY) {
       console.error('PI_SERVER_API_KEY not configured properly');
       return response.status(500).json({ 
         message: 'PI_SERVER_API_KEY not configured properly', 
@@ -248,10 +251,11 @@ async function paymentCompletionHandler(request, response) {
     }
 
     console.log("Completing payment with Pi Network, paymentId:", paymentId, "txid:", txid);
-    console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
+    console.log("PI_SERVER_API_KEY configured:", !!process.env.PI_SERVER_API_KEY);
+    console.log("PI_SANDBOX_MODE:", process.env.PI_SANDBOX_MODE);
     
-    // Use the correct endpoint based on sandbox mode - CONSISTENT WITH OTHER FILES
-    const piApiUrl = process.env.PI_SANDBOX_MODE === "true" 
+    // Use the correct endpoint based on sandbox mode - using user's suggested approach
+    const piApiUrl = process.env.PI_SANDBOX_MODE 
       ? `https://sandbox.minepi.com/v2/payments/${paymentId}/complete` 
       : `https://api.minepi.com/v2/payments/${paymentId}/complete`;
       
@@ -317,54 +321,3 @@ async function paymentCompletionHandler(request, response) {
     });
   }
 }
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Environment Variables Not Set**: Make sure `PI_SERVER_API_KEY` is properly configured in your deployment environment.
-
-2. **CORS Issues**: The endpoints include proper CORS headers for Pi Browser compatibility.
-
-3. **Payment Approval Fails**: Ensure you're using the correct Pi Network sandbox endpoint: `https://sandbox.minepi.com/v2/payments/{paymentId}/approve`
-
-4. **Payment Completion Fails**: Ensure you're using the correct Pi Network sandbox endpoint: `https://sandbox.minepi.com/v2/payments/{paymentId}/complete`
-
-### Testing Locally
-
-You can test the endpoints locally by running:
-
-```bash
-npm run dev
-```
-
-Then use tools like Postman or curl to test the endpoints:
-
-```bash
-# Test metadata endpoint
-curl http://localhost:3000/api/metadata
-
-# Test payment approval (requires valid body and headers)
-curl -X POST http://localhost:3000/api/payment/approve \
-  -H "Content-Type: application/json" \
-  -d '{"paymentId": "test-payment-id"}'
-  
-# Test payment completion (requires valid body and headers)
-curl -X POST http://localhost:3000/api/payment/complete \
-  -H "Content-Type: application/json" \
-  -d '{"paymentId": "test-payment-id", "txid": "test-txid"}'
-```
-
-## Deployment
-
-When deploying to Vercel, make sure to set the environment variables in the Vercel dashboard:
-
-1. Go to your project settings in Vercel
-2. Navigate to "Environment Variables"
-3. Add the following variables:
-   - `PI_SECRET_KEY`
-   - `PI_SERVER_API_KEY`
-   - `PI_APP_ID`
-
-Your Pi Testnet verification should now work correctly!

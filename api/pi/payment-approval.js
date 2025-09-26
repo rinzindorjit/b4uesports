@@ -1,5 +1,6 @@
 // Pi Network payment approval endpoint for Vercel
-import fetch from "node-fetch";
+// Use built-in fetch when available (Node.js 18+ in Vercel) to avoid compatibility issues
+const fetch = globalThis.fetch || (await import("node-fetch")).default;
 import { withCORS } from '../utils/cors.js';
 
 export default withCORS(paymentApprovalHandler);
@@ -30,21 +31,18 @@ async function paymentApprovalHandler(request, response) {
       return response.status(400).json({ message: 'Payment ID required' });
     }
 
-    if (!process.env.PI_SERVER_API_KEY) {
-      console.error("Missing PI_SERVER_API_KEY in environment variables");
-      return response.status(500).json({
-        error: "Missing PI_SERVER_API_KEY",
-        message: "Please configure your PI_SERVER_API_KEY in .env"
-      });
-    }
-
     console.log("Approving payment with Pi Network, paymentId:", paymentId);
-    console.log("Using API key starting with:", process.env.PI_SERVER_API_KEY?.substring(0, 10) || "NOT SET");
+    console.log("PI_SERVER_API_KEY configured:", !!process.env.PI_SERVER_API_KEY);
+    console.log("PI_SANDBOX_MODE:", process.env.PI_SANDBOX_MODE);
+    console.log("PI_SANDBOX_MODE type:", typeof process.env.PI_SANDBOX_MODE);
+    console.log("PI_SANDBOX_MODE truthy:", !!process.env.PI_SANDBOX_MODE);
     
-    // Select correct endpoint based on sandbox mode
-    const piApiUrl = process.env.PI_SANDBOX_MODE === "true"
+    // Select correct endpoint based on sandbox mode - using user's suggested approach
+    const piApiUrl = process.env.PI_SANDBOX_MODE 
       ? `https://sandbox.minepi.com/v2/payments/${paymentId}/approve`
       : `https://api.minepi.com/v2/payments/${paymentId}/approve`;
+
+    console.log("Using Pi API URL:", piApiUrl);
 
     const piResponse = await fetch(piApiUrl, {
       method: "POST",
@@ -57,11 +55,12 @@ async function paymentApprovalHandler(request, response) {
     });
 
     console.log("Pi Network API status:", piResponse.status);
+    console.log("Pi Network API headers:", [...piResponse.headers.entries()]);
 
     const contentType = piResponse.headers.get("content-type");
     if (!contentType || !contentType.includes("application/json")) {
       const textResponse = await piResponse.text();
-      console.error("Non-JSON response from Pi Network:", textResponse);
+      console.error("Non-JSON response from Pi Network:", textResponse.substring(0, 500));
 
       return response.status(piResponse.status).json({
         error: "Invalid response from Pi Network",
