@@ -6,8 +6,6 @@ import webhookHandler from './pi/webhook.js';
 import metadataHandler from './metadata.js';
 import mockPaymentHandler from './pi/mock-payment.js';
 
-// Remove the mock handleAuthPi function and use the imported authHandler instead
-
 // Mock handlers for additional routes
 async function handleProfileUpdate(request, response) {
   // In Vercel, the request body is already parsed as JSON
@@ -198,10 +196,11 @@ export default async function handler(request, response) {
   console.log('Request body:', request.body);
   console.log('Request body type:', typeof request.body);
   
-  // Set CORS headers
+  // Set CORS headers for Pi Browser compatibility
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  response.setHeader('Access-Control-Allow-Credentials', 'true');
   
   // Handle preflight requests
   if (request.method === 'OPTIONS') {

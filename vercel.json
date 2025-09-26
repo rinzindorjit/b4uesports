@@ -18,6 +18,14 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.pi-network.io https://*.minepi.com https://cdnjs.cloudflare.com https://api.coingecko.com; connect-src 'self' https://*.pi-network.io https://*.minepi.com https://api.coingecko.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.pi-network.io https://*.minepi.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https:; font-src 'self' data: https://cdnjs.cloudflare.com;"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), midi=(), notifications=(), push=(), sync-xhr=(), microphone=(), camera=(), magnetometer=(), gyroscope=(), fullscreen=(self), payment=()"
         }
       ]
     }
