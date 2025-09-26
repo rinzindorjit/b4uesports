@@ -1,5 +1,4 @@
 // Pi Network authentication endpoint for Vercel
-// Use built-in fetch when available (Node.js 18+ in Vercel) to avoid compatibility issues
 const fetch = globalThis.fetch;
 import { withCORS, setCORSHeaders, handlePreflight } from '../utils/cors.js';
 
@@ -11,9 +10,7 @@ async function authHandler(request, response) {
   console.log('Request headers:', request.headers);
   console.log('Process env keys:', Object.keys(process.env).filter(key => key.includes('PI')));
   console.log('PI_SANDBOX_MODE:', process.env.PI_SANDBOX_MODE);
-  console.log('PI_SANDBOX_MODE type:', typeof process.env.PI_SANDBOX_MODE);
-  console.log('PI_SANDBOX_MODE truthy:', !!process.env.PI_SANDBOX_MODE);
-  console.log('PI_SERVER_API_KEY configured:', !!process.env.PI_SERVER_API_KEY);
+  console.log('PI_SERVER_API_KEY:', process.env.PI_SERVER_API_KEY ? '✅ SET' : '❌ MISSING');
   
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
@@ -35,20 +32,13 @@ async function authHandler(request, response) {
   }
 
   try {
-    console.log('Pi auth request received:', {
-      method: request.method,
-      headers: request.headers,
-      body: request.body
-    });
+    console.log('🔹 Verifying Pi authentication...');
     
     // In Vercel, the request body is already parsed as JSON
     // So we don't need to parse it again
     const body = request.body || {};
     
     console.log('Parsed body:', body);
-    console.log('Body type:', typeof body);
-    
-    console.log('Body:', body);
     console.log('Body type:', typeof body);
     
     // Check if this is a mock request (for Pi Browser development)
@@ -79,7 +69,7 @@ async function authHandler(request, response) {
       // Generate a mock JWT token
       const mockToken = 'mock-jwt-token-' + Date.now();
 
-      console.log('Mock authentication successful for user:', mockUser.username);
+      console.log('✅ Mock authentication successful for user:', mockUser.username);
       
       // Add a small delay to simulate network request
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -111,8 +101,8 @@ async function authHandler(request, response) {
     // Verify the access token with Pi Network
     console.log('Verifying access token with Pi Network');
     
-    // Use sandbox endpoint for testnet mode - using user's suggested approach
-    const piApiUrl = process.env.PI_SANDBOX_MODE 
+    const isSandbox = process.env.PI_SANDBOX_MODE === "true";
+    const piApiUrl = isSandbox
       ? 'https://sandbox.minepi.com/v2/me' 
       : 'https://api.minepi.com/v2/me';
       
@@ -127,11 +117,10 @@ async function authHandler(request, response) {
     });
 
     console.log('Pi Network response status:', piResponse.status);
-    console.log('Pi Network response headers:', [...piResponse.headers.entries()]);
     
     if (!piResponse.ok) {
       const errorText = await piResponse.text();
-      console.log('Pi Network verification failed:', errorText.substring(0, 500));
+      console.error('❌ Pi Network verification failed:', errorText.substring(0, 500));
       return response.status(401).json({ 
         message: 'Pi Network authentication failed',
         error: errorText 
@@ -164,7 +153,7 @@ async function authHandler(request, response) {
     // For now, we'll use a mock token since we don't have JWT implementation
     const token = 'mock-jwt-token-' + Date.now() + '-' + piUser.uid;
 
-    console.log('Authentication successful for user:', user.username);
+    console.log('✅ Authentication successful for user:', user.username);
     
     // Add a small delay to simulate network request
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -175,7 +164,7 @@ async function authHandler(request, response) {
       token: token
     });
   } catch (error) {
-    console.error('Pi authentication error:', error);
+    console.error('❌ Pi authentication error:', error);
     console.error('Error stack:', error.stack);
     
     // Ensure we always send a response

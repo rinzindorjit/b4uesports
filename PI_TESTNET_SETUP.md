@@ -117,69 +117,81 @@ async function paymentApprovalHandler(request, response) {
   }
 
   try {
+    console.log("🔹 Approving Pi payment...");
+    console.log("PI_SANDBOX_MODE:", process.env.PI_SANDBOX_MODE);
+    console.log("PI_SERVER_API_KEY:", process.env.PI_SERVER_API_KEY ? "✅ SET" : "❌ MISSING");
+
+    const isSandbox = process.env.PI_SANDBOX_MODE === "true";
+    const piApiUrlBase = isSandbox
+      ? "https://sandbox.minepi.com/v2/payments"
+      : "https://api.minepi.com/v2/payments";
+
+    if (!process.env.PI_SERVER_API_KEY) {
+      return response.status(500).json({
+        error: "PI_SERVER_API_KEY is not configured",
+        message: "Please set PI_SERVER_API_KEY in your environment variables"
+      });
+    }
+
     // In Vercel, the request body is already parsed as JSON
     const body = request.body || {};
-    
     const { paymentId } = body;
     
     if (!paymentId) {
-      return response.status(400).json({ message: 'Payment ID required' });
-    }
-
-    if (!process.env.PI_SERVER_API_KEY) {
-      console.error('PI_SERVER_API_KEY not configured properly');
-      return response.status(500).json({ 
-        message: 'PI_SERVER_API_KEY not configured properly', 
-        error: 'Missing PI_SERVER_API_KEY environment variable' 
+      return response.status(400).json({ 
+        error: "Invalid payment data",
+        message: "Payment ID is required" 
       });
     }
 
     console.log("Approving payment with Pi Network, paymentId:", paymentId);
-    console.log("PI_SERVER_API_KEY configured:", !!process.env.PI_SERVER_API_KEY);
-    console.log("PI_SANDBOX_MODE:", process.env.PI_SANDBOX_MODE);
-    
-    // Use the correct endpoint based on sandbox mode - using user's suggested approach
-    const piApiUrl = process.env.PI_SANDBOX_MODE 
-      ? `https://sandbox.minepi.com/v2/payments/${paymentId}/approve` 
-      : `https://api.minepi.com/v2/payments/${paymentId}/approve`;
-      
-    const piResponse = await fetch(piApiUrl, {
-      method: "POST",
-      headers: {
-        "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
-        "Content-Type": "application/json"
-      }
-    });
 
-    console.log("Pi Network approval response status:", piResponse.status);
-    console.log("Pi Network approval response headers:", [...piResponse.headers.entries()]);
-    
-    // Check if the response is JSON before trying to parse it
-    const contentType = piResponse.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const textResponse = await piResponse.text();
-      console.error("Non-JSON response from Pi Network:", textResponse.substring(0, 500));
-      return response.status(piResponse.status).json({ 
-        error: "Invalid response from Pi Network",
-        responsePreview: textResponse.substring(0, 500),
-        contentType: contentType
+    try {
+      const piApiUrl = `${piApiUrlBase}/${paymentId}/approve`;
+      console.log("Using Pi API URL:", piApiUrl);
+
+      const piResponse = await fetch(piApiUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`, // SERVER API KEY here
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "User-Agent": "B4U-Esports-App/1.0"
+        }
+      });
+
+      console.log("Pi Network API status:", piResponse.status);
+
+      const contentType = piResponse.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const textResponse = await piResponse.text();
+        console.error("❌ Non-JSON response from Pi Network:", textResponse.substring(0, 500));
+
+        return response.status(piResponse.status).json({
+          error: "Invalid response from Pi Network",
+          message: textResponse
+        });
+      }
+
+      const data = await piResponse.json();
+      if (!piResponse.ok) {
+        console.error("❌ Pi Network API error:", data);
+        return response.status(piResponse.status).json({
+          error: "Pi Network API error",
+          details: data
+        });
+      }
+
+      console.log("✅ Payment approved successfully:", data);
+      return response.status(200).json(data);
+
+    } catch (error) {
+      console.error("❌ Payment approval failed:", error);
+      return response.status(500).json({
+        error: "Payment approval failed",
+        message: error.message
       });
     }
-
-    const data = await piResponse.json();
-
-    if (!piResponse.ok) {
-      console.error("Payment approval error:", data);
-      return response.status(piResponse.status).json({ error: data });
-    }
-
-    console.log("Payment approved successfully:", data);
-
-    return response.status(200).json({
-      success: true,
-      paymentData: data
-    });
-
   } catch (error) {
     console.error("Payment approval exception:", error);
     console.error("Error stack:", error.stack);
@@ -233,72 +245,84 @@ async function paymentCompletionHandler(request, response) {
   }
 
   try {
+    console.log("🔹 Completing Pi payment...");
+    console.log("PI_SANDBOX_MODE:", process.env.PI_SANDBOX_MODE);
+    console.log("PI_SERVER_API_KEY:", process.env.PI_SERVER_API_KEY ? "✅ SET" : "❌ MISSING");
+
+    const isSandbox = process.env.PI_SANDBOX_MODE === "true";
+    const piApiUrlBase = isSandbox
+      ? "https://sandbox.minepi.com/v2/payments"
+      : "https://api.minepi.com/v2/payments";
+
+    if (!process.env.PI_SERVER_API_KEY) {
+      return response.status(500).json({
+        error: "PI_SERVER_API_KEY is not configured",
+        message: "Please set PI_SERVER_API_KEY in your environment variables"
+      });
+    }
+
     // In Vercel, the request body is already parsed as JSON
     const body = request.body || {};
-    
     const { paymentId, txid } = body;
     
     if (!paymentId || !txid) {
-      return response.status(400).json({ message: 'Payment ID and txid required' });
-    }
-
-    if (!process.env.PI_SERVER_API_KEY) {
-      console.error('PI_SERVER_API_KEY not configured properly');
-      return response.status(500).json({ 
-        message: 'PI_SERVER_API_KEY not configured properly', 
-        error: 'Missing PI_SERVER_API_KEY environment variable' 
+      return response.status(400).json({ 
+        error: "Invalid payment data",
+        message: "Payment ID and txid are required" 
       });
     }
 
     console.log("Completing payment with Pi Network, paymentId:", paymentId, "txid:", txid);
-    console.log("PI_SERVER_API_KEY configured:", !!process.env.PI_SERVER_API_KEY);
-    console.log("PI_SANDBOX_MODE:", process.env.PI_SANDBOX_MODE);
-    
-    // Use the correct endpoint based on sandbox mode - using user's suggested approach
-    const piApiUrl = process.env.PI_SANDBOX_MODE 
-      ? `https://sandbox.minepi.com/v2/payments/${paymentId}/complete` 
-      : `https://api.minepi.com/v2/payments/${paymentId}/complete`;
-      
-    const piResponse = await fetch(piApiUrl, {
-      method: "POST",
-      headers: {
-        "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        txid: txid
-      })
-    });
 
-    console.log("Pi Network completion response status:", piResponse.status);
-    console.log("Pi Network completion response headers:", [...piResponse.headers.entries()]);
-    
-    // Check if the response is JSON before trying to parse it
-    const contentType = piResponse.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const textResponse = await piResponse.text();
-      console.error("Non-JSON response from Pi Network:", textResponse.substring(0, 500));
-      return response.status(piResponse.status).json({ 
-        error: "Invalid response from Pi Network",
-        responsePreview: textResponse.substring(0, 500),
-        contentType: contentType
+    try {
+      const piApiUrl = `${piApiUrlBase}/${paymentId}/complete`;
+      console.log("Using Pi API URL:", piApiUrl);
+
+      const piResponse = await fetch(piApiUrl, {
+        method: "POST",
+        headers: {
+          "Authorization": `Key ${process.env.PI_SERVER_API_KEY}`, // SERVER API KEY here
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "User-Agent": "B4U-Esports-App/1.0"
+        },
+        body: JSON.stringify({
+          txid: txid
+        })
+      });
+
+      console.log("Pi Network API status:", piResponse.status);
+
+      const contentType = piResponse.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const textResponse = await piResponse.text();
+        console.error("❌ Non-JSON response from Pi Network:", textResponse.substring(0, 500));
+
+        return response.status(piResponse.status).json({
+          error: "Invalid response from Pi Network",
+          message: textResponse
+        });
+      }
+
+      const data = await piResponse.json();
+      if (!piResponse.ok) {
+        console.error("❌ Pi Network API error:", data);
+        return response.status(piResponse.status).json({
+          error: "Pi Network API error",
+          details: data
+        });
+      }
+
+      console.log("✅ Payment completed successfully:", data);
+      return response.status(200).json(data);
+
+    } catch (error) {
+      console.error("❌ Payment completion failed:", error);
+      return response.status(500).json({
+        error: "Payment completion failed",
+        message: error.message
       });
     }
-
-    const data = await piResponse.json();
-
-    if (!piResponse.ok) {
-      console.error("Payment completion error:", data);
-      return response.status(piResponse.status).json({ error: data });
-    }
-
-    console.log("Payment completed successfully:", data);
-
-    return response.status(200).json({
-      success: true,
-      paymentData: data
-    });
-
   } catch (error) {
     console.error("Payment completion exception:", error);
     console.error("Error stack:", error.stack);
