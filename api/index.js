@@ -5,8 +5,7 @@ import userHandler from './pi/user.js';
 import webhookHandler from './pi/webhook.js';
 import metadataHandler from './metadata.js';
 import mockPaymentHandler from './mock-pi-payment.js';
-// Deprecated - do not import the direct payment creation handler
-// import createPaymentHandler from './pi-create-payment.js'; // Import the new payment creation handler
+import createPaymentHandler from './pi/create-payment.js'; // Import the new payment creation handler
 import paymentApprovalHandler from './pi/payment-approval.js'; // Import the new payment approval handler
 import paymentCompletionHandler from './pi/payment-completion.js'; // Import the new payment completion handler
 import { withCORS, setCORSHeaders, handlePreflight } from './utils/cors.js';
@@ -507,9 +506,9 @@ async function apiHandler(request, response) {
     } else if (path === '/api/mock-pi-payment') {
       console.log('Routing to mock payment handler');
       return await mockPaymentHandler(request, response);
-    // } else if (path === '/api/pi/create-payment') {
-    //   console.log('Routing to payment creation handler');
-    //   return await createPaymentHandler(request, response);
+    } else if (path === '/api/pi/create-payment') {
+      console.log('Routing to payment creation handler');
+      return await createPaymentHandler(request, response);
     } else if (path.startsWith('/api/')) {
       console.log('API endpoint not found:', path);
       response.status(404).json({ message: `API endpoint not found: ${path}` });
