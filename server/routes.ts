@@ -170,6 +170,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const price = await pricingService.getCurrentPiPrice();
       const lastPrice = pricingService.getLastPrice();
       
+      console.log('API /api/pi-price returning:', { price, lastPrice });
+      
       res.json({
         price,
         lastUpdated: lastPrice?.lastUpdated || new Date(),

@@ -16,16 +16,20 @@ export class PricingService {
 
   async getCurrentPiPrice(): Promise<number> {
     if (this.lastPrice && (Date.now() - this.lastPrice.lastUpdated.getTime()) < 60000) {
+      console.log('Returning cached price:', this.lastPrice.price);
       return this.lastPrice.price;
     }
 
     try {
+      console.log('Fetching Pi price from CoinGecko API');
       // Use the CoinGecko API with the provided demo API key
       const response = await axios.get(
         'https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4'
       );
 
+      console.log('CoinGecko API response:', response.data);
       const price = response.data['pi-network']?.usd || 0.01; // fallback to 0.01 if not available
+      console.log('Extracted price:', price);
       
       this.lastPrice = {
         price,
@@ -34,6 +38,7 @@ export class PricingService {
 
       // Save to database
       await storage.savePiPrice(price);
+      console.log('Saved price to database:', price);
 
       return price;
     } catch (error) {
@@ -42,10 +47,12 @@ export class PricingService {
       // Try to get latest price from database
       const latestPrice = await storage.getLatestPiPrice();
       if (latestPrice) {
+        console.log('Using price from database:', latestPrice.price);
         return parseFloat(latestPrice.price);
       }
 
       // Fallback to default price
+      console.log('Using fallback price: 0.01');
       return 0.01;
     }
   }
@@ -62,10 +69,12 @@ export class PricingService {
 
   startPriceUpdates(): void {
     // Initial price fetch
+    console.log('Starting price updates');
     this.getCurrentPiPrice();
 
     // Update price every 60 seconds
     this.updateInterval = setInterval(async () => {
+      console.log('Scheduled price update');
       await this.getCurrentPiPrice();
     }, 60000);
   }
