@@ -14,9 +14,16 @@ export async function apiRequest(
 ): Promise<Response> {
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      "Content-Type": "application/json",
+      // Add Origin header to help with CORS in Pi Browser
+      "Origin": typeof window !== 'undefined' ? window.location.origin : 'https://b4uesports.vercel.app'
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
+    // Add mode and cache options for better compatibility
+    mode: 'cors',
+    cache: 'no-cache'
   });
 
   await throwIfResNotOk(res);

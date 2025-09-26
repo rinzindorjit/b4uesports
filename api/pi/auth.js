@@ -1,8 +1,11 @@
 // Pi Network authentication endpoint for Vercel
 // Use built-in fetch when available (Node.js 18+ in Netlify) to avoid compatibility issues
 const fetch = globalThis.fetch;
+import { withCORS, setCORSHeaders, handlePreflight } from '../utils/cors.js';
 
-export default async function handler(request, response) {
+export default withCORS(authHandler);
+
+async function authHandler(request, response) {
   console.log('=== AUTH API ENDPOINT CALLED ===');
   console.log('Request method:', request.method);
   console.log('Request headers:', request.headers);
@@ -10,7 +13,9 @@ export default async function handler(request, response) {
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin');
+  response.setHeader('Access-Control-Allow-Credentials', 'true');
+  response.setHeader('Access-Control-Max-Age', '86400');
   
   // Handle preflight requests
   if (request.method === 'OPTIONS') {

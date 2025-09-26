@@ -1,5 +1,9 @@
 // Mock Pi Payment endpoint for Vercel
-export default async function handler(request, response) {
+import { withCORS, setCORSHeaders, handlePreflight } from '../utils/cors.js';
+
+export default withCORS(mockPaymentHandler);
+
+async function mockPaymentHandler(request, response) {
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -18,15 +22,9 @@ export default async function handler(request, response) {
       const { packageId, gameAccount } = body;
       
       // Get authorization header
+      // In mock mode, we don't require a valid token
       const authHeader = request.headers.authorization;
-      if (!authHeader) {
-        return response.status(401).json({ message: 'No token provided' });
-      }
-      
-      const token = authHeader.replace('Bearer ', '');
-      if (!token) {
-        return response.status(401).json({ message: 'No token provided' });
-      }
+      const token = authHeader ? authHeader.replace('Bearer ', '') : 'mock-token';
       
       // Validate input
       if (!packageId) {

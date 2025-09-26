@@ -68,7 +68,10 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
   };
 
   const handleProcessPayment = async () => {
-    if (!passphrase) {
+    // Only require passphrase in production mode
+    const isTestnetMode = process.env.NODE_ENV !== 'production';
+    
+    if (!isTestnetMode && !passphrase) {
       toast({
         title: "Error",
         description: "Please enter your passphrase",
@@ -96,7 +99,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
       const isVercel = window.location.hostname.includes('vercel.app');
       
       // Always use mock payment flow for Vercel deployments, preview mode, or Pi Browser
-      if (isPreview || isVercel || isPiBrowserEnv) {
+      if (isPreview || isVercel || isPiBrowserEnv || isTestnetMode) {
         // Use mock payment flow
         console.log('Using mock payment flow');
         
@@ -446,7 +449,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                 <Button 
                   onClick={handleProcessPayment} 
                   className="flex-1"
-                  disabled={isProcessing || !passphrase}
+                  disabled={isProcessing || (!passphrase && process.env.NODE_ENV === 'production')}
                   data-testid="process-payment"
                 >
                   {isProcessing ? (

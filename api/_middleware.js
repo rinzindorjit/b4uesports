@@ -19,7 +19,10 @@ export default function middleware(request) {
     });
   }
 
-  // For all other requests, continue with the response
+  // For all other requests, continue to the next handler
+  // In Vercel Edge Functions, we return a Response with status 200
+  // but the actual API handler will process the request
+  // We just need to ensure CORS headers are set
   return new Response(null, {
     status: 200,
     headers

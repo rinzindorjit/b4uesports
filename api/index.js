@@ -5,6 +5,7 @@ import userHandler from './pi/user.js';
 import webhookHandler from './pi/webhook.js';
 import metadataHandler from './metadata.js';
 import mockPaymentHandler from './pi/mock-payment.js';
+import { withCORS, setCORSHeaders, handlePreflight } from './utils/cors.js';
 
 // Use built-in fetch when available (Node.js 18+ in Vercel)
 const fetch = globalThis.fetch;
@@ -246,7 +247,9 @@ async function handleAnalytics(request, response) {
   response.status(200).json(mockAnalytics);
 }
 
-export default async function handler(request, response) {
+export default withCORS(apiHandler);
+
+async function apiHandler(request, response) {
   console.log('=== DEBUG API REQUEST ===');
   console.log('Full request URL:', request.url);
   console.log('Request method:', request.method);
@@ -257,8 +260,9 @@ export default async function handler(request, response) {
   // Set CORS headers for Pi Browser compatibility
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Origin');
   response.setHeader('Access-Control-Allow-Credentials', 'true');
+  response.setHeader('Access-Control-Max-Age', '86400');
   
   // Handle preflight requests
   if (request.method === 'OPTIONS') {

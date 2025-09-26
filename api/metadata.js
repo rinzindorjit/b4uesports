@@ -1,5 +1,9 @@
 // API metadata endpoint for Vercel
-export default async function handler(request, response) {
+import { withCORS, setCORSHeaders, handlePreflight } from './utils/cors.js';
+
+export default withCORS(metadataHandler);
+
+async function metadataHandler(request, response) {
   // Set CORS headers
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
