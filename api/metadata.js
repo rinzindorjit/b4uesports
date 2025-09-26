@@ -20,10 +20,13 @@ export default function handler(req, res) {
     // For Pi Testnet, we use direct domain access rather than app ID
     // Testnet relies on domain registration in the developer console
     endpoints: {
-      authentication: `${backendUrl}/api/pi/auth`,
-      payment_create: `${backendUrl}/api/payment/approve`,
-      payment_complete: `${backendUrl}/api/payment/complete`,
-      user_profile: `${backendUrl}/api/pi/user`
+      authentication: `${backendUrl}/api/pi?action=auth`,
+      payment_create: `${backendUrl}/api/pi?action=create-payment`,
+      payment_approve: `${backendUrl}/api/pi?action=approve-payment`,
+      payment_complete: `${backendUrl}/api/pi?action=complete-payment`,
+      user_profile: `${backendUrl}/api/pi?action=user`,
+      price: `${backendUrl}/api/pi?action=price`,
+      balance: `${backendUrl}/api/pi?action=balance`
     },
     contact: {
       support_email: "info@b4uesports.com",

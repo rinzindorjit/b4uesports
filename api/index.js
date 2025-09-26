@@ -1,12 +1,5 @@
 // Main API handler for Vercel
-import authHandler from './pi/auth.js';
-import paymentsHandler from './pi/payments.js';
-import userHandler from './pi/user.js';
-import webhookHandler from './pi/webhook.js';
 import mockPaymentHandler from './mock-pi-payment.js';
-import createPaymentHandler from './pi/create-payment.js'; // Import the new payment creation handler
-import paymentApprovalHandler from './pi/payment-approval.js'; // Import the new payment approval handler
-import paymentCompletionHandler from './pi/payment-completion.js'; // Import the new payment completion handler
 import { withCORS, setCORSHeaders, handlePreflight } from './utils/cors.js';
 
 // Use built-in fetch when available (Node.js 18+ in Vercel)
@@ -56,59 +49,6 @@ async function handleAdminLogin(request, response) {
     admin: mockAdmin,
     token: mockToken
   });
-}
-
-// Handler for Pi price - using the real CoinGecko API
-async function handlePiPrice(request, response) {
-  try {
-    console.log('Fetching Pi price from CoinGecko API');
-    
-    // Use the CoinGecko API with the provided demo API key
-    const apiResponse = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4'
-    );
-
-    if (!apiResponse.ok) {
-      throw new Error(`CoinGecko API error: ${apiResponse.status}`);
-    }
-
-    const data = await apiResponse.json();
-    console.log('CoinGecko API response:', data);
-    
-    const price = data['pi-network']?.usd || 0.01; // fallback to 0.01 if not available
-    console.log('Extracted price:', price);
-    
-    const priceData = {
-      price: price,
-      lastUpdated: new Date().toISOString(), // Return as ISO string to match client expectations
-    };
-
-    response.status(200).json(priceData);
-  } catch (error) {
-    console.error('Failed to fetch Pi price from CoinGecko:', error);
-    
-    // Even in error cases, use a fixed fallback price rather than random
-    // This ensures consistency between environments
-    const fallbackPrice = {
-      price: 0.0009, // Fixed price matching what you observed
-      lastUpdated: new Date().toISOString(),
-    };
-
-    response.status(200).json(fallbackPrice);
-  }
-}
-
-// Mock handler for Pi balance
-async function handlePiBalance(request, response) {
-  // For mock purposes, return a mock Pi balance
-  const mockBalance = {
-    balance: 1000.00000000, // Fixed balance for testnet
-    currency: 'π',
-    lastUpdated: new Date().toISOString(),
-    isTestnet: true
-  };
-
-  response.status(200).json(mockBalance);
 }
 
 // Mock handler for packages
@@ -442,10 +382,13 @@ async function handleMetadata(request, response) {
     // For Pi Testnet, we use direct domain access rather than app ID
     // Testnet relies on domain registration in the developer console
     endpoints: {
-      authentication: `${backendUrl}/api/pi/auth`,
-      payment_create: `${backendUrl}/api/payment/approve`,
-      payment_complete: `${backendUrl}/api/payment/complete`,
-      user_profile: `${backendUrl}/api/pi/user`
+      authentication: `${backendUrl}/api/pi?action=auth`,
+      payment_create: `${backendUrl}/api/pi?action=create-payment`,
+      payment_approve: `${backendUrl}/api/pi?action=approve-payment`,
+      payment_complete: `${backendUrl}/api/pi?action=complete-payment`,
+      user_profile: `${backendUrl}/api/pi?action=user`,
+      price: `${backendUrl}/api/pi?action=price`,
+      balance: `${backendUrl}/api/pi?action=balance`
     },
     contact: {
       support_email: "info@b4uesports.com",
@@ -791,18 +734,10 @@ async function apiHandler(request, response) {
     console.log('Request body type:', typeof request.body);
     
     // Route to appropriate handler based on path
-    if (path === '/api/pi/auth' || path === '/api/auth/pi') {
-      console.log('Routing to auth handler');
-      return await authHandler(request, response);
-    } else if (path === '/api/pi/payments') {
-      console.log('Routing to payments handler');
-      return await paymentsHandler(request, response);
-    } else if (path === '/api/pi/user') {
-      console.log('Routing to user handler');
-      return await userHandler(request, response);
-    } else if (path === '/api/pi/webhook') {
-      console.log('Routing to webhook handler');
-      return await webhookHandler(request, response);
+    if (path === '/api/pi') {
+      // Import and use the consolidated Pi API handler
+      const piHandler = (await import('./pi.js')).default;
+      return await piHandler(request, response);
     } else if (path === '/api/metadata') {
       console.log('Routing to metadata handler');
       return await handleMetadata(request, response);
@@ -812,12 +747,6 @@ async function apiHandler(request, response) {
     } else if (path === '/api/admin/login') {
       console.log('Routing to admin login handler');
       return await handleAdminLogin(request, response);
-    } else if (path === '/api/pi-price') {
-      console.log('Routing to Pi price handler');
-      return await handlePiPrice(request, response);
-    } else if (path === '/api/pi-balance') {
-      console.log('Routing to Pi balance handler');
-      return await handlePiBalance(request, response);
     } else if (path === '/api/packages') {
       console.log('Routing to packages handler');
       return await handlePackages(request, response);
@@ -826,19 +755,16 @@ async function apiHandler(request, response) {
       return await handleTransactions(request, response);
     } else if (path === '/api/payment/approve') {
       console.log('Routing to payment approval handler');
-      return await paymentApprovalHandler(request, response);
+      return await handlePaymentApproval(request, response);
     } else if (path === '/api/payment/complete') {
       console.log('Routing to payment completion handler');
-      return await paymentCompletionHandler(request, response);
+      return await handlePaymentCompletion(request, response);
     } else if (path === '/api/admin/analytics') {
       console.log('Routing to analytics handler');
       return await handleAnalytics(request, response);
     } else if (path === '/api/mock-pi-payment') {
       console.log('Routing to mock payment handler');
       return await mockPaymentHandler(request, response);
-    } else if (path === '/api/pi/create-payment') {
-      console.log('Routing to payment creation handler');
-      return await createPaymentHandler(request, response);
     } else if (path === '/api/test-fetch') {
       console.log('Routing to test fetch handler');
       return await handleTestFetch(request, response);
@@ -872,3 +798,5 @@ async function apiHandler(request, response) {
     });
   }
 }
+
+export default apiHandler;
