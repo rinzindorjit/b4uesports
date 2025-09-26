@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -10,10 +9,14 @@ const __dirname = dirname(__filename);
 
 // Import API handlers
 import mockPaymentHandler from './api/mock-pi-payment.js';
-import createPaymentHandler from './api/pi/create-payment.js';
+import createPaymentHandler from './api/pi-create-payment.js';
+
+// Load environment variables
+import dotenv from 'dotenv';
+dotenv.config();
 
 const app = express();
-const PORT = 5000;
+const PORT = 5001;
 
 // Middleware
 app.use(cors());
@@ -51,7 +54,7 @@ app.post('/api/mock-pi-payment', (req, res) => {
   mockPaymentHandler(mockRequest, mockResponse);
 });
 
-app.post('/api/pi/create-payment', (req, res) => {
+app.post('/api/pi-create-payment', (req, res) => {
   // Mock the Vercel request/response objects
   const mockRequest = {
     method: req.method,
