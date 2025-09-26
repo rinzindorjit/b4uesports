@@ -1,7 +1,7 @@
 // /api/metadata.js
 export default function handler(req, res) {
-  // Use the specific Pi Network subdomain for the backend URL
-  const backendUrl = 'https://esportshub6671.b4uesports.vercel.app';
+  // Use the current Vercel deployment URL for the backend URL
+  const backendUrl = 'https://b4uesports.vercel.app';
   
   res.status(200).json({
     application: {
@@ -21,8 +21,8 @@ export default function handler(req, res) {
     // Testnet relies on domain registration in the developer console
     endpoints: {
       authentication: `${backendUrl}/api/pi/auth`,
-      payment_create: `${backendUrl}/api/pi/payments`,
-      payment_complete: `${backendUrl}/api/pi/payments`,
+      payment_create: `${backendUrl}/api/payment/approve`,
+      payment_complete: `${backendUrl}/api/payment/complete`,
       user_profile: `${backendUrl}/api/pi/user`
     },
     contact: {
