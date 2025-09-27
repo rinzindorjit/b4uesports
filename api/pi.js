@@ -15,14 +15,22 @@ export default async function handler(req, res) {
         // Example price (you might replace with real API if needed)
         const piPrice = 0.26;
         console.log("Extracted price:", piPrice);
-        return res.status(200).json({ price: piPrice });
+        return res.status(200).json({ 
+          price: piPrice,
+          lastUpdated: new Date().toISOString()
+        });
       }
 
       case "balance": {
         // Mock balance for testnet
         const balance = 1000.0;
         console.log("Routing to Pi balance handler");
-        return res.status(200).json({ balance });
+        return res.status(200).json({ 
+          balance: balance,
+          currency: "PI",
+          lastUpdated: new Date().toISOString(),
+          isTestnet: true
+        });
       }
 
       case "auth": {

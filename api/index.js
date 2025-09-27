@@ -783,6 +783,22 @@ async function apiHandler(request, response) {
         query: Object.fromEntries(searchParams)
       };
       return await piHandler(modifiedRequest, response);
+    } else if (path === '/api/pi-price') {
+      // Handle /api/pi-price endpoint
+      const piHandler = (await import('./pi.js')).default;
+      const modifiedRequest = {
+        ...request,
+        query: { action: 'price' }
+      };
+      return await piHandler(modifiedRequest, response);
+    } else if (path === '/api/pi-balance') {
+      // Handle /api/pi-balance endpoint
+      const piHandler = (await import('./pi.js')).default;
+      const modifiedRequest = {
+        ...request,
+        query: { action: 'balance' }
+      };
+      return await piHandler(modifiedRequest, response);
     } else if (path === '/api/metadata') {
       console.log('Routing to metadata handler');
       return await handleMetadata(request, response);
