@@ -20,6 +20,11 @@ export default async function handler(req, res) {
     hasBody: !!body,
     queryKeys: Object.keys(query)
   });
+  
+  // Check if request is from Pi Browser by looking at the x-requested-with header
+  const isPiBrowser = req.headers['x-requested-with'] === 'pi.browser';
+  console.log('Pi Browser detection - x-requested-with header:', req.headers['x-requested-with']);
+  console.log('Is Pi Browser request:', isPiBrowser);
 
   try {
     switch (action) {

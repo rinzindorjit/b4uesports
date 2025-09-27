@@ -1,5 +1,5 @@
 // /api/mock-pi-payment.js
-// Version: 1.0.4 - Fix CORS, transaction ID duplication, and response format issues
+// Version: 1.0.5 - Fix Pi Browser detection and CORS
 
 import { db } from './utils/db.js';
 import { storeMockPayment } from './utils/db-operations.js';
@@ -28,6 +28,11 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }
+
+  // Check if request is from Pi Browser by looking at the x-requested-with header
+  const isPiBrowser = req.headers['x-requested-with'] === 'pi.browser';
+  console.log('Pi Browser detection - x-requested-with header:', req.headers['x-requested-with']);
+  console.log('Is Pi Browser request:', isPiBrowser);
 
   const { paymentId } = req.body;
   if (!paymentId) {

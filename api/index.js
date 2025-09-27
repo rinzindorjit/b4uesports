@@ -334,6 +334,11 @@ async function handlePaymentApproval(request, response) {
     return response.status(200).end();
   }
   
+  // Check if request is from Pi Browser by looking at the x-requested-with header
+  const isPiBrowser = request.headers['x-requested-with'] === 'pi.browser';
+  console.log('Pi Browser detection - x-requested-with header:', request.headers['x-requested-with']);
+  console.log('Is Pi Browser request:', isPiBrowser);
+  
   // In Vercel, the request body is already parsed as JSON
   const body = request.body || {};
   
@@ -427,6 +432,11 @@ async function handlePaymentCompletion(request, response) {
   if (request.method === "OPTIONS") {
     return response.status(200).end();
   }
+  
+  // Check if request is from Pi Browser by looking at the x-requested-with header
+  const isPiBrowser = request.headers['x-requested-with'] === 'pi.browser';
+  console.log('Pi Browser detection - x-requested-with header:', request.headers['x-requested-with']);
+  console.log('Is Pi Browser request:', isPiBrowser);
   
   // In Vercel, the request body is already parsed as JSON
   const body = request.body || {};
