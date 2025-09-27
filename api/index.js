@@ -807,43 +807,27 @@ async function handleMetadata(request, response) {
   // Use the current Vercel deployment URL for the backend URL
   const backendUrl = 'https://b4uesports.vercel.app';
   
-  response.status(200).json({
-    application: {
-      name: "B4U Esports",
-      description: "Pi Network Integrated Marketplace for Gaming Currency",
-      version: "1.0.0",
-      platform: "Pi Network",
-      category: "Gaming"
-    },
-    payment: {
-      currency: "PI",
-      supported_operations: ["buy_gaming_currency", "deposit", "withdrawal"],
-      min_amount: 0.1,
-      max_amount: 10000
-    },
-    // For Pi Testnet, we use direct domain access rather than app ID
-    // Testnet relies on domain registration in the developer console
-    endpoints: {
-      authentication: `${backendUrl}/api/pi?action=auth`,
-      payment_create: `${backendUrl}/api/pi?action=create-payment`,
-      payment_approve: `${backendUrl}/api/payment/approve`,
-      payment_complete: `${backendUrl}/api/payment/complete`,
-      user_profile: `${backendUrl}/api/pi?action=user`,
-      price: `${backendUrl}/api/pi?action=price`,
-      balance: `${backendUrl}/api/pi?action=balance`
-    },
-    contact: {
-      support_email: "info@b4uesports.com",
-      website: "https://b4uesports.vercel.app"
-    },
-    last_updated: new Date().toISOString(),
-    // Add Testnet-specific information
-    testnet: {
-      mode: "enabled",
-      description: "Running in Pi Network Testnet mode",
-      note: "Payments are handled via Pi SDK client-side, no backend API calls needed"
-    }
-  });
+  // Return metadata in the format expected by Pi Browser
+  const metadata = {
+    name: "B4U Esports",
+    description: "Esports platform for Bhutan and beyond",
+    icon: "https://b4uesports.vercel.app/icon.svg", // Point to the SVG icon
+    url: "https://b4uesports.vercel.app",
+    permissions: ["payments"]
+  };
+  
+  // Set proper Content-Type header
+  response.setHeader('Content-Type', 'application/json');
+  
+  response.status(200).json(metadata);
+}
+
+// Add a simple handler for the icon
+async function handleIcon(request, response) {
+  // Return a simple transparent 1x1 PNG as a placeholder
+  const pngBuffer = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==', 'base64');
+  response.setHeader('Content-Type', 'image/png');
+  response.status(200).send(pngBuffer);
 }
 
 // Pi Network metadata endpoint for payment validation
@@ -881,6 +865,8 @@ async function handlePiMetadata(request, response) {
         min_amount: 0.1,
         max_amount: 10000
       },
+      // For Pi Testnet, we use direct domain access rather than app ID
+      // Testnet relies on domain registration in the developer console
       endpoints: {
         authentication: `${backendUrl}/api/pi?action=auth`,
         payment_create: `${backendUrl}/api/pi?action=create-payment`,
@@ -894,7 +880,13 @@ async function handlePiMetadata(request, response) {
         support_email: "info@b4uesports.com",
         website: "https://b4uesports.vercel.app"
       },
-      last_updated: new Date().toISOString()
+      last_updated: new Date().toISOString(),
+      // Add Testnet-specific information
+      testnet: {
+        mode: "enabled",
+        description: "Running in Pi Network Testnet mode",
+        note: "Payments are handled via Pi SDK client-side, no backend API calls needed"
+      }
     };
     
     console.log('Returning metadata:', JSON.stringify(metadata, null, 2));
@@ -1081,6 +1073,12 @@ async function handlePiApi(req, res) {
   if (!action) {
     console.log("ℹ️ No action specified, returning Pi Network metadata for Testnet compatibility");
     return handleMetadata(req, res);
+  }
+  
+  // Handle icon requests
+  if (action === 'icon') {
+    console.log("ℹ️ Icon requested");
+    return handleIcon(req, res);
   }
   
   // Check if request is from Pi Browser by looking at the x-requested-with header
