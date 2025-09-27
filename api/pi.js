@@ -27,6 +27,29 @@ export default async function handler(req, res) {
   console.log('Pi Browser detection - x-requested-with header:', headers['x-requested-with']);
   console.log('Is Pi Browser request:', isPiBrowser);
 
+  // Robust Pi Browser detection function
+  function isPiBrowserRequest(headers) {
+    const xRequestedWith = (headers['x-requested-with'] || '').toLowerCase();
+    const userAgent = (headers['user-agent'] || '').toLowerCase();
+    
+    return (
+      xRequestedWith === 'pi.browser' ||
+      userAgent.includes('pi browser')
+    );
+  }
+  
+  // Robust Pi Browser detection
+  const isPiBrowserRobust = isPiBrowserRequest(headers);
+  console.log('Robust Pi Browser detection - x-requested-with header:', headers['x-requested-with']);
+  console.log('User-Agent:', headers['user-agent']);
+  console.log('Is Pi Browser request (robust):', isPiBrowserRobust);
+  
+  // For Testnet mode, we don't want to reject requests that appear to be from Pi Browser
+  // We'll log the detection but allow the request to proceed
+  if (!isPiBrowserRobust) {
+    console.log('⚠️ Request not from Pi Browser, but allowing in Testnet mode');
+  }
+
   try {
     switch (action) {
       case "price": {

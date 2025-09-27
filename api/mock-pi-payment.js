@@ -30,9 +30,21 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  // Check if request is from Pi Browser by looking at the x-requested-with header
-  const isPiBrowser = headers['x-requested-with'] === 'pi.browser';
+  // Robust Pi Browser detection function
+  function isPiBrowserRequest(headers) {
+    const xRequestedWith = (headers['x-requested-with'] || '').toLowerCase();
+    const userAgent = (headers['user-agent'] || '').toLowerCase();
+    
+    return (
+      xRequestedWith === 'pi.browser' ||
+      userAgent.includes('pi browser')
+    );
+  }
+  
+  // Robust Pi Browser detection
+  const isPiBrowser = isPiBrowserRequest(headers);
   console.log('Pi Browser detection - x-requested-with header:', headers['x-requested-with']);
+  console.log('User-Agent:', headers['user-agent']);
   console.log('Is Pi Browser request:', isPiBrowser);
 
   const { paymentId } = req.body;
