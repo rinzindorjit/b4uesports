@@ -1,4 +1,8 @@
 // /api/mock-pi-payment.js
+// Version: 1.0.3 - Add database operations for storing mock payments
+import { db } from './utils/db.js';
+import { storeMockPayment } from './utils/db-operations.js';
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
@@ -17,19 +21,93 @@ export default async function handler(req, res) {
   console.log("🔄 Handling mock payment in Testnet mode...");
   console.log("💳 Payment ID:", paymentId);
 
-  // For any payment ID in Testnet mode, return success
-  // because we're not actually calling the Pi Network API in Testnet
-  const txid = paymentId.startsWith('mock_') ? 
-    "mock-tx-" + Date.now() : 
-    "testnet-tx-" + Date.now();
+  // Check if this is a mock payment ID (handle both mock_ and mock- prefixes)
+  if (paymentId.startsWith('mock_') || paymentId.startsWith('mock-')) {
+    console.log('✅ Mock payment ID detected in mock-pi-payment handler');
     
-  return res.status(200).json({
-    identifier: paymentId,
-    status: 'completed',
-    transaction: {
-      txid: txid,
-      verified: true
-    },
-    message: 'Payment completed successfully in Testnet mode'
-  });
+    // Store mock payment in database if available
+    try {
+      console.log('💾 Storing mock payment in database...');
+      
+      // Generate a transaction ID
+      const txid = "mock-tx-" + Date.now();
+      
+      // Store the mock payment using our database operations
+      const paymentData = {
+        piAmount: '100.00000000', // Mock amount
+        usdAmount: '10.0000', // Mock amount
+        piPriceAtTime: '0.1000', // Mock price
+        status: 'completed',
+        gameAccount: {}, // Empty game account for mock
+        metadata: {
+          isMock: true,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      await storeMockPayment(paymentId, txid, paymentData);
+      
+      console.log('✅ Mock payment processed successfully');
+    } catch (dbError) {
+      console.error('❌ Database operation error:', dbError.message);
+      // Continue with the response even if database operation fails
+    }
+    
+    // For mock payments, just return a success response
+    const txid = "mock-tx-" + Date.now();
+    
+    return res.status(200).json({
+      identifier: paymentId,
+      status: 'completed',
+      transaction: {
+        txid: txid,
+        verified: true
+      },
+      message: 'Mock payment completed successfully in Testnet mode'
+    });
+  } else {
+    console.log('⚠️ Non-mock payment ID detected in Testnet mode');
+    
+    // Store real payment in database if available
+    try {
+      console.log('💾 Storing real payment in database...');
+      
+      // Generate a transaction ID
+      const txid = "testnet-tx-" + Date.now();
+      
+      // Store the payment using our database operations
+      const paymentData = {
+        piAmount: '100.00000000', // Default amount for test
+        usdAmount: '10.0000', // Default amount for test
+        piPriceAtTime: '0.1000', // Default price for test
+        status: 'completed',
+        gameAccount: {}, // Empty game account
+        metadata: {
+          isTestnet: true,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      await storeMockPayment(paymentId, txid, paymentData);
+      
+      console.log('✅ Payment processed successfully');
+    } catch (dbError) {
+      console.error('❌ Database operation error:', dbError.message);
+      // Continue with the response even if database operation fails
+    }
+    
+    // For any other payment ID in Testnet mode, still return success
+    // because we're not actually calling the Pi Network API in Testnet
+    const txid = "testnet-tx-" + Date.now();
+    
+    return res.status(200).json({
+      identifier: paymentId,
+      status: 'completed',
+      transaction: {
+        txid: txid,
+        verified: true
+      },
+      message: 'Payment completed successfully in Testnet mode'
+    });
+  }
 }

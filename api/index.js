@@ -1,5 +1,8 @@
 // Main API handler for Vercel
+// Version: 1.0.4 - Add database operations for storing mock payments
 import mockPaymentHandler from './mock-pi-payment.js';
+import { db } from './utils/db.js';
+import { storeMockPayment, storePaymentApproval, getUserBalance, updateUserBalance } from './utils/db-operations.js';
 
 // Use built-in fetch when available (Node.js 18+ in Vercel)
 const fetch = globalThis.fetch;
@@ -325,9 +328,29 @@ async function handlePaymentApproval(request, response) {
   console.log('🔄 Handling payment approval in Testnet mode...');
   console.log('💳 Payment ID:', paymentId);
 
-  // Check if this is a mock payment ID
-  if (paymentId.startsWith('mock_')) {
-    console.log('✅ Mock payment ID detected, returning success response');
+  // Check if this is a mock payment ID (handle both mock_ and mock- prefixes)
+  if (paymentId.startsWith('mock_') || paymentId.startsWith('mock-')) {
+    console.log('✅ Mock payment ID detected in payment approval handler');
+    
+    // Store mock payment approval in database if available
+    try {
+      console.log('💾 Storing mock payment approval in database...');
+      
+      // Store the payment approval using our database operations
+      const approvalData = {
+        metadata: {
+          isMock: true,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      await storePaymentApproval(paymentId, approvalData);
+      
+      console.log('✅ Mock payment approval processed successfully');
+    } catch (dbError) {
+      console.error('❌ Database operation error:', dbError.message);
+      // Continue with the response even if database operation fails
+    }
     
     // For mock payments, just return a success response
     return response.status(200).json({
@@ -336,7 +359,27 @@ async function handlePaymentApproval(request, response) {
       message: 'Mock payment approved successfully in Testnet mode'
     });
   } else {
-    console.log('⚠️  Non-mock payment ID detected in Testnet mode, returning success response');
+    console.log('⚠️ Non-mock payment ID detected in Testnet mode');
+    
+    // Store real payment approval in database if available
+    try {
+      console.log('💾 Storing real payment approval in database...');
+      
+      // Store the payment approval using our database operations
+      const approvalData = {
+        metadata: {
+          isTestnet: true,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      await storePaymentApproval(paymentId, approvalData);
+      
+      console.log('✅ Payment approval processed successfully');
+    } catch (dbError) {
+      console.error('❌ Database operation error:', dbError.message);
+      // Continue with the response even if database operation fails
+    }
     
     // For any other payment ID in Testnet mode, still return success
     // because we're not actually calling the Pi Network API in Testnet
@@ -364,9 +407,34 @@ async function handlePaymentCompletion(request, response) {
   console.log('💳 Payment ID:', paymentId);
   console.log('🧾 Transaction ID:', txid);
 
-  // Check if this is a mock payment ID
-  if (paymentId.startsWith('mock_')) {
-    console.log('✅ Mock payment ID detected, returning success response');
+  // Check if this is a mock payment ID (handle both mock_ and mock- prefixes)
+  if (paymentId.startsWith('mock_') || paymentId.startsWith('mock-')) {
+    console.log('✅ Mock payment ID detected in payment completion handler');
+    
+    // Store mock payment in database if available
+    try {
+      console.log('💾 Storing mock payment in database...');
+      
+      // Store the mock payment using our database operations
+      const paymentData = {
+        piAmount: '100.00000000', // Mock amount
+        usdAmount: '10.0000', // Mock amount
+        piPriceAtTime: '0.1000', // Mock price
+        status: 'completed',
+        gameAccount: {}, // Empty game account for mock
+        metadata: {
+          isMock: true,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      await storeMockPayment(paymentId, txid, paymentData);
+      
+      console.log('✅ Mock payment processed successfully');
+    } catch (dbError) {
+      console.error('❌ Database operation error:', dbError.message);
+      // Continue with the response even if database operation fails
+    }
     
     // For mock payments, just return a success response
     return response.status(200).json({
@@ -379,7 +447,32 @@ async function handlePaymentCompletion(request, response) {
       message: 'Mock payment completed successfully in Testnet mode'
     });
   } else {
-    console.log('⚠️  Non-mock payment ID detected in Testnet mode, returning success response');
+    console.log('⚠️ Non-mock payment ID detected in Testnet mode');
+    
+    // Store real payment in database if available
+    try {
+      console.log('💾 Storing real payment in database...');
+      
+      // Store the payment using our database operations
+      const paymentData = {
+        piAmount: '100.00000000', // Default amount for test
+        usdAmount: '10.0000', // Default amount for test
+        piPriceAtTime: '0.1000', // Default price for test
+        status: 'completed',
+        gameAccount: {}, // Empty game account
+        metadata: {
+          isTestnet: true,
+          timestamp: new Date().toISOString()
+        }
+      };
+      
+      await storeMockPayment(paymentId, txid, paymentData);
+      
+      console.log('✅ Payment processed successfully');
+    } catch (dbError) {
+      console.error('❌ Database operation error:', dbError.message);
+      // Continue with the response even if database operation fails
+    }
     
     // For any other payment ID in Testnet mode, still return success
     // because we're not actually calling the Pi Network API in Testnet
