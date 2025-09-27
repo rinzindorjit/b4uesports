@@ -119,7 +119,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       try {
         console.log('Sending mock auth request to backend');
         // Send request to backend with mock auth flag
-        const response = await apiRequest('POST', '/api/auth/pi', {
+        const response = await apiRequest('POST', '/api/pi?action=auth', {
           isMockAuth: true
         });
         
@@ -172,7 +172,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       if (authResult === null) {
         console.log('Pi SDK returned null, using mock authentication');
         // Send request to backend with mock auth flag
-        const response = await apiRequest('POST', '/api/auth/pi', {
+        const response = await apiRequest('POST', '/api/pi?action=auth', {
           isMockAuth: true
         });
         
@@ -201,7 +201,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
       // Send access token to backend for verification
       console.log('Sending access token to backend for verification');
-      const response = await apiRequest('POST', '/api/auth/pi', {
+      const response = await apiRequest('POST', '/api/pi?action=auth', {
         accessToken: authResult.accessToken,
       });
       
