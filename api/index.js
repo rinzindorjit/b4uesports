@@ -1058,15 +1058,15 @@ async function handlePiBalance(request, response) {
   // Add a small delay to simulate API call
   await new Promise(resolve => setTimeout(resolve, 100));
   
-  const response = { 
+  const balanceResponse = { 
     balance: balance,
     currency: "PI",
     lastUpdated: new Date().toISOString(),
     isTestnet: true
   };
   
-  console.log("Balance response:", JSON.stringify(response));
-  return response.status(200).json(response);
+  console.log("Balance response:", JSON.stringify(balanceResponse));
+  return response.status(200).json(balanceResponse);
 }
 
 // Mock handler for pi-price
