@@ -1,5 +1,5 @@
 // Main API handler for Vercel - Consolidated version to stay within 12 function limit
-// Version: 1.2.0 - Fixed syntax errors and fully consolidated
+// Version: 1.2.1 - Fixed empty action parameter handling
 
 // Import required modules
 import { db, initDb } from './utils/db.js';
@@ -1076,6 +1076,17 @@ async function handlePiApi(req, res) {
     queryKeys: Object.keys(query)
   });
   
+  // Handle root endpoint requests (no action specified)
+  if (!action) {
+    console.log("ℹ️ No action specified, returning welcome message");
+    return res.status(200).json({ 
+      message: "B4U Esports Pi Network API", 
+      version: "1.2.1",
+      status: "operational",
+      timestamp: new Date().toISOString()
+    });
+  }
+  
   // Check if request is from Pi Browser by looking at the x-requested-with header
   const headers = req.headers || {};
   const isPiBrowser = headers['x-requested-with'] === 'pi.browser';
@@ -1565,15 +1576,155 @@ async function handlePiApi(req, res) {
         return handleMockPiPayment(req, res);
       }
 
+      case "verify-payment": {
+        return handleVerifyPayment(req, res);
+      }
+
       default: {
         console.error("❌ Unknown action:", action);
-        return res.status(400).json({ message: 'Unknown action' });
+        return res.status(400).json({ 
+          message: 'Unknown action',
+          action: action,
+          availableActions: [
+            "price", "balance", "auth", "user", "create-payment",
+            "payment/approve", "payment/complete", "profile/update",
+            "admin/login", "packages", "transactions", "analytics",
+            "metadata", "mock-pi-payment", "verify-payment"
+          ]
+        });
       }
     }
   } catch (error) {
     console.error("Error during API handling:", error);
     return res.status(500).json({
       error: "Internal server error",
+      message: error.message
+    });
+  }
+}
+
+// Add missing verify-payment action handler
+async function handleVerifyPayment(request, response) {
+  // Set CORS headers for Pi Browser compatibility
+  const allowedOrigins = [
+    "https://sandbox.minepi.com",
+    "https://b4uesports.vercel.app"
+  ];
+
+  const headers = request.headers || {};
+  const origin = headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    response.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  
+  response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  
+  // Handle preflight requests
+  if (request.method === "OPTIONS") {
+    return response.status(200).end();
+  }
+  
+  if (request.method !== "POST") {
+    return response.status(405).json({ message: "Method not allowed" });
+  }
+
+  // Robust Pi Browser detection
+  const isPiBrowser = isPiBrowserRequest(headers);
+  console.log('Pi Browser detection - x-requested-with header:', headers['x-requested-with']);
+  console.log('User-Agent:', headers['user-agent']);
+  console.log('Is Pi Browser request:', isPiBrowser);
+  
+  // Check for Testnet mode
+  const isTestnet = process.env.PI_SANDBOX_MODE === 'true' || process.env.NODE_ENV !== 'production';
+  const isDev = process.env.NODE_ENV !== 'production';
+  
+  console.log('Environment check - isTestnet:', isTestnet, 'isDev:', isDev);
+
+  // For Testnet or development, allow payments without requiring Pi Browser
+  // For production/live mode, require Pi Browser
+  if (!isPiBrowser && !isTestnet && !isDev) {
+    console.log('❌ Request not from Pi Browser in production/live mode');
+    return response.status(403).json({
+      error: "Payment verification can only be processed through Pi Browser"
+    });
+  }
+  
+  console.log('✅ Request allowed - Testnet mode or Pi Browser detected');
+
+  // In Vercel, the request body is already parsed as JSON
+  const body = request.body || {};
+  
+  const { paymentId } = body;
+  if (!paymentId) {
+    return response.status(400).json({ message: 'Payment ID required' });
+  }
+
+  console.log('🔄 Handling payment verification...');
+  console.log('💳 Payment ID:', paymentId);
+
+  try {
+    // For Testnet mode, we'll mock the verification
+    if (isTestnet) {
+      console.log('✅ Mocking payment verification in Testnet mode');
+      
+      // Return mock verification result
+      return response.status(200).json({
+        verified: true,
+        paymentId: paymentId,
+        status: "completed",
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // For production, call Pi Network API to verify payment
+    console.log('🔄 Calling Pi Network API to verify payment...');
+    
+    const piApiUrl = `https://api.minepi.com/v2/payments/${paymentId}`;
+    const apiKey = process.env.PI_API_KEY;
+    
+    if (!apiKey) {
+      console.error('❌ PI_API_KEY not configured');
+      return response.status(500).json({ 
+        error: "Server configuration error",
+        message: "PI_API_KEY not configured" 
+      });
+    }
+    
+    const piResponse = await fetch(piApiUrl, {
+      method: "GET",
+      headers: {
+        "Authorization": `Key ${apiKey}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "B4U-Esports-Server/1.0"
+      }
+    });
+    
+    console.log('📥 Pi API Response Status:', piResponse.status);
+    
+    if (!piResponse.ok) {
+      const errorText = await piResponse.text();
+      console.error('❌ Pi Network API error:', errorText);
+      return response.status(piResponse.status).json({
+        error: "Failed to verify payment with Pi Network",
+        message: errorText
+      });
+    }
+    
+    const paymentData = await piResponse.json();
+    console.log('✅ Payment verification successful');
+    
+    return response.status(200).json({
+      verified: true,
+      paymentId: paymentId,
+      status: paymentData.status,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Payment verification failed:', error.message);
+    return response.status(500).json({
+      error: "Payment verification failed",
       message: error.message
     });
   }

@@ -236,8 +236,8 @@ export async function checkPiMetadata(): Promise<{ success: boolean; data?: any;
   try {
     console.log('Checking Pi Network metadata...');
     
-    // Call the Pi Network metadata endpoint
-    const response = await fetch('/api/pi-metadata');
+    // Call the Pi Network metadata endpoint (updated to match server-side handler)
+    const response = await fetch('/api/pi?action=metadata');
     
     if (!response.ok) {
       const errorData = await response.json();
