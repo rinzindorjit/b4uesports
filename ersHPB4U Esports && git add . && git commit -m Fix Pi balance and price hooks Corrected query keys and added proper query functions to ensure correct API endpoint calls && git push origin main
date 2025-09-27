@@ -1,0 +1,5 @@
+[33m9aba6dd[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Update backend response format to match Pi Browser expectations: Updated mock-pi-payment.js and payment handlers to return correct format for Step 11 completion, added proper CORS headers for Pi Browser compatibility
+[33mb3c4674[m your message here
+[33md566d79[m Initial commit
+[33m36d02e9[m your message here
+[33m2e16a4e[m your message here

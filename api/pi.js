@@ -7,7 +7,9 @@ export default async function handler(req, res) {
   const { method, query, body } = req;
   const action = query.action; // e.g. /api/pi?action=create-payment
 
+  console.log("Pi API Handler → Full query object:", JSON.stringify(query));
   console.log("Pi API Handler → Action:", action);
+  console.log("Pi API Handler → Method:", method);
 
   try {
     switch (action) {
@@ -63,12 +65,20 @@ export default async function handler(req, res) {
         // Mock balance for testnet
         const balance = 1000.0;
         console.log("Routing to Pi balance handler");
-        return res.status(200).json({ 
+        console.log("Balance handler executing");
+        
+        // Add a small delay to simulate API call
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const response = { 
           balance: balance,
           currency: "PI",
           lastUpdated: new Date().toISOString(),
           isTestnet: true
-        });
+        };
+        
+        console.log("Balance response:", JSON.stringify(response));
+        return res.status(200).json(response);
       }
 
       case "auth": {
@@ -601,7 +611,9 @@ export default async function handler(req, res) {
       }
 
       default:
-        return res.status(400).json({ error: "Invalid action" });
+        console.log("Pi API Handler → Invalid action received:", action);
+        console.log("Pi API Handler → Full request object:", JSON.stringify({ method, query, body }));
+        return res.status(400).json({ error: "Invalid action", receivedAction: action });
     }
   } catch (error) {
     console.error("Pi API handler error:", error);

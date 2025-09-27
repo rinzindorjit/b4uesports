@@ -981,11 +981,13 @@ async function apiHandler(request, response) {
       return await piHandler(modifiedRequest, response);
     } else if (path === '/api/pi-balance') {
       // Handle /api/pi-balance endpoint
+      console.log('Routing to /api/pi-balance endpoint');
       const piHandler = (await import('./pi.js')).default;
       const modifiedRequest = {
         ...request,
         query: { action: 'balance' }
       };
+      console.log('Modified request for Pi handler:', JSON.stringify(modifiedRequest));
       return await piHandler(modifiedRequest, response);
     } else if (path === '/api/metadata') {
       console.log('Routing to metadata handler');
