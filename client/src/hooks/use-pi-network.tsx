@@ -268,8 +268,14 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     const isSandbox = isSandboxEnvironment();
     const isVercel = window.location.hostname.includes('vercel.app');
     
-    // In testnet/preview/sandbox environments, always use mock payments
-    if (isPreview || isSandbox || isNetlify || isVercel || process.env.NODE_ENV !== 'production') {
+    // For testing purposes in the Pi Developer Portal, we want to use real payments
+    // even in sandbox environments to ensure proper tracking
+    // Check if we're specifically testing Step 11 in the Pi Developer Portal
+    const isPiPortalTest = localStorage.getItem('pi_portal_test') === 'true';
+    const useRealPayments = isPiPortalTest || isSandbox || isNetlify || isVercel;
+    
+    // Only use mock payments in local development (unless specifically testing Pi Portal)
+    if (isPreview || (process.env.NODE_ENV !== 'production' && !useRealPayments)) {
       // Mock payment flow for preview mode, sandbox, or Pi Browser
       console.log('Mock payment initiated:', paymentData);
       

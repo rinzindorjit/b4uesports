@@ -20,7 +20,10 @@ const app = express();
 const PORT = 5001;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3005'],
+  credentials: true
+}));
 app.use(express.json());
 
 // API routes

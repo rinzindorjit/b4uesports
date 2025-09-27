@@ -320,11 +320,43 @@ async function handlePaymentApproval(request, response) {
     return response.status(400).json({ message: 'Payment ID required' });
   }
 
-  // For mock purposes, we'll return a success response
-  response.status(200).json({ 
-    success: true, 
-    transactionId: 'transaction-' + Date.now() 
-  });
+  try {
+    // Call Pi Network API to approve the payment
+    const piApiUrl = `https://sandbox.minepi.com/v2/payments/${paymentId}/approve`;
+    const apiKey = "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
+
+    console.log('Approving payment with Pi Network:', paymentId);
+    
+    const piResponse = await fetch(piApiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${apiKey}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+    });
+
+    const contentType = piResponse.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const textResponse = await piResponse.text();
+      console.error("Non-JSON response from Pi Network:", textResponse.substring(0, 300));
+      return response.status(piResponse.status).json({
+        error: "Invalid response from Pi Network",
+        message: textResponse,
+      });
+    }
+
+    const data = await piResponse.json();
+    console.log("Payment approval response from Pi Network:", data);
+    
+    return response.status(piResponse.status).json(data);
+  } catch (error) {
+    console.error("Payment approval error:", error);
+    return response.status(500).json({ 
+      error: "Payment approval failed",
+      message: error.message
+    });
+  }
 }
 
 // Mock handler for payment completion
@@ -337,12 +369,46 @@ async function handlePaymentCompletion(request, response) {
     return response.status(400).json({ message: 'Payment ID and txid required' });
   }
 
-  // For mock purposes, we'll return a success response
-  response.status(200).json({ 
-    success: true, 
-    transactionId: 'transaction-' + Date.now(),
-    txid
-  });
+  try {
+    // Call Pi Network API to complete the payment
+    const piApiUrl = `https://sandbox.minepi.com/v2/payments/${paymentId}/complete`;
+    const apiKey = "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
+
+    console.log('Completing payment with Pi Network:', paymentId, txid);
+    
+    const piResponse = await fetch(piApiUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${apiKey}`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        txid: txid
+      }),
+    });
+
+    const contentType = piResponse.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const textResponse = await piResponse.text();
+      console.error("Non-JSON response from Pi Network:", textResponse.substring(0, 300));
+      return response.status(piResponse.status).json({
+        error: "Invalid response from Pi Network",
+        message: textResponse,
+      });
+    }
+
+    const data = await piResponse.json();
+    console.log("Payment completion response from Pi Network:", data);
+    
+    return response.status(piResponse.status).json(data);
+  } catch (error) {
+    console.error("Payment completion error:", error);
+    return response.status(500).json({ 
+      error: "Payment completion failed",
+      message: error.message
+    });
+  }
 }
 
 // Mock handler for analytics
@@ -383,8 +449,8 @@ async function handleMetadata(request, response) {
     endpoints: {
       authentication: `${backendUrl}/api/pi?action=auth`,
       payment_create: `${backendUrl}/api/pi?action=create-payment`,
-      payment_approve: `${backendUrl}/api/pi?action=approve-payment`,
-      payment_complete: `${backendUrl}/api/pi?action=complete-payment`,
+      payment_approve: `${backendUrl}/api/payment/approve`,
+      payment_complete: `${backendUrl}/api/payment/complete`,
       user_profile: `${backendUrl}/api/pi?action=user`,
       price: `${backendUrl}/api/pi?action=price`,
       balance: `${backendUrl}/api/pi?action=balance`

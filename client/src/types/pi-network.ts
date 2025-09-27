@@ -51,6 +51,7 @@ export interface PaymentDTO {
 export interface PiPrice {
   price: number;
   lastUpdated: Date;
+  source?: string; // Indicates if the price is from CoinGecko or fallback
 }
 
 export interface PiBalance {

@@ -22,8 +22,8 @@ export default function handler(req, res) {
     endpoints: {
       authentication: `${backendUrl}/api/pi?action=auth`,
       payment_create: `${backendUrl}/api/pi?action=create-payment`,
-      payment_approve: `${backendUrl}/api/pi?action=approve-payment`,
-      payment_complete: `${backendUrl}/api/pi?action=complete-payment`,
+      payment_approve: `${backendUrl}/api/payment/approve`,
+      payment_complete: `${backendUrl}/api/payment/complete`,
       user_profile: `${backendUrl}/api/pi?action=user`,
       price: `${backendUrl}/api/pi?action=price`,
       balance: `${backendUrl}/api/pi?action=balance`

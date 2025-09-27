@@ -12,13 +12,51 @@ export default async function handler(req, res) {
   try {
     switch (action) {
       case "price": {
-        // Example price (you might replace with real API if needed)
-        const piPrice = 0.26;
-        console.log("Extracted price:", piPrice);
-        return res.status(200).json({ 
-          price: piPrice,
-          lastUpdated: new Date().toISOString()
-        });
+        try {
+          // Fetch live price from CoinGecko
+          const coingeckoApiKey = process.env.COINGECKO_API_KEY || '';
+          const headers = {
+            'accept': 'application/json',
+          };
+          
+          // Add API key to headers if available
+          if (coingeckoApiKey && coingeckoApiKey !== 'your_coingecko_api_key') {
+            headers['x-cg-pro-api-key'] = coingeckoApiKey;
+          }
+          
+          const response = await fetch(
+            'https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd',
+            { headers }
+          );
+          
+          if (!response.ok) {
+            throw new Error(`CoinGecko API error: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          const piPrice = data['pi-network']?.usd;
+          
+          if (!piPrice) {
+            throw new Error('Failed to get PI price from CoinGecko');
+          }
+          
+          console.log("Fetched live PI price from CoinGecko:", piPrice);
+          return res.status(200).json({ 
+            price: piPrice,
+            lastUpdated: new Date().toISOString()
+          });
+        } catch (error) {
+          console.error("Error fetching PI price from CoinGecko:", error);
+          
+          // Fallback to hardcoded price if CoinGecko fails
+          const fallbackPrice = 0.26;
+          console.log("Using fallback price:", fallbackPrice);
+          return res.status(200).json({ 
+            price: fallbackPrice,
+            lastUpdated: new Date().toISOString(),
+            source: 'fallback'
+          });
+        }
       }
 
       case "balance": {
@@ -364,6 +402,22 @@ export default async function handler(req, res) {
         
         // Log the webhook event
         console.log('Pi Network webhook received:', { action: webhookAction, paymentId, txid });
+        
+        // Process different webhook actions
+        switch (webhookAction) {
+          case 'payment_created':
+            console.log('Payment created webhook received:', paymentId);
+            break;
+          case 'payment_approved':
+            console.log('Payment approved webhook received:', paymentId);
+            break;
+          case 'payment_completed':
+            console.log('Payment completed webhook received:', paymentId, txid);
+            // Here you would typically update your database to mark the transaction as completed
+            break;
+          default:
+            console.log('Unknown webhook action:', webhookAction);
+        }
         
         // Acknowledge the webhook
         return res.status(200).json({ success: true });

@@ -20,10 +20,16 @@ export default function Landing() {
   console.log('PiPrice data:', piPrice);
   console.log('PiPrice error:', error);
   console.log('PiPrice loading:', isLoading);
+  
+  // Log price source for debugging
+  if (piPrice?.source) {
+    console.log('Pi price source:', piPrice.source);
+  }
 
   // Create mock packages for preview
   const mockPackages = useMemo(() => {
-    if (!piPrice) return [];
+    // Use a default price if piPrice is not available
+    const price = piPrice?.price || 0.0009; // Default price if API fails
     
     // PUBG Packages
     const pubgPackages: Package[] = DEFAULT_PACKAGES.PUBG.map((pkg, index) => ({
@@ -34,8 +40,8 @@ export default function Landing() {
       usdtValue: pkg.usdtValue.toString(),
       image: GAME_LOGOS.PUBG,
       isActive: true,
-      piPrice: pkg.usdtValue / piPrice.price,
-      currentPiPrice: piPrice.price
+      piPrice: pkg.usdtValue / price,
+      currentPiPrice: price
     }));
     
     // MLBB Packages
@@ -47,18 +53,16 @@ export default function Landing() {
       usdtValue: pkg.usdtValue.toString(),
       image: GAME_LOGOS.MLBB,
       isActive: true,
-      piPrice: pkg.usdtValue / piPrice.price,
-      currentPiPrice: piPrice.price
+      piPrice: pkg.usdtValue / price,
+      currentPiPrice: price
     }));
     
     return [...pubgPackages, ...mlbbPackages];
   }, [piPrice]);
 
   // Use mock data for preview instead of API
-  const { data: packages, isLoading: packagesLoading } = {
-    data: mockPackages,
-    isLoading: !piPrice
-  } as { data: Package[]; isLoading: boolean };
+  const packages = mockPackages;
+  const packagesLoading = !piPrice;
 
   // Redirect to dashboard if already authenticated
   if (isAuthenticated) {
@@ -188,7 +192,9 @@ export default function Landing() {
                   <div className="text-center">
                     <p className="text-sm text-white/80">Live Pi Price</p>
                     <p className="text-2xl font-bold text-white">1 π = ${piPrice.price.toFixed(4)} USD</p>
-                    <p className="text-xs text-white/60">Updated 60s ago</p>
+                    <p className="text-xs text-white/60">
+                      {piPrice.source === 'fallback' ? 'Using fallback price' : 'Updated 60s ago'}
+                    </p>
                   </div>
                 </div>
               </div>

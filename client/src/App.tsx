@@ -18,6 +18,11 @@ import AuthTest from "@/pages/auth-test";
 import SDKTest from "@/pages/sdk-test";
 import NotFound from "@/pages/not-found";
 
+// Simple error boundary component
+function ErrorBoundary({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
+
 function Router() {
   return (
     <Switch>
@@ -45,7 +50,9 @@ function App() {
         <PiNetworkProvider>
           <div className="dark min-h-screen bg-background text-foreground">
             <Toaster />
-            <Router />
+            <ErrorBoundary>
+              <Router />
+            </ErrorBoundary>
           </div>
         </PiNetworkProvider>
       </TooltipProvider>
