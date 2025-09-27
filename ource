@@ -1,5 +1,0 @@
-[33m8e5ad24[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Fix Pi Network API 403 errors: Enhanced error handling and CDN detection
-[33m6d4c149[m Fix Pi Network API 403 errors: Enhanced error handling and CDN detection for payment creation endpoints
-[33m922e566[m Fix Pi Network API endpoints to use fixed Testnet URL and simplify error handling
-[33m5a99696[m Update Pi Network API endpoints to use fixed sandbox URLs and improve error handling
-[33m101a7da[m Fix Pi Network API integration issues - Resolve 403 errors by implementing proper endpoint selection and enhanced logging

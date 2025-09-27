@@ -33,9 +33,9 @@ export function getAuthMode() {
     return 'netlify-testnet';
   }
   
-  // Vercel deployment (sandbox mode)
+  // Vercel deployment (testnet mode)
   if (hostname.includes('vercel.app')) {
-    return 'vercel-sandbox';
+    return 'vercel-testnet';
   }
   
   // Production environment
@@ -59,6 +59,7 @@ export function shouldInitializePiSDK(): boolean {
   const mode = getAuthMode();
   console.log('shouldInitializePiSDK check, mode:', mode);
   // Initialize Pi SDK for all environments except development mock
+  // For testnet environments, we still initialize the Pi SDK
   return mode !== 'development-mock';
 }
 
@@ -66,5 +67,6 @@ export function getPiSDKSandboxMode(): boolean {
   const mode = getAuthMode();
   console.log('getPiSDKSandboxMode check, mode:', mode);
   // Use sandbox mode for testnet environments, production mode for production
+  // For testnet (Vercel, Netlify), we use sandbox mode
   return mode !== 'production';
 }

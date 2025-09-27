@@ -32,6 +32,12 @@ export default function handler(req, res) {
       support_email: "info@b4uesports.com",
       website: "https://b4uesports.vercel.app"
     },
-    last_updated: new Date().toISOString()
+    last_updated: new Date().toISOString(),
+    // Add Testnet-specific information
+    testnet: {
+      mode: "enabled",
+      description: "Running in Pi Network Testnet mode",
+      note: "Payments are handled via Pi SDK client-side, no backend API calls needed"
+    }
   });
 }

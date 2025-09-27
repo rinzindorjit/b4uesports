@@ -335,6 +335,58 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       return;
     }
     
+    // For Vercel deployments and Testnet environments, we still use the Pi SDK directly
+    // but we don't call the backend approval/complete endpoints
+    if (isVercel || isNetlify || isSandbox) {
+      console.log('Testnet payment initiated:', paymentData);
+      
+      // Add user context to metadata
+      const enhancedPaymentData = {
+        ...paymentData,
+        metadata: {
+          ...paymentData.metadata,
+          type: 'testnet' as const,
+          userId: user?.id,
+        },
+      };
+
+      // For Testnet, we use simplified callbacks that don't call the backend
+      const testnetCallbacks = {
+        onReadyForServerApproval: (paymentId: string) => {
+          console.log('Testnet payment approved:', paymentId);
+          // In Testnet, we don't need to call the backend for approval
+          // Just call the original callback
+          callbacks.onReadyForServerApproval(paymentId);
+        },
+        onReadyForServerCompletion: (paymentId: string, txid: string) => {
+          console.log('Testnet payment completed:', paymentId, txid);
+          // In Testnet, we don't need to call the backend for completion
+          // Just call the original callback
+          callbacks.onReadyForServerCompletion(paymentId, txid);
+        },
+        onCancel: callbacks.onCancel,
+        onError: callbacks.onError,
+      };
+
+      // Initialize Pi SDK if not already initialized
+      try {
+        piSDK.createPayment(enhancedPaymentData, testnetCallbacks);
+      } catch (error) {
+        console.error('Testnet payment creation failed:', error);
+        // Try to reinitialize Pi SDK and retry
+        try {
+          const useSandbox = true; // Always use sandbox for Testnet
+          piSDK.init(useSandbox);
+          piSDK.createPayment(enhancedPaymentData, testnetCallbacks);
+        } catch (retryError) {
+          console.error('Testnet payment creation retry failed:', retryError);
+          callbacks.onError(retryError as Error);
+        }
+      }
+      
+      return;
+    }
+    
     if (!isAuthenticated || !user) {
       throw new Error('User not authenticated');
     }
