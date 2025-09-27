@@ -4,6 +4,16 @@ import { db } from './utils/db.js';
 import { storeMockPayment } from './utils/db-operations.js';
 
 export default async function handler(req, res) {
+  // Set CORS headers for Pi Browser compatibility
+  res.setHeader("Access-Control-Allow-Origin", "https://sandbox.minepi.com");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method not allowed" });
   }
@@ -53,17 +63,14 @@ export default async function handler(req, res) {
       // Continue with the response even if database operation fails
     }
     
-    // For mock payments, just return a success response
+    // For mock payments, return Pi Browser expected format
     const txid = "mock-tx-" + Date.now();
     
     return res.status(200).json({
-      identifier: paymentId,
-      status: 'completed',
-      transaction: {
-        txid: txid,
-        verified: true
-      },
-      message: 'Mock payment completed successfully in Testnet mode'
+      status: "success",
+      message: "Payment completed",
+      paymentId: paymentId,
+      txid: txid
     });
   } else {
     console.log('⚠️ Non-mock payment ID detected in Testnet mode');
@@ -96,18 +103,14 @@ export default async function handler(req, res) {
       // Continue with the response even if database operation fails
     }
     
-    // For any other payment ID in Testnet mode, still return success
-    // because we're not actually calling the Pi Network API in Testnet
+    // For any other payment ID in Testnet mode, return Pi Browser expected format
     const txid = "testnet-tx-" + Date.now();
     
     return res.status(200).json({
-      identifier: paymentId,
-      status: 'completed',
-      transaction: {
-        txid: txid,
-        verified: true
-      },
-      message: 'Payment completed successfully in Testnet mode'
+      status: "success",
+      message: "Payment completed",
+      paymentId: paymentId,
+      txid: txid
     });
   }
 }

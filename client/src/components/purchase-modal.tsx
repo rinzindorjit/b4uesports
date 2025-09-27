@@ -10,6 +10,7 @@ import { usePiBalance } from '@/hooks/use-pi-balance';
 import { GAME_LOGOS } from '@/lib/constants';
 import type { Package } from '@/types/pi-network';
 import bcrypt from 'bcryptjs';
+import { processPayment } from '@/lib/payment-process';
 
 interface PurchaseModalProps {
   isOpen: boolean;
@@ -101,189 +102,33 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
     setIsProcessing(true);
 
     try {
-      // Always use mock payment flow for Vercel deployments, preview mode, or Pi Browser
-      if (useMockPayment) {
-        // Use mock payment flow with real Pi payment creation
-        console.log('Using mock payment flow with real Pi payment creation');
-        
-        // For mock payments, we'll use the existing flow but remove the direct API call
-        // The payment should be created using the Pi SDK which will trigger the callbacks
-        // that call our backend endpoints for approval and completion
-        
-        // Since we're in mock mode, we'll simulate the Pi SDK flow
-        const mockPaymentId = 'mock-payment-' + Date.now();
-        
-        // Step 1: Simulate onReadyForServerApproval callback
-        try {
-          const approvalResponse = await fetch('/api/payment/approve', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token || 'mock-token'}`
-            },
-            body: JSON.stringify({
-              paymentId: mockPaymentId
-            })
-          });
-          
-          const approvalData = await approvalResponse.json();
-          
-          if (!approvalResponse.ok) {
-            throw new Error(approvalData.message || 'Failed to approve payment');
-          }
-          
-          console.log('Payment approved:', approvalData);
-        } catch (approvalError: any) {
-          throw new Error(`Payment approval failed: ${approvalError.message || approvalError}`);
-        }
-        
-        // Step 2: Simulate onReadyForServerCompletion callback
-        const mockTxid = 'mock-tx-' + Date.now();
-        try {
-          const completionResponse = await fetch('/api/payment/complete', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token || 'mock-token'}`
-            },
-            body: JSON.stringify({
-              paymentId: mockPaymentId,
-              txid: mockTxid
-            })
-          });
-          
-          const completionData = await completionResponse.json();
-          
-          if (!completionResponse.ok) {
-            throw new Error(completionData.message || 'Failed to complete payment');
-          }
-          
-          console.log('Payment completed:', completionData);
-          
-          toast({
-            title: "Payment Completed",
-            description: `✅ Payment confirmed! Transaction ID: ${completionData.transactionId || mockTxid}`,
-          });
-          
-          // Close modal and reset
-          onClose();
-          setStep('confirm');
-          setPassphrase('');
-          setIsProcessing(false);
-          return;
-        } catch (completionError: any) {
-          throw new Error(`Payment completion failed: ${completionError.message || completionError}`);
-        }
-      }
-      
-      // Create payment with Pi Network (real payment flow)
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-      
-      const paymentData = {
-        amount: pkg.piPrice || 0,
-        memo: `${pkg.name} - ${gameName}`,
-        metadata: {
-          type: 'backend' as const,
+      // Use the new payment process function
+      const result = await processPayment(
+        pkg.piPrice || 0,
+        `${pkg.name} - ${pkg.game === 'PUBG' ? 'PUBG Mobile' : 'Mobile Legends'}`,
+        {
+          type: 'backend',
           userId: user.id,
           packageId: pkg.id,
           gameAccount: editableGameAccount,
-          passphrase: await bcrypt.hash(passphrase, 10), // Hash passphrase
-        },
-      };
+          passphrase: passphrase ? await bcrypt.hash(passphrase, 10) : undefined, // Hash passphrase
+        }
+      );
 
-      createPayment(paymentData, {
-        onReadyForServerApproval: async (paymentId: string) => {
-          try {
-            // Call our backend to approve the payment
-            const response = await fetch('/api/payment/approve', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token || 'mock-token'}`
-              },
-              body: JSON.stringify({
-                paymentId: paymentId
-              })
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-              throw new Error(data.message || 'Failed to approve payment');
-            }
-            
-            toast({
-              title: "Payment Approved",
-              description: `Payment ${paymentId} approved by server`,
-            });
-          } catch (error: any) {
-            console.error('Payment approval failed:', error);
-            toast({
-              title: "Payment Approval Failed",
-              description: `⚠️ Payment approval failed: ${error.message || error}. Please retry.`,
-              variant: "destructive",
-            });
-            setIsProcessing(false);
-          }
-        },
-        onReadyForServerCompletion: async (paymentId: string, txid: string) => {
-          try {
-            // Call our backend to complete the payment
-            const response = await fetch('/api/payment/complete', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token || 'mock-token'}`
-              },
-              body: JSON.stringify({
-                paymentId: paymentId,
-                txid: txid
-              })
-            });
-            
-            const data = await response.json();
-            
-            if (!response.ok) {
-              throw new Error(data.message || 'Failed to complete payment');
-            }
-            
-            toast({
-              title: "Payment Completed",
-              description: `✅ Payment confirmed! Transaction ID: ${txid}`,
-            });
-            
-            onClose();
-            setStep('confirm');
-            setPassphrase('');
-          } catch (error: any) {
-            console.error('Payment completion failed:', error);
-            toast({
-              title: "Payment Completion Failed",
-              description: `⚠️ Payment completion failed: ${error.message || error}. Please retry.`,
-              variant: "destructive",
-            });
-            setIsProcessing(false);
-          }
-        },
-        onCancel: (paymentId: string) => {
-          toast({
-            title: "Payment Cancelled",
-            description: "❌ Payment canceled. No Pi deducted.",
-            variant: "destructive",
-          });
-          setIsProcessing(false);
-        },
-        onError: (error: Error) => {
-          toast({
-            title: "Payment Failed",
-            description: `⚠️ Payment failed: ${error.message}. Please retry.`,
-            variant: "destructive",
-          });
-          setIsProcessing(false);
-        },
-      });
+      if (result.success) {
+        toast({
+          title: "Payment Completed",
+          description: `✅ Payment confirmed! Payment ID: ${result.paymentId}`,
+        });
+        
+        // Close modal and reset
+        onClose();
+        setStep('confirm');
+        setPassphrase('');
+        setIsProcessing(false);
+      } else {
+        throw new Error(result.error || "Payment failed");
+      }
     } catch (error: any) {
       toast({
         title: "Error",

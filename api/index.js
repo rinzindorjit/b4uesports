@@ -315,6 +315,16 @@ async function handleTransactions(request, response) {
 
 // Mock handler for payment approval
 async function handlePaymentApproval(request, response) {
+  // Set CORS headers for Pi Browser compatibility
+  response.setHeader("Access-Control-Allow-Origin", "https://sandbox.minepi.com");
+  response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  
+  // Handle preflight requests
+  if (request.method === "OPTIONS") {
+    return response.status(200).end();
+  }
+  
   // In Vercel, the request body is already parsed as JSON
   const body = request.body || {};
   
@@ -352,11 +362,11 @@ async function handlePaymentApproval(request, response) {
       // Continue with the response even if database operation fails
     }
     
-    // For mock payments, just return a success response
+    // For mock payments, return Pi Browser expected format
     return response.status(200).json({
-      identifier: paymentId,
-      status: 'approved',
-      message: 'Mock payment approved successfully in Testnet mode'
+      status: "success",
+      message: "Payment approved",
+      paymentId: paymentId
     });
   } else {
     console.log('⚠️ Non-mock payment ID detected in Testnet mode');
@@ -381,18 +391,27 @@ async function handlePaymentApproval(request, response) {
       // Continue with the response even if database operation fails
     }
     
-    // For any other payment ID in Testnet mode, still return success
-    // because we're not actually calling the Pi Network API in Testnet
+    // For any other payment ID in Testnet mode, return Pi Browser expected format
     return response.status(200).json({
-      identifier: paymentId,
-      status: 'approved',
-      message: 'Payment approved successfully in Testnet mode'
+      status: "success",
+      message: "Payment approved",
+      paymentId: paymentId
     });
   }
 }
 
 // Mock handler for payment completion
 async function handlePaymentCompletion(request, response) {
+  // Set CORS headers for Pi Browser compatibility
+  response.setHeader("Access-Control-Allow-Origin", "https://sandbox.minepi.com");
+  response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  
+  // Handle preflight requests
+  if (request.method === "OPTIONS") {
+    return response.status(200).end();
+  }
+  
   // In Vercel, the request body is already parsed as JSON
   const body = request.body || {};
   
@@ -436,15 +455,12 @@ async function handlePaymentCompletion(request, response) {
       // Continue with the response even if database operation fails
     }
     
-    // For mock payments, just return a success response
+    // For mock payments, return Pi Browser expected format
     return response.status(200).json({
-      identifier: paymentId,
-      status: 'completed',
-      transaction: {
-        txid: txid,
-        verified: true
-      },
-      message: 'Mock payment completed successfully in Testnet mode'
+      status: "success",
+      message: "Payment completed",
+      paymentId: paymentId,
+      txid: txid
     });
   } else {
     console.log('⚠️ Non-mock payment ID detected in Testnet mode');
@@ -474,16 +490,12 @@ async function handlePaymentCompletion(request, response) {
       // Continue with the response even if database operation fails
     }
     
-    // For any other payment ID in Testnet mode, still return success
-    // because we're not actually calling the Pi Network API in Testnet
+    // For any other payment ID in Testnet mode, return Pi Browser expected format
     return response.status(200).json({
-      identifier: paymentId,
-      status: 'completed',
-      transaction: {
-        txid: txid,
-        verified: true
-      },
-      message: 'Payment completed successfully in Testnet mode'
+      status: "success",
+      message: "Payment completed",
+      paymentId: paymentId,
+      txid: txid
     });
   }
 }
@@ -915,7 +927,7 @@ async function apiHandler(request, response) {
   console.log('Request body type:', typeof request.body);
   
   // Set CORS headers for Pi Browser compatibility
-  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Origin', 'https://sandbox.minepi.com');
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Origin');
   response.setHeader('Access-Control-Allow-Credentials', 'true');

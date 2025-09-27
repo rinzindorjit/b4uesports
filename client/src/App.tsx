@@ -16,6 +16,7 @@ import AboutUs from "@/pages/about-us";
 import OurHistory from "@/pages/our-history";
 import AuthTest from "@/pages/auth-test";
 import SDKTest from "@/pages/sdk-test";
+import TestPaymentPage from "@/pages/test-payment";
 import NotFound from "@/pages/not-found";
 
 // Simple error boundary component
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/our-history" component={OurHistory} />
       <Route path="/auth-test" component={AuthTest} />
       <Route path="/sdk-test" component={SDKTest} />
+      <Route path="/test-payment" component={TestPaymentPage} />
       <Route component={NotFound} />
     </Switch>
   );

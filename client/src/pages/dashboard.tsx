@@ -200,251 +200,221 @@ export default function Dashboard() {
   const completedTransactions = transactions?.filter(tx => tx.status === 'completed').length || 0;
 
   return (
-    <div className="min-h-screen bg-background text-foreground" data-testid="dashboard-page">
+    <div className="min-h-screen bg-background">
       <ParticleBackground />
-      <Navigation isTestnet={process.env.NODE_ENV !== 'production'} />
+      <Navigation />
       
-      {/* Dashboard Header */}
-      <div className="bg-card border-b border-border" data-testid="dashboard-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-            <div className="w-full sm:w-auto">
-              <h1 className="text-3xl font-bold text-foreground" data-testid="user-greeting">
-                Welcome back, <span className="text-primary">{currentUser?.username || 'User'}!</span>
-              </h1>
-              <p className="text-muted-foreground font-mono" data-testid="user-wallet">
-                Wallet: {formatWalletAddress(currentUser?.walletAddress || '')}
-              </p>
-              {/* Profile Verification Notice */}
-              {currentUser && (
-                <div className="mt-2">
-                  {currentUser.isProfileVerified ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      <i className="fas fa-check-circle mr-1"></i>
-                      Profile Verified
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                      <i className="fas fa-exclamation-triangle mr-1"></i>
-                      Profile Incomplete - <button 
-                        onClick={() => setIsProfileModalOpen(true)}
-                        className="ml-1 underline hover:no-underline"
-                      >
-                        Complete Now
-                      </button>
-                    </span>
-                  )}
+      <main className="container mx-auto px-4 py-8">
+        {/* Test Payment Button - only visible in development */}
+        {process.env.NODE_ENV !== 'production' && (
+          <div className="mb-6 text-center">
+            <a href="/test-payment">
+              <Button variant="outline" className="bg-yellow-500/20 border-yellow-500 hover:bg-yellow-500/30">
+                Test Payment Integration
+              </Button>
+            </a>
+          </div>
+        )}
+        
+        {/* User Profile Section */}
+        <div className="mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>User Profile</span>
+                <Button onClick={() => setIsProfileModalOpen(true)} variant="outline">
+                  Edit Profile
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {currentUser ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Username</p>
+                    <p className="font-medium">{currentUser.username || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="font-medium">{currentUser.email || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Phone</p>
+                    <p className="font-medium">{currentUser.phone || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Wallet Address</p>
+                    <p className="font-medium font-mono">{formatWalletAddress(currentUser.walletAddress)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Country</p>
+                    <p className="font-medium">{currentUser.country || 'Not set'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Language</p>
+                    <p className="font-medium">{currentUser.language || 'Not set'}</p>
+                  </div>
                 </div>
+              ) : (
+                <p>Loading user data...</p>
               )}
-              {/* Pi Balance Display */}
-              {piBalance && (
-                <div className="mt-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    <i className="fas fa-wallet mr-1"></i>
-                    Balance: {piBalance.balance.toFixed(2)} π
-                    {piBalance.isTestnet && <span className="ml-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded">Testnet</span>}
-                  </span>
-                </div>
-              )}
-            </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Package Shop */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-6">Package Shop</h2>
+          <Tabs defaultValue="pubg" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="pubg" className="flex items-center justify-center">
+                <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-6 h-6 mr-2" />
+                PUBG Mobile
+              </TabsTrigger>
+              <TabsTrigger value="mlbb" className="flex items-center justify-center">
+                <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-6 h-6 mr-2" />
+                Mobile Legends
+              </TabsTrigger>
+            </TabsList>
             
-            {/* Live Pi Price Ticker */}
-            {piPrice && (
-              <div className="pi-price-ticker px-4 py-2 rounded-lg w-full sm:w-auto sticky top-0 z-10 sm:static sm:z-auto bg-card/90 backdrop-blur sm:bg-transparent" data-testid="pi-price-dashboard">
-                <div className="text-center">
-                  <p className="text-xs text-white/80">Live Pi Price</p>
-                  <p className="text-lg font-bold text-white">1 π = ${piPrice.price.toFixed(4)} USD</p>
-                  <p className="text-xs text-white/60">Updated 60s ago</p>
-                </div>
+            <TabsContent value="pubg" className="mt-8">
+              <div className="grid grid-cols-2 gap-6">
+                {packagesLoading ? (
+                  <div className="col-span-2 text-center text-muted-foreground">
+                    Loading packages...
+                  </div>
+                ) : (
+                  pubgPackages.map((pkg) => (
+                    <PackageCard
+                      key={pkg.id}
+                      package={pkg}
+                      onPurchase={() => handlePurchaseClick(pkg)}
+                    />
+                  ))
+                )}
               </div>
+            </TabsContent>
+            
+            <TabsContent value="mlbb" className="mt-8">
+              <div className="grid grid-cols-2 gap-6">
+                {packagesLoading ? (
+                  <div className="col-span-2 text-center text-muted-foreground">
+                    Loading packages...
+                  </div>
+                ) : (
+                  mlbbPackages.map((pkg) => (
+                    <PackageCard
+                      key={pkg.id}
+                      package={pkg}
+                      onPurchase={() => handlePurchaseClick(pkg)}
+                    />
+                  ))
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Recent Transactions */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-6">Recent Transactions</h2>
+          <div className="space-y-4">
+            {transactionsLoading ? (
+              <div className="text-muted-foreground">Loading...</div>
+            ) : recentTransactions.length === 0 ? (
+              <div className="text-muted-foreground">No transactions yet</div>
+            ) : (
+              recentTransactions.map((transaction, index) => (
+                <div 
+                  key={transaction.id} 
+                  className="border-b border-border pb-3 last:border-b-0"
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-semibold text-sm">
+                        {packages?.find(p => p.id === transaction.packageId)?.name || 'Unknown Package'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(transaction.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-mono text-green-400 text-sm">
+                        -{transaction.piAmount} π
+                      </p>
+                      <p className="text-xs capitalize text-green-400">
+                        {transaction.status === 'completed' ? '✅ Completed' : 
+                         transaction.status === 'pending' ? '🔄 Pending' : 
+                         transaction.status === 'failed' ? '❌ Failed' : transaction.status}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
-
-          {/* Quick Stats - Two columns on mobile */}
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6" data-testid="user-stats">
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm text-muted-foreground">Total Spent</h3>
-                <p className="text-2xl font-bold text-green-400 font-mono" data-testid="stat-total-spent">
-                  {totalSpent.toFixed(1)} π
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm text-muted-foreground">Transactions</h3>
-                <p className="text-2xl font-bold" data-testid="stat-transaction-count">
-                  {completedTransactions}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm text-muted-foreground">Country</h3>
-                <p className="text-2xl font-bold text-blue-400" data-testid="stat-country">
-                  {currentUser?.country || 'N/A'}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm text-muted-foreground">Status</h3>
-                <p className="text-2xl font-bold text-green-400" data-testid="stat-status">
-                  {isPreviewMode ? 'Preview Mode' : 'Active'}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
         </div>
-      </div>
 
-      {/* Dashboard Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Package Shop */}
-          <div className="lg:col-span-2" data-testid="package-shop">
-            <div className="flex items-center mb-6">
-              <h2 className="text-2xl font-bold">Package Shop</h2>
-            </div>
-            
-            <Tabs defaultValue="pubg" className="w-full">
-              <TabsList className="grid w-full grid-cols-2" data-testid="game-tabs">
-                <TabsTrigger value="pubg" className="flex items-center justify-center" data-testid="tab-pubg">
-                  <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-6 h-6 mr-2" />
-                  PUBG Mobile
-                </TabsTrigger>
-                <TabsTrigger value="mlbb" className="flex items-center justify-center" data-testid="tab-mlbb">
-                  <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-6 h-6 mr-2" />
-                  Mobile Legends
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="pubg" className="mt-8">
-                <div className="grid grid-cols-2 gap-6" data-testid="pubg-packages">
-                  {packagesLoading ? (
-                    <div className="col-span-2 text-center text-muted-foreground" data-testid="loading-packages">
-                      Loading packages...
-                    </div>
-                  ) : (
-                    pubgPackages.map((pkg) => (
-                      <PackageCard
-                        key={pkg.id}
-                        package={pkg}
-                        onPurchase={() => handlePurchaseClick(pkg)}
-                        data-testid={`package-card-${pkg.id}`}
-                      />
-                    ))
-                  )}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="mlbb" className="mt-8">
-                <div className="grid grid-cols-2 gap-6" data-testid="mlbb-packages">
-                  {packagesLoading ? (
-                    <div className="col-span-2 text-center text-muted-foreground" data-testid="loading-packages">
-                      Loading packages...
-                    </div>
-                  ) : (
-                    mlbbPackages.map((pkg) => (
-                      <PackageCard
-                        key={pkg.id}
-                        package={pkg}
-                        onPurchase={() => handlePurchaseClick(pkg)}
-                        data-testid={`package-card-${pkg.id}`}
-                      />
-                    ))
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-8" data-testid="dashboard-sidebar">
-            {/* Quick Actions */}
-            <Card data-testid="quick-actions">
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  onClick={() => setIsProfileModalOpen(true)}
-                  className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
-                  data-testid="button-edit-profile"
-                >
-                  <i className="fas fa-user mr-2"></i>Edit Profile
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    // In a real implementation, this would navigate to a transaction history page
-                    // For now, we'll just show an alert with transaction count
-                    const completedCount = transactions?.filter(tx => tx.status === 'completed').length || 0;
-                    alert(`You have ${completedCount} completed transactions. In the full application, this would navigate to a detailed transaction history page.`);
-                  }}
-                  data-testid="button-view-history"
-                >
-                  <i className="fas fa-history mr-2"></i>View History
-                </Button>
-                <Button 
-                  onClick={handleLogout}
-                  variant="destructive"
-                  className="w-full"
-                  data-testid="button-logout"
-                >
-                  <i className="fas fa-sign-out-alt mr-2"></i>Logout
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Transactions */}
-            <Card data-testid="recent-transactions">
-              <CardHeader>
-                <CardTitle>Recent Transactions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {transactionsLoading ? (
-                  <div className="text-muted-foreground" data-testid="loading-transactions">Loading...</div>
-                ) : recentTransactions.length === 0 ? (
-                  <div className="text-muted-foreground" data-testid="no-transactions">No transactions yet</div>
-                ) : (
-                  <div className="space-y-4">
-                    {recentTransactions.map((transaction, index) => (
-                      <div 
-                        key={transaction.id} 
-                        className="border-b border-border pb-3 last:border-b-0"
-                        data-testid={`transaction-${index}`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-semibold text-sm">
-                              {packages?.find(p => p.id === transaction.packageId)?.name || 'Unknown Package'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(transaction.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-mono text-green-400 text-sm">
-                              -{transaction.piAmount} π
-                            </p>
-                            <p className="text-xs capitalize text-green-400">
-                              {transaction.status === 'completed' ? '✅ Completed' : 
-                               transaction.status === 'pending' ? '🔄 Pending' : 
-                               transaction.status === 'failed' ? '❌ Failed' : transaction.status}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Spent</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-green-400 font-mono">
+                {totalSpent.toFixed(1)} π
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Transactions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">
+                {completedTransactions}
+              </p>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+
+        {/* Quick Actions */}
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Button 
+                onClick={() => setIsProfileModalOpen(true)}
+                className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+              >
+                <i className="fas fa-user mr-2"></i>Edit Profile
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  // In a real implementation, this would navigate to a transaction history page
+                  // For now, we'll just show an alert with transaction count
+                  const completedCount = transactions?.filter(tx => tx.status === 'completed').length || 0;
+                  alert(`You have ${completedCount} completed transactions. In the full application, this would navigate to a detailed transaction history page.`);
+                }}
+              >
+                <i className="fas fa-history mr-2"></i>View History
+              </Button>
+              <Button 
+                onClick={handleLogout}
+                variant="destructive"
+                className="w-full"
+              >
+                <i className="fas fa-sign-out-alt mr-2"></i>Logout
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
 
       {/* Floating Pi Price for Mobile */}
       {piPrice && (
