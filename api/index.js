@@ -998,6 +998,19 @@ async function apiHandler(request, response) {
       console.log('Modified request for Pi handler - query:', modifiedRequest.query);
       console.log('Modified request for Pi handler - headers:', modifiedRequest.headers);
       return await piHandler(modifiedRequest, response);
+    } else if (path === '/api/auth/pi') {
+      // Handle /api/auth/pi endpoint by redirecting to Pi handler with auth action
+      console.log('Routing to /api/auth/pi endpoint');
+      const piHandler = (await import('./pi.js')).default;
+      const modifiedRequest = {
+        ...request,
+        query: { action: 'auth' },
+        headers: request.headers // Ensure headers are passed through
+      };
+      console.log('Modified request for Pi handler - method:', modifiedRequest.method);
+      console.log('Modified request for Pi handler - query:', modifiedRequest.query);
+      console.log('Modified request for Pi handler - headers:', modifiedRequest.headers);
+      return await piHandler(modifiedRequest, response);
     } else if (path === '/api/metadata') {
       console.log('Routing to metadata handler');
       return await handleMetadata(request, response);
