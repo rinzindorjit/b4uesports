@@ -1,11 +1,22 @@
 // /api/mock-pi-payment.js
-// Version: 1.0.3 - Add database operations for storing mock payments
+// Version: 1.0.4 - Fix CORS, transaction ID duplication, and response format issues
+
 import { db } from './utils/db.js';
 import { storeMockPayment } from './utils/db-operations.js';
 
 export default async function handler(req, res) {
   // Set CORS headers for Pi Browser compatibility
-  res.setHeader("Access-Control-Allow-Origin", "https://sandbox.minepi.com");
+  // Allow both Pi sandbox and deployed domain
+  const allowedOrigins = [
+    "https://sandbox.minepi.com",
+    "https://b4uesports.vercel.app"
+  ];
+
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   
@@ -35,12 +46,12 @@ export default async function handler(req, res) {
   if (paymentId.startsWith('mock_') || paymentId.startsWith('mock-')) {
     console.log('✅ Mock payment ID detected in mock-pi-payment handler');
     
+    // Generate a transaction ID once to avoid duplication
+    const txid = "mock-tx-" + Date.now();
+    
     // Store mock payment in database if available
     try {
       console.log('💾 Storing mock payment in database...');
-      
-      // Generate a transaction ID
-      const txid = "mock-tx-" + Date.now();
       
       // Store the mock payment using our database operations
       const paymentData = {
@@ -64,23 +75,23 @@ export default async function handler(req, res) {
     }
     
     // For mock payments, return Pi Browser expected format
-    const txid = "mock-tx-" + Date.now();
-    
     return res.status(200).json({
-      status: "success",
-      message: "Payment completed",
       paymentId: paymentId,
-      txid: txid
+      status: "success",
+      transaction: {
+        txid: txid,
+        verified: true
+      }
     });
   } else {
     console.log('⚠️ Non-mock payment ID detected in Testnet mode');
     
+    // Generate a transaction ID once to avoid duplication
+    const txid = "testnet-tx-" + Date.now();
+    
     // Store real payment in database if available
     try {
       console.log('💾 Storing real payment in database...');
-      
-      // Generate a transaction ID
-      const txid = "testnet-tx-" + Date.now();
       
       // Store the payment using our database operations
       const paymentData = {
@@ -104,13 +115,13 @@ export default async function handler(req, res) {
     }
     
     // For any other payment ID in Testnet mode, return Pi Browser expected format
-    const txid = "testnet-tx-" + Date.now();
-    
     return res.status(200).json({
-      status: "success",
-      message: "Payment completed",
       paymentId: paymentId,
-      txid: txid
+      status: "success",
+      transaction: {
+        txid: txid,
+        verified: true
+      }
     });
   }
 }

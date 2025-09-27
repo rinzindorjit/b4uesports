@@ -4,12 +4,16 @@
 const fetch = globalThis.fetch || (await import("node-fetch")).default;
 
 export default async function handler(req, res) {
-  const { method, query, body } = req;
-  const action = query.action; // e.g. /api/pi?action=create-payment
+  // Extract action from query parameters or request object
+  const query = req.query || {};
+  const action = query.action || (req.body && req.body.action) || '';
+  const method = req.method || 'GET';
+  const body = req.body || {};
 
   console.log("Pi API Handler → Full query object:", JSON.stringify(query));
   console.log("Pi API Handler → Action:", action);
   console.log("Pi API Handler → Method:", method);
+  console.log("Pi API Handler → Full request object:", JSON.stringify({ method, query, body }));
 
   try {
     switch (action) {
@@ -63,9 +67,8 @@ export default async function handler(req, res) {
 
       case "balance": {
         // Mock balance for testnet
-        const balance = 1000.0;
-        console.log("Routing to Pi balance handler");
         console.log("Balance handler executing");
+        const balance = 1000.0;
         
         // Add a small delay to simulate API call
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -612,8 +615,18 @@ export default async function handler(req, res) {
 
       default:
         console.log("Pi API Handler → Invalid action received:", action);
-        console.log("Pi API Handler → Full request object:", JSON.stringify({ method, query, body }));
-        return res.status(400).json({ error: "Invalid action", receivedAction: action });
+        console.log("Pi API Handler → Full request details:", JSON.stringify({ 
+          method: req.method, 
+          url: req.url, 
+          query: req.query, 
+          body: req.body,
+          headers: req.headers
+        }, null, 2));
+        return res.status(400).json({ 
+          error: "Invalid action", 
+          receivedAction: action,
+          message: `Action '${action}' is not supported. Supported actions: price, balance, auth, create-payment, approve-payment, complete-payment, verify-payment, user, webhook, test`
+        });
     }
   } catch (error) {
     console.error("Pi API handler error:", error);

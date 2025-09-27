@@ -316,7 +316,16 @@ async function handleTransactions(request, response) {
 // Mock handler for payment approval
 async function handlePaymentApproval(request, response) {
   // Set CORS headers for Pi Browser compatibility
-  response.setHeader("Access-Control-Allow-Origin", "https://sandbox.minepi.com");
+  const allowedOrigins = [
+    "https://sandbox.minepi.com",
+    "https://b4uesports.vercel.app"
+  ];
+
+  const origin = request.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    response.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  
   response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   
@@ -364,9 +373,8 @@ async function handlePaymentApproval(request, response) {
     
     // For mock payments, return Pi Browser expected format
     return response.status(200).json({
-      status: "success",
-      message: "Payment approved",
-      paymentId: paymentId
+      paymentId: paymentId,
+      status: "success"
     });
   } else {
     console.log('⚠️ Non-mock payment ID detected in Testnet mode');
@@ -393,9 +401,8 @@ async function handlePaymentApproval(request, response) {
     
     // For any other payment ID in Testnet mode, return Pi Browser expected format
     return response.status(200).json({
-      status: "success",
-      message: "Payment approved",
-      paymentId: paymentId
+      paymentId: paymentId,
+      status: "success"
     });
   }
 }
@@ -403,7 +410,16 @@ async function handlePaymentApproval(request, response) {
 // Mock handler for payment completion
 async function handlePaymentCompletion(request, response) {
   // Set CORS headers for Pi Browser compatibility
-  response.setHeader("Access-Control-Allow-Origin", "https://sandbox.minepi.com");
+  const allowedOrigins = [
+    "https://sandbox.minepi.com",
+    "https://b4uesports.vercel.app"
+  ];
+
+  const origin = request.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    response.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  
   response.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   
@@ -457,10 +473,12 @@ async function handlePaymentCompletion(request, response) {
     
     // For mock payments, return Pi Browser expected format
     return response.status(200).json({
-      status: "success",
-      message: "Payment completed",
       paymentId: paymentId,
-      txid: txid
+      status: "success",
+      transaction: {
+        txid: txid,
+        verified: true
+      }
     });
   } else {
     console.log('⚠️ Non-mock payment ID detected in Testnet mode');
@@ -492,10 +510,12 @@ async function handlePaymentCompletion(request, response) {
     
     // For any other payment ID in Testnet mode, return Pi Browser expected format
     return response.status(200).json({
-      status: "success",
-      message: "Payment completed",
       paymentId: paymentId,
-      txid: txid
+      status: "success",
+      transaction: {
+        txid: txid,
+        verified: true
+      }
     });
   }
 }
@@ -971,14 +991,16 @@ async function apiHandler(request, response) {
         query: Object.fromEntries(searchParams)
       };
       return await piHandler(modifiedRequest, response);
-    } else if (path === '/api/pi-price') {
-      // Handle /api/pi-price endpoint
-      const piHandler = (await import('./pi.js')).default;
-      const modifiedRequest = {
-        ...request,
-        query: { action: 'price' }
-      };
-      return await piHandler(modifiedRequest, response);
+    } else if (path === '/api/test-pi-balance') {
+      console.log('Routing to direct Pi balance test endpoint');
+      // Direct test of balance functionality
+      return response.status(200).json({ 
+        balance: 1000.0,
+        currency: "PI",
+        lastUpdated: new Date().toISOString(),
+        isTestnet: true,
+        test: "direct"
+      });
     } else if (path === '/api/pi-balance') {
       // Handle /api/pi-balance endpoint
       console.log('Routing to /api/pi-balance endpoint');
@@ -988,6 +1010,15 @@ async function apiHandler(request, response) {
         query: { action: 'balance' }
       };
       console.log('Modified request for Pi handler:', JSON.stringify(modifiedRequest));
+      console.log('Calling Pi handler for balance action');
+      return await piHandler(modifiedRequest, response);
+    } else if (path === '/api/pi-price') {
+      // Handle /api/pi-price endpoint
+      const piHandler = (await import('./pi.js')).default;
+      const modifiedRequest = {
+        ...request,
+        query: { action: 'price' }
+      };
       return await piHandler(modifiedRequest, response);
     } else if (path === '/api/metadata') {
       console.log('Routing to metadata handler');

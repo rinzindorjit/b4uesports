@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pi Balance Endpoint Test</title>
+</head>
+<body>
+    <h1>Pi Balance Endpoint Test</h1>
+    <button id="testDirect">Test Direct Pi Balance</button>
+    <button id="testPiHandler">Test Pi Handler Balance</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testDirect').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/pi-balance');
+                const data = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<pre>Error: ' + error.message + '</pre>';
+            }
+        });
+
+        document.getElementById('testPiHandler').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/pi?action=balance');
+                const data = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<pre>Error: ' + error.message + '</pre>';
+            }
+        });
+    </script>
+</body>
+</html>
