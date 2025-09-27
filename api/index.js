@@ -903,22 +903,12 @@ async function apiHandler(request, response) {
       // Import and use the consolidated Pi API handler
       const piHandler = (await import('./pi.js')).default;
       
-      // For /api/pi, pass through the query parameters
+      // For /api/pi, pass through the query parameters and headers
       const modifiedRequest = {
         ...request,
-        query: Object.fromEntries(searchParams)
+        query: Object.fromEntries(searchParams),
+        headers: request.headers // Ensure headers are passed through
       };
-      return await piHandler(modifiedRequest, response);
-    } else if (path === '/api/auth/pi') {
-      // Handle /api/auth/pi endpoint by redirecting to Pi handler with auth action
-      console.log('Routing to /api/auth/pi endpoint');
-      const piHandler = (await import('./pi.js')).default;
-      const modifiedRequest = {
-        ...request,
-        query: { action: 'auth' }
-      };
-      console.log('Modified request for Pi handler - method:', modifiedRequest.method);
-      console.log('Modified request for Pi handler - query:', modifiedRequest.query);
       return await piHandler(modifiedRequest, response);
     } else if (path === '/api/pi-price') {
       // Handle /api/pi-price endpoint
@@ -926,10 +916,12 @@ async function apiHandler(request, response) {
       const piHandler = (await import('./pi.js')).default;
       const modifiedRequest = {
         ...request,
-        query: { action: 'price' }
+        query: { action: 'price' },
+        headers: request.headers // Ensure headers are passed through
       };
       console.log('Modified request for Pi handler - method:', modifiedRequest.method);
       console.log('Modified request for Pi handler - query:', modifiedRequest.query);
+      console.log('Modified request for Pi handler - headers:', modifiedRequest.headers);
       return await piHandler(modifiedRequest, response);
     } else if (path === '/api/pi-balance') {
       // Handle /api/pi-balance endpoint
@@ -937,10 +929,12 @@ async function apiHandler(request, response) {
       const piHandler = (await import('./pi.js')).default;
       const modifiedRequest = {
         ...request,
-        query: { action: 'balance' }
+        query: { action: 'balance' },
+        headers: request.headers // Ensure headers are passed through
       };
       console.log('Modified request for Pi handler - method:', modifiedRequest.method);
       console.log('Modified request for Pi handler - query:', modifiedRequest.query);
+      console.log('Modified request for Pi handler - headers:', modifiedRequest.headers);
       return await piHandler(modifiedRequest, response);
     } else if (path === '/api/metadata') {
       console.log('Routing to metadata handler');
