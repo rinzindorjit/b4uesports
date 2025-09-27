@@ -1049,6 +1049,75 @@ async function handleMockPiPayment(request, response) {
   }
 }
 
+// Mock handler for pi-balance
+async function handlePiBalance(request, response) {
+  // Mock balance for testnet
+  console.log("Balance handler executing");
+  const balance = 1000.0;
+  
+  // Add a small delay to simulate API call
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  const response = { 
+    balance: balance,
+    currency: "PI",
+    lastUpdated: new Date().toISOString(),
+    isTestnet: true
+  };
+  
+  console.log("Balance response:", JSON.stringify(response));
+  return response.status(200).json(response);
+}
+
+// Mock handler for pi-price
+async function handlePiPrice(request, response) {
+  try {
+    // Fetch live price from CoinGecko
+    const coingeckoApiKey = process.env.COINGECKO_API_KEY || '';
+    const headers = {
+      'accept': 'application/json',
+    };
+    
+    // Add API key to headers if available
+    if (coingeckoApiKey && coingeckoApiKey !== 'your_coingecko_api_key') {
+      headers['x-cg-pro-api-key'] = coingeckoApiKey;
+    }
+    
+    const fetchResponse = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd',
+      { headers }
+    );
+    
+    if (!fetchResponse.ok) {
+      throw new Error(`CoinGecko API error: ${fetchResponse.status}`);
+    }
+    
+    const data = await fetchResponse.json();
+    const piPrice = data['pi-network']?.usd;
+    
+    if (!piPrice) {
+      throw new Error('Failed to get PI price from CoinGecko');
+    }
+    
+    console.log("Fetched live PI price from CoinGecko:", piPrice);
+    return response.status(200).json({ 
+      price: piPrice,
+      lastUpdated: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error("Error fetching PI price from CoinGecko:", error);
+    
+    // Fallback to hardcoded price if CoinGecko fails
+    const fallbackPrice = 0.0009;
+    console.log("Using fallback price:", fallbackPrice);
+    return response.status(200).json({ 
+      price: fallbackPrice,
+      lastUpdated: new Date().toISOString(),
+      source: 'fallback'
+    });
+  }
+}
+
 // Consolidated Pi Network API handler
 async function handlePiApi(req, res) {
   // Extract action from query parameters or request object
@@ -1115,72 +1184,21 @@ async function handlePiApi(req, res) {
   try {
     switch (action) {
       case "price": {
-        try {
-          // Fetch live price from CoinGecko
-          const coingeckoApiKey = process.env.COINGECKO_API_KEY || '';
-          const headers = {
-            'accept': 'application/json',
-          };
-          
-          // Add API key to headers if available
-          if (coingeckoApiKey && coingeckoApiKey !== 'your_coingecko_api_key') {
-            headers['x-cg-pro-api-key'] = coingeckoApiKey;
-          }
-          
-          const response = await fetch(
-            'https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd',
-            { headers }
-          );
-          
-          if (!response.ok) {
-            throw new Error(`CoinGecko API error: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          const piPrice = data['pi-network']?.usd;
-          
-          if (!piPrice) {
-            throw new Error('Failed to get PI price from CoinGecko');
-          }
-          
-          console.log("Fetched live PI price from CoinGecko:", piPrice);
-          return res.status(200).json({ 
-            price: piPrice,
-            lastUpdated: new Date().toISOString()
-          });
-        } catch (error) {
-          console.error("Error fetching PI price from CoinGecko:", error);
-          
-          // Fallback to hardcoded price if CoinGecko fails
-          const fallbackPrice = 0.26;
-          console.log("Using fallback price:", fallbackPrice);
-          return res.status(200).json({ 
-            price: fallbackPrice,
-            lastUpdated: new Date().toISOString(),
-            source: 'fallback'
-          });
-        }
+        return handlePiPrice(req, res);
       }
-
+      
+      case "pi-price": {
+        return handlePiPrice(req, res);
+      }
+      
       case "balance": {
-        // Mock balance for testnet
-        console.log("Balance handler executing");
-        const balance = 1000.0;
-        
-        // Add a small delay to simulate API call
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        const response = { 
-          balance: balance,
-          currency: "PI",
-          lastUpdated: new Date().toISOString(),
-          isTestnet: true
-        };
-        
-        console.log("Balance response:", JSON.stringify(response));
-        return res.status(200).json(response);
+        return handlePiBalance(req, res);
       }
-
+      
+      case "pi-balance": {
+        return handlePiBalance(req, res);
+      }
+      
       case "auth": {
         if (method !== "POST") {
           return res.status(405).json({ message: "Method not allowed" });
