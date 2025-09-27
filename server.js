@@ -7,10 +7,8 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Import API handlers
-import mockPaymentHandler from './api/mock-pi-payment.js';
-// import createPaymentHandler from './api/pi-create-payment.js'; // Deprecated
-import metadataHandler from './api/metadata.js'; // Add metadata handler
+// Import the consolidated API handler
+import handlePiApi from './api/index.js';
 
 // Load environment variables
 import dotenv from 'dotenv';
@@ -26,14 +24,15 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// API routes
-app.get('/api/metadata', (req, res) => {
-  // Mock the Vercel request/response objects
+// API routes - Updated to use the consolidated handler
+app.all('/api/*', (req, res) => {
+  // Mock the Vercel request/response objects to match what our handler expects
   const mockRequest = {
     method: req.method,
     headers: req.headers,
     body: req.body,
-    url: req.url
+    url: req.url,
+    query: req.query
   };
   
   const mockResponse = {
@@ -41,6 +40,7 @@ app.get('/api/metadata', (req, res) => {
     headers: {},
     setHeader(key, value) {
       this.headers[key] = value;
+      res.setHeader(key, value);
     },
     status(code) {
       this.statusCode = code;
@@ -54,71 +54,9 @@ app.get('/api/metadata', (req, res) => {
     }
   };
   
-  // Call the metadata handler
-  metadataHandler(mockRequest, mockResponse);
+  // Call the consolidated API handler
+  handlePiApi(mockRequest, mockResponse);
 });
-
-app.post('/api/mock-pi-payment', (req, res) => {
-  // Mock the Vercel request/response objects
-  const mockRequest = {
-    method: req.method,
-    headers: req.headers,
-    body: req.body,
-    url: req.url
-  };
-  
-  const mockResponse = {
-    statusCode: 200,
-    headers: {},
-    setHeader(key, value) {
-      this.headers[key] = value;
-    },
-    status(code) {
-      this.statusCode = code;
-      return this;
-    },
-    json(data) {
-      res.status(this.statusCode).json(data);
-    },
-    end() {
-      res.status(this.statusCode).end();
-    }
-  };
-  
-  // Call the mock payment handler
-  mockPaymentHandler(mockRequest, mockResponse);
-});
-
-// app.post('/api/pi-create-payment', (req, res) => {
-//   // Mock the Vercel request/response objects
-//   const mockRequest = {
-//     method: req.method,
-//     headers: req.headers,
-//     body: req.body,
-//     url: req.url
-//   };
-//   
-//   const mockResponse = {
-//     statusCode: 200,
-//     headers: {},
-//     setHeader(key, value) {
-//       this.headers[key] = value;
-//     },
-//     status(code) {
-//       this.statusCode = code;
-//       return this;
-//     },
-//     json(data) {
-//       res.status(this.statusCode).json(data);
-//     },
-//     end() {
-//       res.status(this.statusCode).end();
-//     }
-//   };
-//   
-//   // Call the create payment handler
-//   createPaymentHandler(mockRequest, mockResponse);
-// });
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
