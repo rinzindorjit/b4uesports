@@ -231,7 +231,37 @@ export async function verifyPayment(paymentId: string): Promise<{ verified: bool
   }
 }
 
+// Add a new function to check Pi Network metadata
+export async function checkPiMetadata(): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    console.log('Checking Pi Network metadata...');
+    
+    // Call the Pi Network metadata endpoint
+    const response = await fetch('/api/pi-metadata');
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`Failed to fetch Pi metadata: ${errorData.message || response.statusText}`);
+    }
+    
+    const metadata = await response.json();
+    console.log('Pi Network metadata:', metadata);
+    
+    return {
+      success: true,
+      data: metadata
+    };
+  } catch (error) {
+    console.error('Pi Network metadata check error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
+  }
+}
+
 export default {
   processPayment,
-  verifyPayment
+  verifyPayment,
+  checkPiMetadata
 };
