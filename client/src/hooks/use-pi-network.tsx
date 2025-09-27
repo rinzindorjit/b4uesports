@@ -20,28 +20,47 @@ interface PiNetworkProviderProps {
   children: ReactNode;
 }
 
-// Robust Pi Browser detection function (matches server-side implementation)
+// Function to detect if we're running in Pi Browser
 function isPiBrowser() {
-  // Check for Pi Browser using robust detection method
+  // Check for Pi Browser specific user agent or features
   if (typeof window !== 'undefined') {
-    // Check for Pi Browser specific user agent or features
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const xRequestedWith = (window as any).Pi ? 'pi.browser' : '';
+    // Check for Pi Browser user agent
+    const userAgent = window.navigator.userAgent;
+    if (userAgent.includes('PiBrowser') || userAgent.includes('Pi Network')) {
+      return true;
+    }
     
-    // Robust detection that matches server-side implementation
-    const isPiBrowserRequest = (
-      xRequestedWith === 'pi.browser' ||
-      userAgent.includes('pi browser') ||
-      userAgent.includes('pibrowser') ||
-      userAgent.includes('pi network')
-    );
+    // Check for Pi Browser specific features
+    // @ts-ignore
+    if (window.Pi && typeof window.Pi === 'object') {
+      return true;
+    }
     
-    // Additional environment checks
-    const isVercel = window.location.hostname.includes('vercel.app');
-    const isNetlify = window.location.hostname.includes('netlify.app');
-    const isLocalhost = window.location.hostname === 'localhost' && window.location.port === '5173';
+    // Check for localhost development
+    if (window.location.hostname === 'localhost' && window.location.port === '3005') {
+      return true;
+    }
     
-    return isPiBrowserRequest || isVercel || isNetlify || isLocalhost;
+    // Check for Netlify deployment (testnet)
+    if (window.location.hostname.includes('netlify.app')) {
+      return true;
+    }
+    
+    // Check for Vercel deployment (for testing)
+    if (window.location.hostname.includes('vercel.app')) {
+      return true;
+    }
+    
+    // Additional check for mobile devices that might be running in Pi Browser
+    // Pi Browser typically runs on mobile devices
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    if (isMobile && userAgent.includes('Mobile')) {
+      // On mobile, if we're not on localhost and we have the Pi object, likely Pi Browser
+      // @ts-ignore
+      if (window.Pi) {
+        return true;
+      }
+    }
   }
   
   return false;
@@ -53,7 +72,7 @@ function isSandboxEnvironment() {
     const hostname = window.location.hostname;
     // Treat as sandbox for testnet environments
     return hostname.includes('netlify.app') || hostname.includes('vercel.app') || 
-           (hostname === 'localhost' && window.location.port === '5173');
+           (hostname === 'localhost' && window.location.port === '3005');
   }
   return false;
 }
@@ -65,8 +84,6 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('PiNetworkProvider useEffect running');
-    
     // Initialize Pi SDK
     const useMockAuth = shouldUseMockAuth();
     const shouldInitPiSDK = shouldInitializePiSDK();
@@ -88,24 +105,13 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     const savedToken = localStorage.getItem('pi_token');
     const savedUser = localStorage.getItem('pi_user');
     
-    console.log('Checking for existing session:', { savedToken, savedUser });
-    
     if (savedToken && savedUser) {
-      try {
-        const parsedUser = JSON.parse(savedUser);
-        setToken(savedToken);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-        console.log('Restored session from localStorage');
-      } catch (error) {
-        console.error('Failed to parse saved user data:', error);
-        // Clear invalid data
-        localStorage.removeItem('pi_token');
-        localStorage.removeItem('pi_user');
-      }
+      setToken(savedToken);
+      setUser(JSON.parse(savedUser));
+      setIsAuthenticated(true);
+      console.log('Restored session from localStorage');
     }
     
-    console.log('Setting isLoading to false');
     setIsLoading(false);
   }, []);
 
@@ -123,48 +129,6 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       userAgent: window.navigator.userAgent
     });
     
-    // If Pi SDK is available on localhost, try to use it
-    if (isPiSDKAvailable && window.location.hostname === 'localhost') {
-      console.log('Pi SDK available on localhost, attempting real authentication');
-      setIsLoading(true);
-      try {
-        // Try real authentication first
-        console.log('Requesting Pi authentication with scopes: payments, username, wallet_address');
-        const authResult = await piSDK.authenticate(['payments', 'username', 'wallet_address']);
-        console.log('Pi authentication result:', authResult);
-        
-        if (authResult) {
-          // Send access token to backend for verification
-          console.log('Sending access token to backend for verification');
-          const response = await apiRequest('POST', '/api/pi?action=auth', {
-            accessToken: authResult.accessToken,
-          });
-          
-          console.log('Backend response status:', response.status);
-          const data = await response.json();
-          console.log('Backend response data:', data);
-          
-          if (!response.ok) {
-            throw new Error(data.message || 'Authentication failed on server');
-          }
-          
-          setUser(data.user);
-          setToken(data.token);
-          setIsAuthenticated(true);
-          
-          // Save to localStorage
-          localStorage.setItem('pi_token', data.token);
-          localStorage.setItem('pi_user', JSON.stringify(data.user));
-          
-          console.log('Authentication successful');
-          setIsLoading(false);
-          return;
-        }
-      } catch (error) {
-        console.error('Real authentication failed, falling back to mock:', error);
-      }
-    }
-    
     // Use mock authentication only for development mock environments
     if (useMockAuth) {
       console.log('Using mock authentication flow');
@@ -174,7 +138,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       try {
         console.log('Sending mock auth request to backend');
         // Send request to backend with mock auth flag
-        const response = await apiRequest('POST', '/api/pi?action=auth', {
+        const response = await apiRequest('POST', '/api/auth/pi', {
           isMockAuth: true
         });
         
@@ -227,7 +191,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       if (authResult === null) {
         console.log('Pi SDK returned null, using mock authentication');
         // Send request to backend with mock auth flag
-        const response = await apiRequest('POST', '/api/pi?action=auth', {
+        const response = await apiRequest('POST', '/api/auth/pi', {
           isMockAuth: true
         });
         
@@ -247,7 +211,6 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
         localStorage.setItem('pi_user', JSON.stringify(data.user));
         
         console.log('Mock authentication complete, user:', data.user);
-        setIsLoading(false);
         return;
       }
       
@@ -257,7 +220,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
       // Send access token to backend for verification
       console.log('Sending access token to backend for verification');
-      const response = await apiRequest('POST', '/api/pi?action=auth', {
+      const response = await apiRequest('POST', '/api/auth/pi', {
         accessToken: authResult.accessToken,
       });
       
@@ -299,7 +262,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   const createPayment = (paymentData: PaymentData, callbacks: PaymentCallbacks) => {
     // Check if we're in preview mode or Pi Browser
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '5173';
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3005';
     const isPiBrowserEnv = isPiBrowser();
     const isNetlify = window.location.hostname.includes('netlify.app');
     const isSandbox = isSandboxEnvironment();
@@ -482,15 +445,12 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   };
 
   const logout = () => {
-    console.log('Logging out user');
     setIsAuthenticated(false);
     setUser(null);
     setToken(null);
     localStorage.removeItem('pi_token');
     localStorage.removeItem('pi_user');
   };
-
-  console.log('PiNetworkProvider rendering with state:', { isAuthenticated, user, isLoading, token });
 
   return (
     <PiNetworkContext.Provider value={{
