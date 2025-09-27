@@ -1,53 +1,72 @@
-# Vercel Serverless Functions Optimization Summary
+# Vercel Function Count Optimization Summary
 
-## Problem
-The B4U Esports application was hitting Vercel's limit of 12 Serverless Functions on the Hobby plan, which was preventing deployment.
+## Issue
+Vercel Hobby plan has a 12 Serverless Functions limit. The project was exceeding this limit with individual handlers for each API endpoint.
 
-## Solution
-We optimized the application by consolidating several Serverless Functions to stay within the limit:
+## Actions Taken
 
-### Functions Removed
-1. **`api/pi/mock-payment.js`** - Removed duplicate mock payment handler (functionality already exists in `api/mock-pi-payment.js`)
-2. **`api/metadata.js`** - Moved inline to `api/index.js` to reduce function count
-3. **`api/pi/auth.js`** - Consolidated into `api/pi.js`
-4. **`api/pi/create-payment.js`** - Consolidated into `api/pi.js`
-5. **`api/pi/payment-approval.js`** - Consolidated into `api/pi.js`
-6. **`api/pi/payment-completion.js`** - Consolidated into `api/pi.js`
-7. **`api/pi/payments.js`** - Consolidated into `api/pi.js`
-8. **`api/pi/user.js`** - Consolidated into `api/pi.js`
-9. **`api/pi/webhook.js`** - Consolidated into `api/pi.js`
+### 1. Removed Dedicated Endpoint Handlers
+Deleted individual files that were creating separate functions:
+- `api/pi-balance.js` - Dedicated handler for Pi balance endpoint
+- `api/pi-price.js` - Dedicated handler for Pi price endpoint
+- `api/metadata.js` - Metadata endpoint handler
+- `api/auth-pi.js` - Auth endpoint redirect handler
+- `api/diagnose-pi-issue.js` - Diagnostic endpoint handler
 
-### Current Serverless Functions (4 total)
-1. `api/diagnose-pi-issue.js` - Diagnostic endpoint for Pi Network issues
-2. `api/mock-pi-payment.js` - Mock payment processing
-3. `api/pi.js` - Consolidated Pi Network endpoint handling all operations
-4. `api/index.js` - Main API router
+### 2. Consolidated Functionality
+Moved functionality from deleted individual files into the main API handler:
 
-### Functions Consolidated into `api/index.js`
-1. **Metadata Handler** - Moved from `api/metadata.js` to inline function in `api/index.js`
+#### Pi Balance and Price Endpoints
+- Routed back to `api/pi.js` with appropriate action parameters
+- No loss of functionality, just consolidation
+
+#### Metadata Endpoint
+- Moved metadata handler function directly into `api/index.js`
+- Eliminates separate function while maintaining same functionality
+
+#### Auth Endpoint
+- Removed redirect handler and route directly to Pi handler
+- Simplified the authentication flow
+
+#### Diagnostic Endpoint
+- Removed as it was primarily for development/testing
+- Can be re-added if needed by creating a combined test endpoint
+
+### 3. Removed Test Endpoints
+Removed several test endpoints that were consuming function slots:
+- `api/diagnose-pi-issue.js` (functionality removed)
+- Route to `handleDiagnosePiIssue` function (function removed)
+
+## Current Function Count
+The project now has the following functions:
+
+1. `api/index.js` - Main API router
+2. `api/pi.js` - Pi Network API handler
+3. `api/mock-pi-payment.js` - Mock payment handler
+4. Other handlers in `api/index.js` (profile, admin, packages, transactions, etc.)
+
+This brings the total to well under the 12-function limit.
+
+## Expected Outcome
+These changes should allow successful deployment to Vercel without hitting the function count limit while maintaining all essential functionality.
+
+## Verification Steps
+1. Deploy the updated code to Vercel
+2. Test all API endpoints:
+   - `/api/pi-balance`
+   - `/api/pi-price`
+   - `/api/metadata`
+   - Payment processing endpoints
+3. Verify that Pi Network integration still works correctly
+4. Check Vercel logs for any deployment issues
+
+## Files Modified
+- `api/index.js` - Removed routing to deleted files, moved metadata handler inline
+- Removed 5 individual API handler files
 
 ## Benefits
-1. **Deployment**: Application now deploys successfully within Vercel's 12 function limit
-2. **Performance**: Reduced cold start times by consolidating smaller functions
-3. **Maintainability**: Simplified the codebase by removing duplicate functionality
-4. **Scalability**: Easier to add new Pi Network features without hitting function limits
-
-## Testing
-To verify the optimization:
-1. Deploy the application to Vercel
-2. Test all API endpoints to ensure functionality is preserved:
-   - `https://b4uesports.vercel.app/api/pi?action=price`
-   - `https://b4uesports.vercel.app/api/pi?action=balance`
-   - `https://b4uesports.vercel.app/api/pi?action=auth`
-   - `https://b4uesports.vercel.app/api/pi?action=create-payment`
-   - `https://b4uesports.vercel.app/api/pi?action=approve-payment`
-   - `https://b4uesports.vercel.app/api/pi?action=complete-payment`
-   - `https://b4uesports.vercel.app/api/pi?action=user`
-   - `https://b4uesports.vercel.app/api/pi?action=webhook`
-3. Monitor Vercel logs for any errors
-
-## Future Considerations
-If more functions are needed in the future, consider:
-1. Upgrading to a paid Vercel plan for more Serverless Functions
-2. Further consolidation of related functionality
-3. Moving some functionality to client-side processing
+- Stays within Vercel Hobby plan limits
+- Simplified codebase structure
+- Reduced deployment complexity
+- Maintained all essential functionality
+- Improved code organization

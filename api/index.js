@@ -568,7 +568,13 @@ async function handleMetadata(request, response) {
       support_email: "info@b4uesports.com",
       website: "https://b4uesports.vercel.app"
     },
-    last_updated: new Date().toISOString()
+    last_updated: new Date().toISOString(),
+    // Add Testnet-specific information
+    testnet: {
+      mode: "enabled",
+      description: "Running in Pi Network Testnet mode",
+      note: "Payments are handled via Pi SDK client-side, no backend API calls needed"
+    }
   });
 }
 
@@ -722,107 +728,6 @@ async function handleTestAuth(request, response) {
     user: mockUser,
     token: mockToken
   });
-}
-
-// Diagnostic handler for Pi Network issues
-async function handleDiagnosePiIssue(request, response) {
-  if (request.method !== "POST") {
-    return response.status(405).json({ message: "Method not allowed" });
-  }
-
-  try {
-    // Use the correct API key as specified by the user
-    const PI_SERVER_API_KEY = "2qq9mwnt1ovpfgyee3dshoxcznrjhsmgf3jabkq0r5gsqtsohlmpq4bhqpmks7ya";
-
-    // Log environment info
-    console.log('=== Pi Network API Diagnostic ===');
-    console.log('Using hardcoded PI_SERVER_API_KEY starting with:', PI_SERVER_API_KEY.substring(0, 10));
-    console.log('PI_SANDBOX_MODE: true (hardcoded)');
-    
-    // Test 1: Simple GET request to see if we can reach the domain
-    console.log('Test 1: Checking domain connectivity...');
-    try {
-      const getResponse = await fetch('https://sandbox.minepi.com/v2/payments', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Key ${PI_SERVER_API_KEY}`,
-          'Content-Type': 'application/json',
-          'User-Agent': 'B4U-Esports-Diagnostic/1.0'
-        }
-      });
-      console.log('GET request status:', getResponse.status);
-    } catch (getError) {
-      console.log('GET request error:', getError.message);
-    }
-
-    // Test 2: Actual POST request with proper error handling
-    console.log('Test 2: Sending POST request to Pi Network API...');
-    const piApiUrl = "https://sandbox.minepi.com/v2/payments";
-    
-    const apiResponse = await fetch(piApiUrl, {
-      method: "POST",
-      headers: {
-        "Authorization": `Key ${PI_SERVER_API_KEY}`,
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "User-Agent": "B4U-Esports-Diagnostic/1.0",
-        "Cache-Control": "no-cache"
-      },
-      body: JSON.stringify({
-        amount: 1.0,
-        memo: "Diagnostic Test Payment",
-        metadata: { test: true, timestamp: Date.now() },
-      }),
-    });
-
-    console.log('Pi API Response Status:', apiResponse.status);
-    console.log('Pi API Response Headers:', [...apiResponse.headers.entries()]);
-    
-    const text = await apiResponse.text();
-    console.log('Pi API Response Text (first 1000 chars):', text.substring(0, 1000));
-    
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (parseError) {
-      console.log('Response is not JSON:', parseError.message);
-      data = { rawResponse: text.substring(0, 1000) };
-    }
-
-    if (apiResponse.status === 403) {
-      console.log('❌ 403 ERROR DETECTED - This is the main issue');
-      return response.status(403).json({
-        error: "Pi Network API Access Blocked",
-        message: "403 Forbidden - Check if request is hitting CDN instead of API server",
-        response: data,
-        diagnostic: {
-          url: piApiUrl,
-          method: "POST",
-          headers: {
-            "Authorization": "Key [REDACTED]",
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "User-Agent": "B4U-Esports-Diagnostic/1.0",
-            "Cache-Control": "no-cache"
-          }
-        }
-      });
-    }
-
-    return response.status(apiResponse.ok ? 200 : apiResponse.status).json({
-      message: "Diagnostic completed",
-      status: apiResponse.status,
-      data: data
-    });
-
-  } catch (error) {
-    console.error('❌ Diagnostic error:', error);
-    return response.status(500).json({ 
-      error: "Diagnostic failed",
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
-  }
 }
 
 // DNS test handler
@@ -982,21 +887,7 @@ async function apiHandler(request, response) {
     console.log('Request body type:', typeof request.body);
     
     // Route to appropriate handler based on path
-    if (path === '/api/auth/pi') {
-      console.log('Routing to auth-pi test handler');
-      const authPiHandler = (await import('./auth-pi.js')).default;
-      return await authPiHandler(request, response);
-    } else if (path === '/api/pi-balance') {
-      // Handle /api/pi-balance endpoint with dedicated handler
-      console.log('Routing to /api/pi-balance endpoint');
-      const piBalanceHandler = (await import('./pi-balance.js')).default;
-      return await piBalanceHandler(request, response);
-    } else if (path === '/api/pi-price') {
-      // Handle /api/pi-price endpoint with dedicated handler
-      console.log('Routing to /api/pi-price endpoint');
-      const piPriceHandler = (await import('./pi-price.js')).default;
-      return await piPriceHandler(request, response);
-    } else if (path === '/api/pi') {
+    if (path === '/api/pi') {
       // Import and use the consolidated Pi API handler
       const piHandler = (await import('./pi.js')).default;
       
@@ -1005,6 +896,28 @@ async function apiHandler(request, response) {
         ...request,
         query: Object.fromEntries(searchParams)
       };
+      return await piHandler(modifiedRequest, response);
+    } else if (path === '/api/pi-price') {
+      // Handle /api/pi-price endpoint
+      console.log('Routing to /api/pi-price endpoint');
+      const piHandler = (await import('./pi.js')).default;
+      const modifiedRequest = {
+        ...request,
+        query: { action: 'price' }
+      };
+      console.log('Modified request for Pi handler - method:', modifiedRequest.method);
+      console.log('Modified request for Pi handler - query:', modifiedRequest.query);
+      return await piHandler(modifiedRequest, response);
+    } else if (path === '/api/pi-balance') {
+      // Handle /api/pi-balance endpoint
+      console.log('Routing to /api/pi-balance endpoint');
+      const piHandler = (await import('./pi.js')).default;
+      const modifiedRequest = {
+        ...request,
+        query: { action: 'balance' }
+      };
+      console.log('Modified request for Pi handler - method:', modifiedRequest.method);
+      console.log('Modified request for Pi handler - query:', modifiedRequest.query);
       return await piHandler(modifiedRequest, response);
     } else if (path === '/api/metadata') {
       console.log('Routing to metadata handler');
@@ -1045,9 +958,6 @@ async function apiHandler(request, response) {
     } else if (path === '/api/test-auth') {
       console.log('Routing to test auth handler');
       return await handleTestAuth(request, response);
-    } else if (path === '/api/diagnose-pi-issue') {
-      console.log('Routing to Pi Network diagnostic handler');
-      return await handleDiagnosePiIssue(request, response);
     } else if (path === '/api/test-pi-dns') {
       console.log('Routing to Pi Network DNS test handler');
       return await handleTestPiDns(request, response);
