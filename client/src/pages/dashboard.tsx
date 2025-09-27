@@ -18,8 +18,8 @@ import { DEFAULT_PACKAGES, GAME_LOGOS } from '@/lib/constants';
 import { useMemo } from 'react';
 
 export default function Dashboard() {
-  const { user, isAuthenticated, logout, token } = usePiNetwork();
-  const { data: piPrice, error, isLoading } = usePiPrice();
+  const { user, isAuthenticated, logout, token, isLoading: authLoading } = usePiNetwork();
+  const { data: piPrice, error, isLoading: priceLoading } = usePiPrice();
   const { data: piBalance, refetch: refetchBalance } = usePiBalance();
   const [, setLocation] = useLocation();
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
@@ -29,7 +29,10 @@ export default function Dashboard() {
   // Log piPrice data for debugging
   console.log('Dashboard PiPrice data:', piPrice);
   console.log('Dashboard PiPrice error:', error);
-  console.log('Dashboard PiPrice loading:', isLoading);
+  console.log('Dashboard PiPrice loading:', priceLoading);
+  console.log('Dashboard auth loading:', authLoading);
+  console.log('Dashboard isAuthenticated:', isAuthenticated);
+  console.log('Dashboard user:', user);
 
   // Create mock packages for preview with all the specified packages
   const mockPackages = useMemo(() => {
@@ -138,11 +141,17 @@ export default function Dashboard() {
 
   const { data: packages, isLoading: packagesLoading } = isPreviewMode ? 
     { data: mockPackages, isLoading: false } as { data: Package[]; isLoading: boolean } : 
-    useQuery<Package[]>({ queryKey: ['/api/packages'] });
+    useQuery<Package[]>({ 
+      queryKey: ['/api/packages'],
+      enabled: isAuthenticated || isPreviewMode
+    });
 
   const { data: transactions, isLoading: transactionsLoading, refetch: refetchTransactions } = isPreviewMode ? 
     { data: mockTransactions, isLoading: false, refetch: () => {} } as { data: Transaction[]; isLoading: boolean; refetch: () => void } : 
-    useQuery<Transaction[]>({ queryKey: ['/api/transactions'], enabled: !!token });
+    useQuery<Transaction[]>({ 
+      queryKey: ['/api/transactions'], 
+      enabled: !!token 
+    });
 
   // Add effect to refresh data after purchase
   useEffect(() => {
@@ -153,11 +162,14 @@ export default function Dashboard() {
     }
   }, [isPurchaseModalOpen, isPreviewMode, refetchBalance, refetchTransactions]);
 
-  // Redirect to landing if not authenticated
-  if (!isAuthenticated && !isPreviewMode) {
-    setLocation('/');
-    return null;
-  }
+  // Redirect to landing if not authenticated and not in preview mode
+  useEffect(() => {
+    console.log('Dashboard useEffect - isAuthenticated:', isAuthenticated, 'isPreviewMode:', isPreviewMode, 'authLoading:', authLoading);
+    if (!isAuthenticated && !isPreviewMode && !authLoading) {
+      console.log('Redirecting to landing page');
+      setLocation('/');
+    }
+  }, [isAuthenticated, isPreviewMode, authLoading, setLocation]);
 
   // Fix the package filtering to ensure it works correctly
   const pubgPackages = useMemo(() => {
@@ -198,6 +210,33 @@ export default function Dashboard() {
   ) || 0;
 
   const completedTransactions = transactions?.filter(tx => tx.status === 'completed').length || 0;
+
+  // Show loading state while authenticating
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg">Authenticating...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show authentication required message if not authenticated and not in preview mode
+  if (!isAuthenticated && !isPreviewMode) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center p-8 max-w-md">
+          <h2 className="text-2xl font-bold mb-4">Authentication Required</h2>
+          <p className="text-muted-foreground mb-6">
+            Please sign in with your Pi Network account to access the dashboard.
+          </p>
+          <Button onClick={() => setLocation('/')}>Go to Login</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

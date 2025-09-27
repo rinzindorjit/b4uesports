@@ -87,10 +87,18 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     const savedUser = localStorage.getItem('pi_user');
     
     if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
-      console.log('Restored session from localStorage');
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setToken(savedToken);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+        console.log('Restored session from localStorage');
+      } catch (error) {
+        console.error('Failed to parse saved user data:', error);
+        // Clear invalid data
+        localStorage.removeItem('pi_token');
+        localStorage.removeItem('pi_user');
+      }
     }
     
     setIsLoading(false);
@@ -192,6 +200,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
         localStorage.setItem('pi_user', JSON.stringify(data.user));
         
         console.log('Mock authentication complete, user:', data.user);
+        setIsLoading(false);
         return;
       }
       

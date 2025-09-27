@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { BRAND_LOGOS, GAME_LOGOS, DEFAULT_PACKAGES } from '@/lib/constants';
 import { shouldUseMockAuth } from '@/lib/auth-mode';
 import type { Package } from '@/types/pi-network';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 
 export default function Landing() {
   const { authenticate, isAuthenticated, isLoading: piLoading } = usePiNetwork();
@@ -20,6 +20,8 @@ export default function Landing() {
   console.log('PiPrice data:', piPrice);
   console.log('PiPrice error:', error);
   console.log('PiPrice loading:', isLoading);
+  console.log('Auth loading:', piLoading);
+  console.log('Is authenticated:', isAuthenticated);
   
   // Log price source for debugging
   if (piPrice?.source) {
@@ -65,10 +67,12 @@ export default function Landing() {
   const packagesLoading = !piPrice;
 
   // Redirect to dashboard if already authenticated
-  if (isAuthenticated) {
-    setLocation('/dashboard');
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('User is authenticated, redirecting to dashboard');
+      setLocation('/dashboard');
+    }
+  }, [isAuthenticated, setLocation]);
 
   const handlePiLogin = async () => {
     try {
