@@ -1077,14 +1077,10 @@ async function handlePiApi(req, res) {
   });
   
   // Handle root endpoint requests (no action specified)
+  // For Pi Testnet compatibility, return metadata when no action is specified
   if (!action) {
-    console.log("ℹ️ No action specified, returning welcome message");
-    return res.status(200).json({ 
-      message: "B4U Esports Pi Network API", 
-      version: "1.2.1",
-      status: "operational",
-      timestamp: new Date().toISOString()
-    });
+    console.log("ℹ️ No action specified, returning Pi Network metadata for Testnet compatibility");
+    return handleMetadata(req, res);
   }
   
   // Check if request is from Pi Browser by looking at the x-requested-with header
