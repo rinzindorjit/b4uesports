@@ -1,5 +1,5 @@
 // /api/mock-pi-payment.js
-// Version: 1.0.5 - Fix Pi Browser detection and CORS
+// Version: 1.0.6 - Fix Testnet mode detection and Pi Browser requirements
 
 import { db } from './utils/db.js';
 import { storeMockPayment } from './utils/db-operations.js';
@@ -46,6 +46,25 @@ export default async function handler(req, res) {
   console.log('Pi Browser detection - x-requested-with header:', headers['x-requested-with']);
   console.log('User-Agent:', headers['user-agent']);
   console.log('Is Pi Browser request:', isPiBrowser);
+
+  // Check for Testnet mode
+  // In Testnet mode, we allow payments without requiring Pi Browser
+  // In production/live mode, Pi Browser is required
+  const isTestnet = process.env.PI_SANDBOX_MODE === 'true' || process.env.NODE_ENV !== 'production';
+  const isDev = process.env.NODE_ENV !== 'production';
+  
+  console.log('Environment check - isTestnet:', isTestnet, 'isDev:', isDev);
+
+  // For Testnet or development, allow payments without Pi Browser
+  // For production/live mode, require Pi Browser
+  if (!isPiBrowser && !isTestnet && !isDev) {
+    console.log('❌ Request not from Pi Browser in production/live mode');
+    return res.status(403).json({
+      error: "Payment can only be processed through Pi Browser"
+    });
+  }
+  
+  console.log('✅ Request allowed - Testnet mode or Pi Browser detected');
 
   const { paymentId } = req.body;
   if (!paymentId) {

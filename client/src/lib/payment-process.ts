@@ -124,9 +124,64 @@ export async function processPayment(
       });
     }
 
-    // For non-Pi Browser environments, we can't process real payments
-    // In a real app, you would need to handle this case differently
-    console.log('Not in Pi Browser - cannot process real payment');
+    // For non-Pi Browser environments in Testnet mode, we can still process mock payments
+    // Check if we're in Testnet mode
+    const isTestnet = process.env.NODE_ENV !== 'production' || 
+                     window.location.hostname.includes('vercel.app') || 
+                     window.location.hostname.includes('netlify.app') ||
+                     (window.location.hostname === 'localhost' && window.location.port === '5173');
+    
+    console.log('Testnet mode check:', isTestnet);
+    
+    if (isTestnet) {
+      console.log('Processing mock payment in Testnet mode');
+      
+      // Generate a mock payment ID
+      const mockPaymentId = `mock_payment_${Date.now()}`;
+      
+      try {
+        // Simulate payment approval
+        console.log('Simulating payment approval for:', mockPaymentId);
+        const approveResponse = await apiRequest('POST', '/api/payment/approve', {
+          paymentId: mockPaymentId
+        });
+        
+        if (!approveResponse.ok) {
+          const errorData = await approveResponse.json();
+          throw new Error(`Failed to approve mock payment: ${errorData.message || approveResponse.statusText}`);
+        }
+        
+        console.log('Mock payment approved successfully on backend');
+        
+        // Simulate payment completion
+        const mockTxId = `mock_tx_${Date.now()}`;
+        console.log('Simulating payment completion for:', mockPaymentId, mockTxId);
+        const completeResponse = await apiRequest('POST', '/api/payment/complete', {
+          paymentId: mockPaymentId,
+          txid: mockTxId
+        });
+        
+        if (!completeResponse.ok) {
+          const errorData = await completeResponse.json();
+          throw new Error(`Failed to complete mock payment: ${errorData.message || completeResponse.statusText}`);
+        }
+        
+        console.log('Mock payment completed successfully on backend');
+        return {
+          success: true,
+          paymentId: mockPaymentId
+        };
+      } catch (error) {
+        console.error('Mock payment process failed:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error occurred'
+        };
+      }
+    }
+
+    // For non-Pi Browser environments in production mode, we can't process real payments
+    console.log('Not in Pi Browser or Testnet mode - cannot process real payment');
     return {
       success: false,
       error: 'Payments can only be processed in Pi Browser'

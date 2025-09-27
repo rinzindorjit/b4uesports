@@ -44,11 +44,24 @@ export default async function handler(req, res) {
   console.log('User-Agent:', headers['user-agent']);
   console.log('Is Pi Browser request (robust):', isPiBrowserRobust);
   
-  // For Testnet mode, we don't want to reject requests that appear to be from Pi Browser
-  // We'll log the detection but allow the request to proceed
-  if (!isPiBrowserRobust) {
-    console.log('⚠️ Request not from Pi Browser, but allowing in Testnet mode');
+  // Check for Testnet mode
+  // In Testnet mode, we allow requests without requiring Pi Browser
+  // In production/live mode, Pi Browser is required
+  const isTestnet = process.env.PI_SANDBOX_MODE === 'true' || process.env.NODE_ENV !== 'production';
+  const isDev = process.env.NODE_ENV !== 'production';
+  
+  console.log('Environment check - isTestnet:', isTestnet, 'isDev:', isDev);
+
+  // For Testnet or development, allow requests without Pi Browser
+  // For production/live mode, require Pi Browser (but we'll log the detection but allow the request to proceed for now)
+  if (!isPiBrowserRobust && !isTestnet && !isDev) {
+    console.log('❌ Request not from Pi Browser in production/live mode');
+    return res.status(403).json({
+      error: "Payment can only be processed through Pi Browser"
+    });
   }
+  
+  console.log('✅ Request allowed - Testnet mode or Pi Browser detected');
 
   try {
     switch (action) {
