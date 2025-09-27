@@ -13,7 +13,13 @@ export default async function handler(req, res) {
   console.log("Pi API Handler → Full query object:", JSON.stringify(query));
   console.log("Pi API Handler → Action:", action);
   console.log("Pi API Handler → Method:", method);
-  console.log("Pi API Handler → Full request object:", JSON.stringify({ method, query, body }));
+  // Log only safe parts of the request to avoid circular reference
+  console.log("Pi API Handler → Safe request info:", {
+    method: method,
+    action: action,
+    hasBody: !!body,
+    queryKeys: Object.keys(query)
+  });
 
   try {
     switch (action) {

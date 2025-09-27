@@ -942,7 +942,13 @@ async function apiHandler(request, response) {
   console.log('=== DEBUG API REQUEST ===');
   console.log('Full request URL:', request.url);
   console.log('Request method:', request.method);
-  console.log('Request headers:', request.headers);
+  // Log only specific headers to avoid circular reference
+  console.log('Request headers:', {
+    'x-requested-with': request.headers['x-requested-with'],
+    'user-agent': request.headers['user-agent'],
+    'content-type': request.headers['content-type'],
+    'origin': request.headers['origin']
+  });
   console.log('Request body:', request.body);
   console.log('Request body type:', typeof request.body);
   
@@ -968,11 +974,10 @@ async function apiHandler(request, response) {
     console.log('API request received:', { 
       method: request.method, 
       path, 
-      url: request.url, 
-      headers: request.headers
+      url: request.url
     });
     
-    // Log request body for debugging
+    // Log request body for debugging (safely)
     console.log('Request body:', request.body);
     console.log('Request body type:', typeof request.body);
     
@@ -981,6 +986,16 @@ async function apiHandler(request, response) {
       console.log('Routing to auth-pi test handler');
       const authPiHandler = (await import('./auth-pi.js')).default;
       return await authPiHandler(request, response);
+    } else if (path === '/api/pi-balance') {
+      // Handle /api/pi-balance endpoint with dedicated handler
+      console.log('Routing to /api/pi-balance endpoint');
+      const piBalanceHandler = (await import('./pi-balance.js')).default;
+      return await piBalanceHandler(request, response);
+    } else if (path === '/api/pi-price') {
+      // Handle /api/pi-price endpoint with dedicated handler
+      console.log('Routing to /api/pi-price endpoint');
+      const piPriceHandler = (await import('./pi-price.js')).default;
+      return await piPriceHandler(request, response);
     } else if (path === '/api/pi') {
       // Import and use the consolidated Pi API handler
       const piHandler = (await import('./pi.js')).default;
@@ -989,35 +1004,6 @@ async function apiHandler(request, response) {
       const modifiedRequest = {
         ...request,
         query: Object.fromEntries(searchParams)
-      };
-      return await piHandler(modifiedRequest, response);
-    } else if (path === '/api/test-pi-balance') {
-      console.log('Routing to direct Pi balance test endpoint');
-      // Direct test of balance functionality
-      return response.status(200).json({ 
-        balance: 1000.0,
-        currency: "PI",
-        lastUpdated: new Date().toISOString(),
-        isTestnet: true,
-        test: "direct"
-      });
-    } else if (path === '/api/pi-balance') {
-      // Handle /api/pi-balance endpoint
-      console.log('Routing to /api/pi-balance endpoint');
-      const piHandler = (await import('./pi.js')).default;
-      const modifiedRequest = {
-        ...request,
-        query: { action: 'balance' }
-      };
-      console.log('Modified request for Pi handler:', JSON.stringify(modifiedRequest));
-      console.log('Calling Pi handler for balance action');
-      return await piHandler(modifiedRequest, response);
-    } else if (path === '/api/pi-price') {
-      // Handle /api/pi-price endpoint
-      const piHandler = (await import('./pi.js')).default;
-      const modifiedRequest = {
-        ...request,
-        query: { action: 'price' }
       };
       return await piHandler(modifiedRequest, response);
     } else if (path === '/api/metadata') {
