@@ -321,7 +321,8 @@ async function handlePaymentApproval(request, response) {
     "https://b4uesports.vercel.app"
   ];
 
-  const origin = request.headers.origin;
+  const headers = request.headers || {};
+  const origin = headers.origin;
   if (allowedOrigins.includes(origin)) {
     response.setHeader("Access-Control-Allow-Origin", origin);
   }
@@ -335,8 +336,8 @@ async function handlePaymentApproval(request, response) {
   }
   
   // Check if request is from Pi Browser by looking at the x-requested-with header
-  const isPiBrowser = request.headers['x-requested-with'] === 'pi.browser';
-  console.log('Pi Browser detection - x-requested-with header:', request.headers['x-requested-with']);
+  const isPiBrowser = headers['x-requested-with'] === 'pi.browser';
+  console.log('Pi Browser detection - x-requested-with header:', headers['x-requested-with']);
   console.log('Is Pi Browser request:', isPiBrowser);
   
   // In Vercel, the request body is already parsed as JSON
@@ -420,7 +421,8 @@ async function handlePaymentCompletion(request, response) {
     "https://b4uesports.vercel.app"
   ];
 
-  const origin = request.headers.origin;
+  const headers = request.headers || {};
+  const origin = headers.origin;
   if (allowedOrigins.includes(origin)) {
     response.setHeader("Access-Control-Allow-Origin", origin);
   }
@@ -434,8 +436,8 @@ async function handlePaymentCompletion(request, response) {
   }
   
   // Check if request is from Pi Browser by looking at the x-requested-with header
-  const isPiBrowser = request.headers['x-requested-with'] === 'pi.browser';
-  console.log('Pi Browser detection - x-requested-with header:', request.headers['x-requested-with']);
+  const isPiBrowser = headers['x-requested-with'] === 'pi.browser';
+  console.log('Pi Browser detection - x-requested-with header:', headers['x-requested-with']);
   console.log('Is Pi Browser request:', isPiBrowser);
   
   // In Vercel, the request body is already parsed as JSON
