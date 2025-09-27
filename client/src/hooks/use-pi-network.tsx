@@ -123,6 +123,48 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       userAgent: window.navigator.userAgent
     });
     
+    // If Pi SDK is available on localhost, try to use it
+    if (isPiSDKAvailable && window.location.hostname === 'localhost') {
+      console.log('Pi SDK available on localhost, attempting real authentication');
+      setIsLoading(true);
+      try {
+        // Try real authentication first
+        console.log('Requesting Pi authentication with scopes: payments, username, wallet_address');
+        const authResult = await piSDK.authenticate(['payments', 'username', 'wallet_address']);
+        console.log('Pi authentication result:', authResult);
+        
+        if (authResult) {
+          // Send access token to backend for verification
+          console.log('Sending access token to backend for verification');
+          const response = await apiRequest('POST', '/api/pi?action=auth', {
+            accessToken: authResult.accessToken,
+          });
+          
+          console.log('Backend response status:', response.status);
+          const data = await response.json();
+          console.log('Backend response data:', data);
+          
+          if (!response.ok) {
+            throw new Error(data.message || 'Authentication failed on server');
+          }
+          
+          setUser(data.user);
+          setToken(data.token);
+          setIsAuthenticated(true);
+          
+          // Save to localStorage
+          localStorage.setItem('pi_token', data.token);
+          localStorage.setItem('pi_user', JSON.stringify(data.user));
+          
+          console.log('Authentication successful');
+          setIsLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Real authentication failed, falling back to mock:', error);
+      }
+    }
+    
     // Use mock authentication only for development mock environments
     if (useMockAuth) {
       console.log('Using mock authentication flow');

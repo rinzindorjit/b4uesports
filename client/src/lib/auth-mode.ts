@@ -18,13 +18,17 @@ export function getAuthMode() {
     isProduction: process.env.NODE_ENV === 'production' && !hostname.includes('localhost')
   });
   
-  // Pi Browser detection
+  // Pi Browser detection - highest priority
   if (userAgent.includes('PiBrowser') || userAgent.includes('Pi Network')) {
     return 'pi-browser';
   }
   
   // Localhost development
   if (hostname === 'localhost') {
+    // Check if Pi SDK is available
+    if (typeof window !== 'undefined' && window.Pi) {
+      return 'localhost-with-pi-sdk';
+    }
     return 'localhost-development';
   }
   
@@ -52,7 +56,8 @@ export function shouldUseMockAuth(): boolean {
   console.log('shouldUseMockAuth check, mode:', mode);
   // Use mock auth only for development environments
   // For production and testnet environments, use real authentication when possible
-  return mode === 'development-mock';
+  // Allow Pi SDK usage on localhost if available
+  return mode === 'development-mock' || mode === 'server';
 }
 
 export function shouldInitializePiSDK(): boolean {
@@ -60,7 +65,7 @@ export function shouldInitializePiSDK(): boolean {
   console.log('shouldInitializePiSDK check, mode:', mode);
   // Initialize Pi SDK for all environments except development mock
   // For testnet environments, we still initialize the Pi SDK
-  return mode !== 'development-mock';
+  return mode !== 'development-mock' && mode !== 'server';
 }
 
 export function getPiSDKSandboxMode(): boolean {
