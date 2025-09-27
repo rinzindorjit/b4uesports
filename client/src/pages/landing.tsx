@@ -17,57 +17,20 @@ export default function Landing() {
   const [, setLocation] = useLocation();
 
   // Log piPrice data for debugging
-  console.log('PiPrice data:', piPrice);
-  console.log('PiPrice error:', error);
-  console.log('PiPrice loading:', isLoading);
-  console.log('Auth loading:', piLoading);
-  console.log('Is authenticated:', isAuthenticated);
+  console.log('Landing PiPrice data:', piPrice);
+  console.log('Landing PiPrice error:', error);
+  console.log('Landing PiPrice loading:', isLoading);
+  console.log('Landing auth loading:', piLoading);
+  console.log('Landing isAuthenticated:', isAuthenticated);
   
   // Log price source for debugging
   if (piPrice?.source) {
-    console.log('Pi price source:', piPrice.source);
+    console.log('Landing Pi price source:', piPrice.source);
   }
-
-  // Create mock packages for preview
-  const mockPackages = useMemo(() => {
-    // Use a default price if piPrice is not available
-    const price = piPrice?.price || 0.0009; // Default price if API fails
-    
-    // PUBG Packages
-    const pubgPackages: Package[] = DEFAULT_PACKAGES.PUBG.map((pkg, index) => ({
-      id: `pubg-${index}`,
-      game: 'PUBG',
-      name: `${pkg.amount} UC`,
-      inGameAmount: pkg.amount,
-      usdtValue: pkg.usdtValue.toString(),
-      image: GAME_LOGOS.PUBG,
-      isActive: true,
-      piPrice: pkg.usdtValue / price,
-      currentPiPrice: price
-    }));
-    
-    // MLBB Packages
-    const mlbbPackages: Package[] = DEFAULT_PACKAGES.MLBB.map((pkg, index) => ({
-      id: `mlbb-${index}`,
-      game: 'MLBB',
-      name: `${pkg.amount} Diamonds`,
-      inGameAmount: pkg.amount,
-      usdtValue: pkg.usdtValue.toString(),
-      image: GAME_LOGOS.MLBB,
-      isActive: true,
-      piPrice: pkg.usdtValue / price,
-      currentPiPrice: price
-    }));
-    
-    return [...pubgPackages, ...mlbbPackages];
-  }, [piPrice]);
-
-  // Use mock data for preview instead of API
-  const packages = mockPackages;
-  const packagesLoading = !piPrice;
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
+    console.log('Landing useEffect running:', { isAuthenticated });
     if (isAuthenticated) {
       console.log('User is authenticated, redirecting to dashboard');
       setLocation('/dashboard');
@@ -106,9 +69,6 @@ export default function Landing() {
       console.log('=== PI NETWORK AUTHENTICATION FINISHED ===');
     }
   };
-
-  const featuredPubgPackages = packages?.filter(pkg => pkg.game === 'PUBG').slice(0, 2) || [];
-  const featuredMlbbPackages = packages?.filter(pkg => pkg.game === 'MLBB').slice(0, 2) || [];
 
   return (
     <div className="min-h-screen bg-background text-foreground" data-testid="landing-page">
@@ -155,105 +115,6 @@ export default function Landing() {
                 <i className="fas fa-info-circle mr-2"></i>
                 Note: Transactions are currently processed on the Pi Testnet. No real Pi coins will be deducted from your mainnet wallet during purchases.
               </p>
-            </div>
-          </div>
-
-          {/* Why Choose Us Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20" data-testid="features-section">
-            <div className="game-card p-8 rounded-xl text-center" data-testid="feature-pricing">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-chart-line text-2xl text-white"></i>
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Live Pricing</h3>
-              <p className="text-muted-foreground">Real-time Pi/USD conversion rates updated every 60 seconds for accurate pricing.</p>
-            </div>
-            
-            <div className="game-card p-8 rounded-xl text-center" data-testid="feature-security">
-              <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-shield-alt text-2xl text-white"></i>
-              </div>
-              <h3 className="text-xl font-semibold mb-3">Secure Payments</h3>
-              <p className="text-muted-foreground">Protected by Pi Network's advanced cryptographic payment system.</p>
-            </div>
-            
-            <div className="game-card p-8 rounded-xl text-center" data-testid="feature-support">
-              <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fas fa-headset text-2xl text-white"></i>
-              </div>
-              <h3 className="text-xl font-semibold mb-3">24/7 Support</h3>
-              <p className="text-muted-foreground">Round-the-clock customer support for all your gaming needs.</p>
-            </div>
-          </div>
-
-          {/* Available Games Section */}
-          <div className="text-center mb-12" data-testid="available-games">
-            <h3 className="text-3xl font-bold mb-8">Available Games</h3>
-            
-            {/* Live Pi Price Display */}
-            {piPrice && (
-              <div className="mb-8">
-                <div className="pi-price-ticker px-6 py-3 rounded-lg inline-block" data-testid="pi-price-ticker">
-                  <div className="text-center">
-                    <p className="text-sm text-white/80">Live Pi Price</p>
-                    <p className="text-2xl font-bold text-white">1 π = ${piPrice.price.toFixed(4)} USD</p>
-                    <p className="text-xs text-white/60">
-                      {piPrice.source === 'fallback' ? 'Using fallback price' : 'Updated 60s ago'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* PUBG Description */}
-              <div className="game-card p-8 rounded-xl" data-testid="pubg-description">
-                <div className="flex items-center justify-center mb-6">
-                  <img 
-                    src={GAME_LOGOS.PUBG} 
-                    alt="PUBG Mobile Logo" 
-                    className="w-16 h-16 mr-4"
-                    data-testid="pubg-logo"
-                  />
-                  <h4 className="text-2xl font-bold">PUBG Mobile</h4>
-                </div>
-                <div className="text-left space-y-4">
-                  <p className="text-muted-foreground">
-                    Purchase UC (Unknown Cash) for PUBG Mobile directly with Pi coins. 
-                    Get the best deals on in-game currency to enhance your battle royale experience.
-                  </p>
-                  <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                    <li>Instant delivery to your game account</li>
-                    <li>Competitive Pi pricing</li>
-                    <li>Secure Pi Network transactions</li>
-                    <li>24/7 customer support</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* MLBB Description */}
-              <div className="game-card p-8 rounded-xl" data-testid="mlbb-description">
-                <div className="flex items-center justify-center mb-6">
-                  <img 
-                    src={GAME_LOGOS.MLBB} 
-                    alt="Mobile Legends Logo" 
-                    className="w-16 h-16 mr-4"
-                    data-testid="mlbb-logo"
-                  />
-                  <h4 className="text-2xl font-bold">Mobile Legends</h4>
-                </div>
-                <div className="text-left space-y-4">
-                  <p className="text-muted-foreground">
-                    Buy Diamonds for Mobile Legends using Pi coins. 
-                    Power up your heroes and dominate the battlefield with our fast and secure payment system.
-                  </p>
-                  <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                    <li>Direct to game account delivery</li>
-                    <li>Real-time Pi conversion rates</li>
-                    <li>Protected by Pi Network security</li>
-                    <li>Global availability</li>
-                  </ul>
-                </div>
-              </div>
             </div>
           </div>
         </div>

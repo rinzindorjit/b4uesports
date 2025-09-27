@@ -65,6 +65,8 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('PiNetworkProvider useEffect running');
+    
     // Initialize Pi SDK
     const useMockAuth = shouldUseMockAuth();
     const shouldInitPiSDK = shouldInitializePiSDK();
@@ -86,6 +88,8 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     const savedToken = localStorage.getItem('pi_token');
     const savedUser = localStorage.getItem('pi_user');
     
+    console.log('Checking for existing session:', { savedToken, savedUser });
+    
     if (savedToken && savedUser) {
       try {
         const parsedUser = JSON.parse(savedUser);
@@ -101,6 +105,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       }
     }
     
+    console.log('Setting isLoading to false');
     setIsLoading(false);
   }, []);
 
@@ -435,12 +440,15 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   };
 
   const logout = () => {
+    console.log('Logging out user');
     setIsAuthenticated(false);
     setUser(null);
     setToken(null);
     localStorage.removeItem('pi_token');
     localStorage.removeItem('pi_user');
   };
+
+  console.log('PiNetworkProvider rendering with state:', { isAuthenticated, user, isLoading, token });
 
   return (
     <PiNetworkContext.Provider value={{
