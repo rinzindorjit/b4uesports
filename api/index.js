@@ -897,6 +897,17 @@ async function apiHandler(request, response) {
         query: Object.fromEntries(searchParams)
       };
       return await piHandler(modifiedRequest, response);
+    } else if (path === '/api/auth/pi') {
+      // Handle /api/auth/pi endpoint by redirecting to Pi handler with auth action
+      console.log('Routing to /api/auth/pi endpoint');
+      const piHandler = (await import('./pi.js')).default;
+      const modifiedRequest = {
+        ...request,
+        query: { action: 'auth' }
+      };
+      console.log('Modified request for Pi handler - method:', modifiedRequest.method);
+      console.log('Modified request for Pi handler - query:', modifiedRequest.query);
+      return await piHandler(modifiedRequest, response);
     } else if (path === '/api/pi-price') {
       // Handle /api/pi-price endpoint
       console.log('Routing to /api/pi-price endpoint');
