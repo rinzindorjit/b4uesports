@@ -1742,4 +1742,6 @@ async function handleVerifyPayment(request, response) {
   }
 }
 
-export default handlePiApi;
+export default function handler(request, response) {
+  return handlePiApi(request, response);
+}
