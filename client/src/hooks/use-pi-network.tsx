@@ -20,47 +20,28 @@ interface PiNetworkProviderProps {
   children: ReactNode;
 }
 
-// Function to detect if we're running in Pi Browser
+// Robust Pi Browser detection function (matches server-side implementation)
 function isPiBrowser() {
-  // Check for Pi Browser specific user agent or features
+  // Check for Pi Browser using robust detection method
   if (typeof window !== 'undefined') {
-    // Check for Pi Browser user agent
-    const userAgent = window.navigator.userAgent;
-    if (userAgent.includes('PiBrowser') || userAgent.includes('Pi Network')) {
-      return true;
-    }
+    // Check for Pi Browser specific user agent or features
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const xRequestedWith = (window as any).Pi ? 'pi.browser' : '';
     
-    // Check for Pi Browser specific features
-    // @ts-ignore
-    if (window.Pi && typeof window.Pi === 'object') {
-      return true;
-    }
+    // Robust detection that matches server-side implementation
+    const isPiBrowserRequest = (
+      xRequestedWith === 'pi.browser' ||
+      userAgent.includes('pi browser') ||
+      userAgent.includes('pibrowser') ||
+      userAgent.includes('pi network')
+    );
     
-    // Check for localhost development
-    if (window.location.hostname === 'localhost' && window.location.port === '3005') {
-      return true;
-    }
+    // Additional environment checks
+    const isVercel = window.location.hostname.includes('vercel.app');
+    const isNetlify = window.location.hostname.includes('netlify.app');
+    const isLocalhost = window.location.hostname === 'localhost' && window.location.port === '5173';
     
-    // Check for Netlify deployment (testnet)
-    if (window.location.hostname.includes('netlify.app')) {
-      return true;
-    }
-    
-    // Check for Vercel deployment (for testing)
-    if (window.location.hostname.includes('vercel.app')) {
-      return true;
-    }
-    
-    // Additional check for mobile devices that might be running in Pi Browser
-    // Pi Browser typically runs on mobile devices
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-    if (isMobile && userAgent.includes('Mobile')) {
-      // On mobile, if we're not on localhost and we have the Pi object, likely Pi Browser
-      // @ts-ignore
-      if (window.Pi) {
-        return true;
-      }
-    }
+    return isPiBrowserRequest || isVercel || isNetlify || isLocalhost;
   }
   
   return false;
@@ -72,7 +53,7 @@ function isSandboxEnvironment() {
     const hostname = window.location.hostname;
     // Treat as sandbox for testnet environments
     return hostname.includes('netlify.app') || hostname.includes('vercel.app') || 
-           (hostname === 'localhost' && window.location.port === '3005');
+           (hostname === 'localhost' && window.location.port === '5173');
   }
   return false;
 }
@@ -262,7 +243,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
   const createPayment = (paymentData: PaymentData, callbacks: PaymentCallbacks) => {
     // Check if we're in preview mode or Pi Browser
-    const isPreview = window.location.hostname === 'localhost' && window.location.port === '3005';
+    const isPreview = window.location.hostname === 'localhost' && window.location.port === '5173';
     const isPiBrowserEnv = isPiBrowser();
     const isNetlify = window.location.hostname.includes('netlify.app');
     const isSandbox = isSandboxEnvironment();

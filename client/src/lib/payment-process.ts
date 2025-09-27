@@ -19,12 +19,33 @@ export async function processPayment(
     console.log('=== PAYMENT PROCESS START ===');
     console.log('Payment details:', { amount, memo, metadata });
 
+    // Robust Pi Browser detection function (matches server-side implementation)
+    function isPiBrowser() {
+      if (typeof window === 'undefined') return false;
+      
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      const xRequestedWith = (window as any).Pi ? 'pi.browser' : '';
+      
+      return (
+        xRequestedWith === 'pi.browser' ||
+        userAgent.includes('pi browser') ||
+        userAgent.includes('pibrowser') ||
+        userAgent.includes('pi network') ||
+        // Additional checks for Pi Browser environment
+        (window.location.hostname.includes('vercel.app')) ||
+        (window.location.hostname.includes('netlify.app')) ||
+        (window.location.hostname === 'localhost' && window.location.port === '5173')
+      );
+    }
+
     // Check if we're running in Pi Browser
-    const isPiBrowser = typeof window !== 'undefined' && 
-      (window.navigator.userAgent.includes('PiBrowser') || window.navigator.userAgent.includes('Pi Network'));
+    const isPiBrowserEnv = isPiBrowser();
+    console.log('Pi Browser detection result:', isPiBrowserEnv);
+    console.log('User agent:', window.navigator.userAgent);
+    console.log('Window.Pi exists:', !!(window as any).Pi);
 
     // If we're in Pi Browser, use the Pi SDK directly
-    if (isPiBrowser && typeof window !== 'undefined' && (window as any).Pi) {
+    if (isPiBrowserEnv && typeof window !== 'undefined' && (window as any).Pi) {
       console.log('Using Pi Browser SDK for payment');
       
       return new Promise((resolve) => {
