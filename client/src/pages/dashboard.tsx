@@ -104,7 +104,7 @@ export default function Dashboard() {
                     <p className="text-lg font-bold text-white">Price unavailable</p>
                     <p className="text-xs text-white/60">Retrying in 60s</p>
                   </div>
-                ) : piPriceData ? (
+                ) : piPriceData && piPriceData.price > 0 ? (
                   <div>
                     <p className="text-lg font-bold text-white">1 π = ${piPriceData.price.toFixed(4)} USD</p>
                     <p className="text-xs text-white/60">
@@ -112,7 +112,10 @@ export default function Dashboard() {
                     </p>
                   </div>
                 ) : (
-                  <p className="text-lg font-bold text-white">N/A</p>
+                  <div>
+                    <p className="text-lg font-bold text-white">Price unavailable</p>
+                    <p className="text-xs text-white/60">Retrying in 60s</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -184,10 +187,18 @@ export default function Dashboard() {
               </TabsList>
               
               <TabsContent value="pubg" className="mt-6 md:mt-8">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold">PUBG Mobile UC Packages</h3>
+                  <p className="text-sm text-muted-foreground">Purchase UC (Unknown Cash) to unlock crates, outfits, and other in-game items.</p>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" data-testid="pubg-packages">
                   {packagesLoading ? (
                     <div className="col-span-2 text-center text-muted-foreground" data-testid="loading-packages">
                       Loading packages...
+                    </div>
+                  ) : pubgPackages.length === 0 ? (
+                    <div className="col-span-2 text-center text-muted-foreground" data-testid="no-packages">
+                      No PUBG packages available at the moment.
                     </div>
                   ) : (
                     pubgPackages.map((pkg) => (
@@ -203,10 +214,18 @@ export default function Dashboard() {
               </TabsContent>
               
               <TabsContent value="mlbb" className="mt-6 md:mt-8">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold">Mobile Legends Diamonds</h3>
+                  <p className="text-sm text-muted-foreground">Buy Diamonds to purchase heroes, skins, battle emblems, and other premium items.</p>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" data-testid="mlbb-packages">
                   {packagesLoading ? (
                     <div className="col-span-2 text-center text-muted-foreground" data-testid="loading-packages">
                       Loading packages...
+                    </div>
+                  ) : mlbbPackages.length === 0 ? (
+                    <div className="col-span-2 text-center text-muted-foreground" data-testid="no-packages">
+                      No Mobile Legends packages available at the moment.
                     </div>
                   ) : (
                     mlbbPackages.map((pkg) => (
@@ -233,14 +252,14 @@ export default function Dashboard() {
               <CardContent className="space-y-3">
                 <Button 
                   onClick={() => setIsProfileModalOpen(true)}
-                  className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                  className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground text-sm md:text-base"
                   data-testid="button-edit-profile"
                 >
                   <i className="fas fa-user mr-2"></i>Edit Profile
                 </Button>
                 <Button 
                   variant="outline"
-                  className="w-full"
+                  className="w-full text-sm md:text-base"
                   data-testid="button-view-history"
                 >
                   <i className="fas fa-history mr-2"></i>View History
@@ -248,7 +267,7 @@ export default function Dashboard() {
                 <Button 
                   onClick={handleLogout}
                   variant="destructive"
-                  className="w-full"
+                  className="w-full text-sm md:text-base"
                   data-testid="button-logout"
                 >
                   <i className="fas fa-sign-out-alt mr-2"></i>Logout

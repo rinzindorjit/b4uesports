@@ -33,7 +33,7 @@ export default function PackageCard({ package: pkg, onPurchase, 'data-testid': t
         
         <div className="flex justify-between items-center mb-4">
           <span className="text-xl md:text-2xl font-bold text-green-400 font-mono" data-testid={`${testId}-pi-price`}>
-            {pkg.piPrice ? `${pkg.piPrice.toFixed(1)} π` : 'Loading...'}
+            {pkg.piPrice ? `${pkg.piPrice.toFixed(1)} π` : 'Price unavailable'}
           </span>
           <span className="text-xs md:text-sm text-muted-foreground" data-testid={`${testId}-usd-price`}>
             ≈ ${pkg.usdtValue}
