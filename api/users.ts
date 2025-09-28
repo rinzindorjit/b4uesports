@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { JWT_SECRET, getStorage, getPiNetworkService } from './_utils';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers
@@ -14,14 +15,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
   }
 
   try {
-    // Import modules dynamically to avoid issues with serverless environment
-    const storageModule = await import('../server/storage');
-    const piNetworkModule = await import('../server/services/pi-network');
-    const utilsModule = await import('./_utils');
-    
-    const { storage } = storageModule;
-    const { piNetworkService } = piNetworkModule;
-    const { JWT_SECRET } = utilsModule;
+    // Get services dynamically
+    const storage = await getStorage();
+    const piNetworkService = await getPiNetworkService();
 
     const { action, data } = request.body;
     
@@ -86,7 +82,6 @@ export default async function handler(request: VercelRequest, response: VercelRe
           return response.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Import storage again for the updateAdminLastLogin function
         await storage.updateAdminLastLogin(admin.id);
 
         const adminToken = jwt.sign({ adminId: admin.id, username: admin.username }, JWT_SECRET, { expiresIn: '8h' });

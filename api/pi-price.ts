@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getPricingService } from './_utils';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers
@@ -16,9 +17,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
   }
 
   try {
-    // Import modules dynamically to avoid issues with serverless environment
-    const pricingModule = await import('../server/services/pricing');
-    const { pricingService } = pricingModule;
+    // Get service dynamically
+    const pricingService = await getPricingService();
 
     const price = await pricingService.getCurrentPiPrice();
     const lastPrice = pricingService.getLastPrice();

@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET, getStorage } from './_utils';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers
@@ -25,14 +26,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
     const { action, data } = request.body;
     
-    const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
-    
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as any;
       
-      // Import modules dynamically to avoid issues with serverless environment
-      const storageModule = await import('../server/storage');
-      const { storage } = storageModule;
+      // Get service dynamically
+      const storage = await getStorage();
       
       const admin = await storage.getAdminByUsername(decoded.username);
       if (!admin || !admin.isActive) {
@@ -42,9 +40,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
       return response.status(401).json({ message: 'Invalid token' });
     }
 
-    // Import modules dynamically to avoid issues with serverless environment
-    const storageModule = await import('../server/storage');
-    const { storage } = storageModule;
+    // Get service dynamically
+    const storage = await getStorage();
 
     switch (action) {
       case 'analytics':

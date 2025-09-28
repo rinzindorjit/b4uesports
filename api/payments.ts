@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET, getStorage, getPricingService, getPiNetworkService, getEmailService } from './_utils';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers
@@ -19,18 +20,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
   try {
     const { action, data } = request.body;
     
-    // Import modules dynamically to avoid issues with serverless environment
-    const storageModule = await import('../server/storage');
-    const pricingModule = await import('../server/services/pricing');
-    const piNetworkModule = await import('../server/services/pi-network');
-    const emailModule = await import('../server/services/email');
-    
-    const { storage } = storageModule;
-    const { pricingService } = pricingModule;
-    const { piNetworkService } = piNetworkModule;
-    const { sendPurchaseConfirmationEmail } = emailModule;
-    
-    const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
+    // Get services dynamically
+    const storage = await getStorage();
+    const pricingService = await getPricingService();
+    const piNetworkService = await getPiNetworkService();
+    const sendPurchaseConfirmationEmail = await getEmailService();
 
     switch (action) {
       case 'approve':

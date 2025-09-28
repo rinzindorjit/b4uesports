@@ -1,7 +1,3 @@
-import { storage } from '../server/storage';
-import { pricingService } from '../server/services/pricing';
-import { piNetworkService } from '../server/services/pi-network';
-import { sendPurchaseConfirmationEmail } from '../server/services/email';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
@@ -32,18 +28,45 @@ export {
   bcrypt,
 };
 
-export async function importServerModules() {
-  const storageModule = await import('../server/storage');
-  const pricingModule = await import('../server/services/pricing');
-  const piNetworkModule = await import('../server/services/pi-network');
-  const emailModule = await import('../server/services/email');
-  
-  return {
-    storage: storageModule.storage,
-    pricingService: pricingModule.pricingService,
-    piNetworkService: piNetworkModule.piNetworkService,
-    sendPurchaseConfirmationEmail: emailModule.sendPurchaseConfirmationEmail,
-  };
+// Dynamic import functions for Vercel serverless environment
+export async function getStorage() {
+  try {
+    const storageModule = await import('../server/storage');
+    return storageModule.storage;
+  } catch (error) {
+    console.error('Failed to import storage module:', error);
+    throw new Error('Storage module not available');
+  }
+}
+
+export async function getPricingService() {
+  try {
+    const pricingModule = await import('../server/services/pricing');
+    return pricingModule.pricingService;
+  } catch (error) {
+    console.error('Failed to import pricing service:', error);
+    throw new Error('Pricing service not available');
+  }
+}
+
+export async function getPiNetworkService() {
+  try {
+    const piNetworkModule = await import('../server/services/pi-network');
+    return piNetworkModule.piNetworkService;
+  } catch (error) {
+    console.error('Failed to import Pi Network service:', error);
+    throw new Error('Pi Network service not available');
+  }
+}
+
+export async function getEmailService() {
+  try {
+    const emailModule = await import('../server/services/email');
+    return emailModule.sendPurchaseConfirmationEmail;
+  } catch (error) {
+    console.error('Failed to import email service:', error);
+    throw new Error('Email service not available');
+  }
 }
 
 // Authentication middleware
@@ -73,6 +96,8 @@ export async function authenticateAdmin(request: Request) {
   }
 
   try {
+    // We need to get storage dynamically here
+    const storage = await getStorage();
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     const admin = await storage.getAdminByUsername(decoded.username);
     if (!admin || !admin.isActive) {
@@ -83,11 +108,3 @@ export async function authenticateAdmin(request: Request) {
     return { error: createResponse(401, { message: 'Invalid token' }) };
   }
 }
-
-export {
-  storage,
-  pricingService,
-  piNetworkService,
-  sendPurchaseConfirmationEmail,
-  // Remove JWT_SECRET from here since we already exported it above
-};
