@@ -23,12 +23,6 @@ export default function Footer() {
             
             <div className="space-y-2" data-testid="footer-contact">
               <p className="text-muted-foreground">
-                <i className="fas fa-envelope mr-2"></i>
-                <a href={`mailto:${CONTACT_INFO.EMAIL}`} className="hover:text-primary" data-testid="contact-email">
-                  {CONTACT_INFO.EMAIL}
-                </a>
-              </p>
-              <p className="text-muted-foreground">
                 <i className="fab fa-whatsapp mr-2"></i>
                 <a href="https://wa.me/+97517875099" target="_blank" rel="noopener noreferrer" className="hover:text-primary" data-testid="contact-whatsapp">
                   WhatsApp: +975 17875099
