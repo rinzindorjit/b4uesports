@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { PACKAGE_IMAGES } from '@/lib/constants';
 import type { Package } from '@/types/pi-network';
 
 interface PackageCardProps {
@@ -10,7 +9,6 @@ interface PackageCardProps {
 }
 
 export default function PackageCard({ package: pkg, onPurchase, 'data-testid': testId }: PackageCardProps) {
-  const packageImageUrl = pkg.game === 'PUBG' ? PACKAGE_IMAGES.PUBG : PACKAGE_IMAGES.MLBB;
   const gameName = pkg.game === 'PUBG' ? 'PUBG Mobile' : 'Mobile Legends';
 
   return (
@@ -18,7 +16,7 @@ export default function PackageCard({ package: pkg, onPurchase, 'data-testid': t
       <CardContent className="p-6">
         <div className="flex items-center mb-4">
           <img 
-            src={packageImageUrl} 
+            src={pkg.image} 
             alt={gameName} 
             className="w-12 h-12 mr-3 object-contain"
             data-testid={`${testId}-logo`}
