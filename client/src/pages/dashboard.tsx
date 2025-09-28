@@ -197,9 +197,75 @@ export default function Dashboard() {
                       Loading packages...
                     </div>
                   ) : pubgPackages.length === 0 ? (
-                    <div className="col-span-2 text-center text-muted-foreground" data-testid="no-packages">
-                      No PUBG packages available at the moment.
-                    </div>
+                    // Display default PUBG packages when none are loaded
+                    <>
+                      {[
+                        { id: 'pubg-60', name: '60 UC', usdtValue: '1.5000', inGameAmount: 60 },
+                        { id: 'pubg-325', name: '325 UC', usdtValue: '6.5000', inGameAmount: 325 },
+                        { id: 'pubg-660', name: '660 UC', usdtValue: '12.0000', inGameAmount: 660 },
+                        { id: 'pubg-1800', name: '1800 UC', usdtValue: '25.0000', inGameAmount: 1800 },
+                        { id: 'pubg-3850', name: '3850 UC', usdtValue: '49.0000', inGameAmount: 3850 },
+                        { id: 'pubg-8100', name: '8100 UC', usdtValue: '96.0000', inGameAmount: 8100 },
+                        { id: 'pubg-16200', name: '16200 UC', usdtValue: '186.0000', inGameAmount: 16200 },
+                        { id: 'pubg-24300', name: '24300 UC', usdtValue: '278.0000', inGameAmount: 24300 },
+                        { id: 'pubg-32400', name: '32400 UC', usdtValue: '369.0000', inGameAmount: 32400 },
+                        { id: 'pubg-40500', name: '40500 UC', usdtValue: '459.0000', inGameAmount: 40500 },
+                      ].map((pkg) => {
+                        // Calculate Pi price based on current Pi price or fallback
+                        const piPrice = piPriceData?.price ? parseFloat(pkg.usdtValue) / piPriceData.price : 0;
+                        
+                        return (
+                          <div 
+                            key={pkg.id} 
+                            className="game-card p-4 md:p-6 rounded-lg border border-border bg-card hover:transform hover:-translate-y-1 transition-all duration-300"
+                          >
+                            <div className="flex items-center mb-3 md:mb-4">
+                              <img 
+                                src="https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png" 
+                                alt="PUBG Mobile" 
+                                className="w-10 h-10 md:w-12 md:h-12 mr-2 md:mr-3 object-contain"
+                              />
+                              <div>
+                                <h3 className="text-lg md:text-xl font-bold">{pkg.name}</h3>
+                                <p className="text-muted-foreground text-xs md:text-sm">
+                                  UC Package
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex justify-between items-center mb-4">
+                              <span className="text-xl md:text-2xl font-bold text-green-400 font-mono">
+                                {piPrice > 0 ? `${piPrice.toFixed(1)} π` : 'Price unavailable'}
+                              </span>
+                              {/* Hidden USDT value for internal calculation only */}
+                              <span className="text-xs md:text-sm text-muted-foreground hidden">
+                                ≈ ${pkg.usdtValue}
+                              </span>
+                            </div>
+                            
+                            <Button 
+                              onClick={() => {
+                                // Create a mock package object for the purchase modal
+                                const mockPackage = {
+                                  id: pkg.id,
+                                  game: 'PUBG',
+                                  name: pkg.name,
+                                  inGameAmount: pkg.inGameAmount,
+                                  usdtValue: pkg.usdtValue,
+                                  image: "https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png",
+                                  isActive: true,
+                                  piPrice: piPrice > 0 ? piPrice : undefined
+                                };
+                                handlePurchaseClick(mockPackage);
+                              }}
+                              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm md:text-base"
+                            >
+                              Buy Now
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </>
                   ) : (
                     pubgPackages.map((pkg) => (
                       <PackageCard
@@ -224,9 +290,72 @@ export default function Dashboard() {
                       Loading packages...
                     </div>
                   ) : mlbbPackages.length === 0 ? (
-                    <div className="col-span-2 text-center text-muted-foreground" data-testid="no-packages">
-                      No Mobile Legends packages available at the moment.
-                    </div>
+                    // Display default MLBB packages when none are loaded
+                    <>
+                      {[
+                        { id: 'mlbb-56', name: '56 Diamonds', usdtValue: '3.0000', inGameAmount: 56 },
+                        { id: 'mlbb-278', name: '278 Diamonds', usdtValue: '6.0000', inGameAmount: 278 },
+                        { id: 'mlbb-571', name: '571 Diamonds', usdtValue: '11.0000', inGameAmount: 571 },
+                        { id: 'mlbb-1783', name: '1783 Diamonds', usdtValue: '33.0000', inGameAmount: 1783 },
+                        { id: 'mlbb-3005', name: '3005 Diamonds', usdtValue: '52.0000', inGameAmount: 3005 },
+                        { id: 'mlbb-6012', name: '6012 Diamonds', usdtValue: '99.0000', inGameAmount: 6012 },
+                        { id: 'mlbb-12000', name: '12000 Diamonds', usdtValue: '200.0000', inGameAmount: 12000 },
+                      ].map((pkg) => {
+                        // Calculate Pi price based on current Pi price or fallback
+                        const piPrice = piPriceData?.price ? parseFloat(pkg.usdtValue) / piPriceData.price : 0;
+                        
+                        return (
+                          <div 
+                            key={pkg.id} 
+                            className="game-card p-4 md:p-6 rounded-lg border border-border bg-card hover:transform hover:-translate-y-1 transition-all duration-300"
+                          >
+                            <div className="flex items-center mb-3 md:mb-4">
+                              <img 
+                                src="https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png" 
+                                alt="Mobile Legends" 
+                                className="w-10 h-10 md:w-12 md:h-12 mr-2 md:mr-3 object-contain"
+                              />
+                              <div>
+                                <h3 className="text-lg md:text-xl font-bold">{pkg.name}</h3>
+                                <p className="text-muted-foreground text-xs md:text-sm">
+                                  Diamonds Package
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="flex justify-between items-center mb-4">
+                              <span className="text-xl md:text-2xl font-bold text-green-400 font-mono">
+                                {piPrice > 0 ? `${piPrice.toFixed(1)} π` : 'Price unavailable'}
+                              </span>
+                              {/* Hidden USDT value for internal calculation only */}
+                              <span className="text-xs md:text-sm text-muted-foreground hidden">
+                                ≈ ${pkg.usdtValue}
+                              </span>
+                            </div>
+                            
+                            <Button 
+                              onClick={() => {
+                                // Create a mock package object for the purchase modal
+                                const mockPackage = {
+                                  id: pkg.id,
+                                  game: 'MLBB',
+                                  name: pkg.name,
+                                  inGameAmount: pkg.inGameAmount,
+                                  usdtValue: pkg.usdtValue,
+                                  image: "https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png",
+                                  isActive: true,
+                                  piPrice: piPrice > 0 ? piPrice : undefined
+                                };
+                                handlePurchaseClick(mockPackage);
+                              }}
+                              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm md:text-base"
+                            >
+                              Buy Now
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </>
                   ) : (
                     mlbbPackages.map((pkg) => (
                       <PackageCard
