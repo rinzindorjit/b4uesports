@@ -16,7 +16,7 @@ import type { Package, Transaction } from '@/types/pi-network';
 
 export default function Dashboard() {
   const { user, isAuthenticated, logout, token } = usePiNetwork();
-  const { data: piPrice } = usePiPrice();
+  const { data: piPriceData, isLoading: piPriceLoading, error: piPriceError } = usePiPrice();
   const [, setLocation] = useLocation();
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -70,7 +70,7 @@ export default function Dashboard() {
       {/* Dashboard Header */}
       <div className="bg-card border-b border-border" data-testid="dashboard-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
             <div className="flex items-center space-x-4">
               {user.profileImage ? (
                 <img 
@@ -84,57 +84,70 @@ export default function Dashboard() {
                 </div>
               )}
               <div>
-                <h1 className="text-3xl font-bold text-foreground" data-testid="user-greeting">
-                  Welcome back, {user.username}!
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground" data-testid="user-greeting">
+                  Welcome back, <span className="text-primary">{user.username}</span>!
                 </h1>
-                <p className="text-muted-foreground font-mono" data-testid="user-wallet">
+                <p className="text-muted-foreground font-mono text-sm md:text-base" data-testid="user-wallet">
                   Wallet: {formatWalletAddress(user.walletAddress)}
                 </p>
               </div>
             </div>
             
             {/* Live Pi Price Ticker */}
-            {piPrice && (
-              <div className="pi-price-ticker px-6 py-3 rounded-lg" data-testid="pi-price-dashboard">
-                <div className="text-center">
-                  <p className="text-sm text-white/80">Live Pi Price</p>
-                  <p className="text-2xl font-bold text-white">1 π = ${piPrice.price.toFixed(3)} USD</p>
-                  <p className="text-xs text-white/60">Updated 60s ago</p>
-                </div>
+            <div className="pi-price-ticker px-4 py-3 rounded-lg w-full md:w-auto text-center md:text-left" data-testid="pi-price-dashboard">
+              <div>
+                <p className="text-xs text-white/80 mb-1">Live Pi Price</p>
+                {piPriceLoading ? (
+                  <p className="text-lg font-bold text-white">Loading...</p>
+                ) : piPriceError ? (
+                  <div>
+                    <p className="text-lg font-bold text-white">Price unavailable</p>
+                    <p className="text-xs text-white/60">Retrying in 60s</p>
+                  </div>
+                ) : piPriceData ? (
+                  <div>
+                    <p className="text-lg font-bold text-white">1 π = ${piPriceData.price.toFixed(4)} USD</p>
+                    <p className="text-xs text-white/60">
+                      Updated {Math.floor((Date.now() - new Date(piPriceData.lastUpdated).getTime()) / 1000)}s ago
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-lg font-bold text-white">N/A</p>
+                )}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6" data-testid="user-stats">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6" data-testid="user-stats">
             <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm text-muted-foreground">Total Spent</h3>
-                <p className="text-2xl font-bold text-green-400 font-mono" data-testid="stat-total-spent">
+              <CardContent className="p-3 md:p-4">
+                <h3 className="text-xs md:text-sm text-muted-foreground">Total Spent</h3>
+                <p className="text-lg md:text-2xl font-bold text-green-400 font-mono" data-testid="stat-total-spent">
                   {totalSpent.toFixed(1)} π
                 </p>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm text-muted-foreground">Transactions</h3>
-                <p className="text-2xl font-bold" data-testid="stat-transaction-count">
+              <CardContent className="p-3 md:p-4">
+                <h3 className="text-xs md:text-sm text-muted-foreground">Transactions</h3>
+                <p className="text-lg md:text-2xl font-bold" data-testid="stat-transaction-count">
                   {completedTransactions}
                 </p>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm text-muted-foreground">Country</h3>
-                <p className="text-2xl font-bold text-blue-400" data-testid="stat-country">
+              <CardContent className="p-3 md:p-4">
+                <h3 className="text-xs md:text-sm text-muted-foreground">Country</h3>
+                <p className="text-lg md:text-2xl font-bold text-blue-400" data-testid="stat-country">
                   {user.country}
                 </p>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm text-muted-foreground">Status</h3>
-                <p className="text-2xl font-bold text-green-400" data-testid="stat-status">
+              <CardContent className="p-3 md:p-4">
+                <h3 className="text-xs md:text-sm text-muted-foreground">Status</h3>
+                <p className="text-lg md:text-2xl font-bold text-green-400" data-testid="stat-status">
                   Active
                 </p>
               </CardContent>
@@ -144,20 +157,34 @@ export default function Dashboard() {
       </div>
 
       {/* Dashboard Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           {/* Package Shop */}
           <div className="lg:col-span-2" data-testid="package-shop">
-            <h2 className="text-2xl font-bold mb-6">Package Shop</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Package Shop</h2>
             
             <Tabs defaultValue="pubg" className="w-full">
               <TabsList className="grid w-full grid-cols-2" data-testid="game-tabs">
-                <TabsTrigger value="pubg" data-testid="tab-pubg">PUBG Mobile</TabsTrigger>
-                <TabsTrigger value="mlbb" data-testid="tab-mlbb">Mobile Legends</TabsTrigger>
+                <TabsTrigger value="pubg" data-testid="tab-pubg" className="flex items-center justify-center">
+                  <img 
+                    src="https://cdn.midasbuy.com/images/pubgm_app-icon_512x512%281%29.e9f7efc0.png" 
+                    alt="PUBG Mobile" 
+                    className="w-6 h-6 mr-2 object-contain"
+                  />
+                  PUBG Mobile
+                </TabsTrigger>
+                <TabsTrigger value="mlbb" data-testid="tab-mlbb" className="flex items-center justify-center">
+                  <img 
+                    src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTT-Neggt-JpAh4eDx84JswmFwJMOa4pcfhqtcTcxtywIGC4IfB" 
+                    alt="Mobile Legends" 
+                    className="w-6 h-6 mr-2 object-contain"
+                  />
+                  Mobile Legends
+                </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="pubg" className="mt-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="pubg-packages">
+              <TabsContent value="pubg" className="mt-6 md:mt-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" data-testid="pubg-packages">
                   {packagesLoading ? (
                     <div className="col-span-2 text-center text-muted-foreground" data-testid="loading-packages">
                       Loading packages...
@@ -175,8 +202,8 @@ export default function Dashboard() {
                 </div>
               </TabsContent>
               
-              <TabsContent value="mlbb" className="mt-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="mlbb-packages">
+              <TabsContent value="mlbb" className="mt-6 md:mt-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" data-testid="mlbb-packages">
                   {packagesLoading ? (
                     <div className="col-span-2 text-center text-muted-foreground" data-testid="loading-packages">
                       Loading packages...
@@ -197,7 +224,7 @@ export default function Dashboard() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-8" data-testid="dashboard-sidebar">
+          <div className="space-y-6 md:space-y-8" data-testid="dashboard-sidebar">
             {/* Quick Actions */}
             <Card data-testid="quick-actions">
               <CardHeader>
@@ -240,11 +267,11 @@ export default function Dashboard() {
                 ) : recentTransactions.length === 0 ? (
                   <div className="text-muted-foreground" data-testid="no-transactions">No transactions yet</div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3 md:space-y-4">
                     {recentTransactions.map((transaction, index) => (
                       <div 
                         key={transaction.id} 
-                        className="border-b border-border pb-3 last:border-b-0"
+                        className="border-b border-border pb-2 md:pb-3 last:border-b-0"
                         data-testid={`transaction-${index}`}
                       >
                         <div className="flex justify-between items-start">

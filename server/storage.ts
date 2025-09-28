@@ -24,6 +24,75 @@ const mockTransactions: Transaction[] = [];
 const mockAdmins: Admin[] = [];
 const mockPriceHistory: PiPriceHistory[] = [];
 
+// Initialize with default packages if empty
+function initializeMockPackages() {
+  if (mockPackages.length === 0) {
+    // PUBG packages
+    const pubgPackages = [
+      { amount: 60, usdtValue: 1.5 },
+      { amount: 325, usdtValue: 6.5 },
+      { amount: 660, usdtValue: 12.0 },
+      { amount: 1800, usdtValue: 25.0 },
+      { amount: 3850, usdtValue: 49.0 },
+      { amount: 8100, usdtValue: 96.0 },
+      { amount: 16200, usdtValue: 186.0 },
+      { amount: 24300, usdtValue: 278.0 },
+      { amount: 32400, usdtValue: 369.0 },
+      { amount: 40500, usdtValue: 459.0 },
+    ];
+    
+    // MLBB packages
+    const mlbbPackages = [
+      { amount: 56, usdtValue: 3.0 },
+      { amount: 278, usdtValue: 6.0 },
+      { amount: 571, usdtValue: 11.0 },
+      { amount: 1783, usdtValue: 33.0 },
+      { amount: 3005, usdtValue: 52.0 },
+      { amount: 6012, usdtValue: 99.0 },
+      { amount: 12000, usdtValue: 200.0 },
+    ];
+    
+    // Add PUBG packages
+    pubgPackages.forEach((pkg, index) => {
+      const packageName = `${pkg.amount} UC`;
+      const usdtValue = pkg.usdtValue.toFixed(4);
+      
+      mockPackages.push({
+        id: `pkg_pubg_${index + 1}`,
+        game: 'PUBG',
+        name: packageName,
+        inGameAmount: pkg.amount,
+        usdtValue: usdtValue,
+        image: "https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png",
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    });
+    
+    // Add MLBB packages
+    mlbbPackages.forEach((pkg, index) => {
+      const packageName = `${pkg.amount} Diamonds`;
+      const usdtValue = pkg.usdtValue.toFixed(4);
+      
+      mockPackages.push({
+        id: `pkg_mlbb_${index + 1}`,
+        game: 'MLBB',
+        name: packageName,
+        inGameAmount: pkg.amount,
+        usdtValue: usdtValue,
+        image: "https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png",
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+    });
+  }
+}
+
+// Initialize mock packages on module load
+initializeMockPackages();
+
 export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;

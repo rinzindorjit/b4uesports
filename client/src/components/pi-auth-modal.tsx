@@ -29,9 +29,9 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md" data-testid="pi-auth-modal">
+      <DialogContent className="max-w-md w-full mx-4 sm:mx-auto" data-testid="pi-auth-modal">
         <DialogHeader>
-          <DialogTitle className="text-2xl text-center">
+          <DialogTitle className="text-xl md:text-2xl text-center">
             {step === 'consent' ? 'Connect with Pi Network' : 'Processing...'}
           </DialogTitle>
         </DialogHeader>
@@ -39,14 +39,14 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
         {step === 'consent' ? (
           <div className="space-y-6">
             <div className="text-center">
-              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                 <img 
                   src={BRAND_LOGOS.PI} 
                   alt="Pi Network" 
-                  className="w-12 h-12 rounded-full"
+                  className="w-10 h-10 md:w-12 md:h-12 rounded-full"
                 />
               </div>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm md:text-base">
                 B4U Esports would like to access your Pi Network account
               </p>
             </div>
@@ -72,7 +72,7 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
             </Card>
 
             <div className="bg-amber-500/20 border border-amber-500 rounded-lg p-4">
-              <p className="text-sm text-amber-300">
+              <p className="text-xs md:text-sm text-amber-300">
                 <i className="fas fa-info-circle mr-2"></i>
                 Note: Transactions are currently processed on the Pi Testnet. No real Pi coins will be deducted.
               </p>
@@ -82,14 +82,14 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
               <Button 
                 variant="outline" 
                 onClick={onClose} 
-                className="flex-1"
+                className="flex-1 text-sm md:text-base"
                 data-testid="auth-cancel"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleAuthenticate} 
-                className="flex-1"
+                className="flex-1 text-sm md:text-base"
                 data-testid="auth-approve"
               >
                 Approve
@@ -102,7 +102,7 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
               <i className="fas fa-spinner fa-spin text-2xl text-primary-foreground"></i>
             </div>
             <p className="text-lg font-semibold mb-2">Connecting to Pi Network</p>
-            <p className="text-muted-foreground">Please wait while we authenticate your account...</p>
+            <p className="text-muted-foreground text-sm md:text-base">Please wait while we authenticate your account...</p>
           </div>
         )}
       </DialogContent>

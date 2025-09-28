@@ -151,34 +151,34 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md" data-testid="purchase-modal">
+      <DialogContent className="max-w-md w-full mx-4 sm:mx-auto" data-testid="purchase-modal">
         {step === 'confirm' ? (
           <>
             <DialogHeader>
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <i className="fas fa-gamepad text-2xl text-primary-foreground"></i>
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-gamepad text-xl md:text-2xl text-primary-foreground"></i>
                 </div>
-                <DialogTitle className="text-2xl mb-2">Confirm Purchase</DialogTitle>
-                <p className="text-muted-foreground">Review and verify your purchase details</p>
+                <DialogTitle className="text-xl md:text-2xl mb-2">Confirm Purchase</DialogTitle>
+                <p className="text-muted-foreground text-sm md:text-base">Review and verify your purchase details</p>
               </div>
             </DialogHeader>
 
             <div className="space-y-4 mb-6">
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex items-center">
-                    <img src={gameLogoUrl} alt={gameName} className="w-12 h-12 mr-3" />
+                    <img src={gameLogoUrl} alt={gameName} className="w-10 h-10 md:w-12 md:h-12 mr-2 md:mr-3" />
                     <div>
-                      <p className="font-semibold" data-testid="package-name">{pkg.name}</p>
-                      <p className="text-sm text-muted-foreground">{gameName}</p>
+                      <p className="font-semibold text-sm md:text-base" data-testid="package-name">{pkg.name}</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">{gameName}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <Label className="text-sm font-medium">Game Account</Label>
                   {pkg.game === 'PUBG' ? (
                     <div className="space-y-2 mt-2">
@@ -186,6 +186,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                         placeholder="In-Game Name (IGN)"
                         value={editableGameAccount.ign || ''}
                         onChange={(e) => handleGameAccountChange('ign', e.target.value)}
+                        className="text-sm"
                         data-testid="purchase-pubg-ign"
                       />
                       <Input
@@ -195,7 +196,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                           const value = e.target.value.replace(/\D/g, '');
                           handleGameAccountChange('uid', value);
                         }}
-                        className="font-mono"
+                        className="font-mono text-sm"
                         data-testid="purchase-pubg-uid"
                       />
                     </div>
@@ -208,7 +209,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                           const value = e.target.value.replace(/\D/g, '');
                           handleGameAccountChange('userId', value);
                         }}
-                        className="font-mono"
+                        className="font-mono text-sm"
                         data-testid="purchase-mlbb-user-id"
                       />
                       <Input
@@ -218,7 +219,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                           const value = e.target.value.replace(/\D/g, '');
                           handleGameAccountChange('zoneId', value);
                         }}
-                        className="font-mono"
+                        className="font-mono text-sm"
                         data-testid="purchase-mlbb-zone-id"
                       />
                     </div>
@@ -231,14 +232,14 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               </Card>
 
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex justify-between items-center">
-                    <span className="font-medium">Total Cost</span>
+                    <span className="font-medium text-sm md:text-base">Total Cost</span>
                     <div className="text-right">
-                      <p className="font-mono text-green-400 text-xl font-bold" data-testid="total-cost">
+                      <p className="font-mono text-green-400 text-lg md:text-xl font-bold" data-testid="total-cost">
                         {pkg.piPrice?.toFixed(1)} π
                       </p>
-                      <p className="text-sm text-muted-foreground">≈ ${pkg.usdtValue}</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">≈ ${pkg.usdtValue}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -246,8 +247,8 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
             </div>
 
             {import.meta.env.DEV && (
-              <div className="bg-amber-500/20 border border-amber-500 rounded-lg p-4 mb-6">
-                <p className="text-sm text-amber-300">
+              <div className="bg-amber-500/20 border border-amber-500 rounded-lg p-3 md:p-4 mb-6">
+                <p className="text-xs md:text-sm text-amber-300">
                   <i className="fas fa-info-circle mr-2"></i>
                   Testnet Mode: No real Pi will be deducted from your mainnet wallet.
                 </p>
@@ -258,14 +259,14 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               <Button 
                 variant="outline" 
                 onClick={onClose} 
-                className="flex-1"
+                className="flex-1 text-sm md:text-base"
                 data-testid="cancel-purchase"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={handleConfirmPurchase} 
-                className="flex-1"
+                className="flex-1 text-sm md:text-base"
                 data-testid="confirm-purchase"
               >
                 Continue
@@ -276,23 +277,23 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
           <>
             <DialogHeader>
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                  <i className="fas fa-lock text-2xl text-primary-foreground"></i>
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-lock text-xl md:text-2xl text-primary-foreground"></i>
                 </div>
-                <DialogTitle className="text-2xl mb-2">Secure Payment</DialogTitle>
-                <p className="text-muted-foreground">Enter your passphrase to authorize the payment</p>
+                <DialogTitle className="text-xl md:text-2xl mb-2">Secure Payment</DialogTitle>
+                <p className="text-muted-foreground text-sm md:text-base">Enter your passphrase to authorize the payment</p>
               </div>
             </DialogHeader>
 
             <div className="space-y-4 mb-6">
               <Card>
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="text-center">
-                    <p className="text-lg font-semibold">{pkg.name}</p>
-                    <p className="text-2xl font-bold text-green-400 font-mono">
+                    <p className="font-semibold text-sm md:text-base">{pkg.name}</p>
+                    <p className="text-lg md:text-2xl font-bold text-green-400 font-mono">
                       {pkg.piPrice?.toFixed(1)} π
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       Account: {formatGameAccount()}
                     </p>
                   </div>
@@ -300,7 +301,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               </Card>
 
               <div className="space-y-2">
-                <Label>Payment Passphrase</Label>
+                <Label className="text-sm">Payment Passphrase</Label>
                 <div className="relative">
                   <Input
                     type={showPassphrase ? "text" : "password"}
@@ -308,17 +309,18 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                     onChange={(e) => setPassphrase(e.target.value)}
                     placeholder="Enter your secure passphrase"
                     disabled={isProcessing}
+                    className="text-sm"
                     data-testid="payment-passphrase"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-1 top-1/2 transform -translate-y-1/2"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6"
                     onClick={() => setShowPassphrase(!showPassphrase)}
                     data-testid="toggle-passphrase"
                   >
-                    <i className={`fas ${showPassphrase ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                    <i className={`fas ${showPassphrase ? 'fa-eye-slash' : 'fa-eye'} text-xs`}></i>
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -327,8 +329,8 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               </div>
             </div>
 
-            <div className="bg-blue-500/20 border border-blue-500 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-300">
+            <div className="bg-blue-500/20 border border-blue-500 rounded-lg p-3 md:p-4 mb-6">
+              <p className="text-xs md:text-sm text-blue-300">
                 <i className="fas fa-info-circle mr-2"></i>
                 You are about to pay {pkg.piPrice?.toFixed(1)} π for {pkg.name}. This transaction will be processed through Pi Network.
               </p>
@@ -338,7 +340,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               <Button 
                 variant="outline" 
                 onClick={() => setStep('confirm')} 
-                className="flex-1"
+                className="flex-1 text-sm md:text-base"
                 disabled={isProcessing}
                 data-testid="back-to-confirm"
               >
@@ -346,7 +348,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               </Button>
               <Button 
                 onClick={handleProcessPayment} 
-                className="flex-1"
+                className="flex-1 text-sm md:text-base"
                 disabled={isProcessing || !passphrase}
                 data-testid="process-payment"
               >

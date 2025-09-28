@@ -27,9 +27,9 @@ export default function CountrySelector({ isOpen, onClose, onSelect, selectedCou
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md" data-testid="country-selector">
+      <DialogContent className="max-w-md w-full mx-4 sm:mx-auto" data-testid="country-selector">
         <DialogHeader>
-          <DialogTitle>Select Country</DialogTitle>
+          <DialogTitle className="text-xl">Select Country</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
@@ -37,6 +37,7 @@ export default function CountrySelector({ isOpen, onClose, onSelect, selectedCou
             placeholder="Search countries..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="text-base"
             data-testid="country-search"
           />
           
@@ -46,12 +47,12 @@ export default function CountrySelector({ isOpen, onClose, onSelect, selectedCou
                 <Button
                   key={country.code}
                   variant={selectedCountry === country.code ? "default" : "ghost"}
-                  className="w-full justify-start"
+                  className="w-full justify-start h-12 text-base"
                   onClick={() => handleSelect(country.code)}
                   data-testid={`country-option-${country.code}`}
                 >
                   <span className="mr-3 text-lg">{country.flag}</span>
-                  <span>{country.name}</span>
+                  <span className="truncate">{country.name}</span>
                   {selectedCountry === country.code && (
                     <i className="fas fa-check ml-auto text-primary"></i>
                   )}

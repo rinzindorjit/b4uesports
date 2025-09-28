@@ -24,9 +24,13 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
-    country: 'Bhutan',
+    country: 'BT', // Default to Bhutan
     language: 'en',
     profileImage: '',
+    selectedGames: {
+      pubg: true,
+      mlbb: true
+    },
     gameAccounts: {
       pubg: { ign: '', uid: '' },
       mlbb: { userId: '', zoneId: '' }
@@ -36,14 +40,38 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   const [showCountrySelector, setShowCountrySelector] = useState(false);
 
+  // Country code mapping
+  const countryCodes: Record<string, string> = {
+    'BT': '+975',
+    'IN': '+91',
+    'US': '+1',
+    'GB': '+44',
+    'CA': '+1',
+    'AU': '+61',
+    'DE': '+49',
+    'FR': '+33',
+    'JP': '+81',
+    'KR': '+82',
+    'SG': '+65',
+    'MY': '+60',
+    'TH': '+66',
+    'ID': '+62',
+    'PH': '+63',
+    'VN': '+84'
+  };
+
   useEffect(() => {
     if (user && isOpen) {
       setFormData({
         email: user.email || '',
         phone: user.phone || '',
-        country: user.country || 'Bhutan',
+        country: user.country || 'BT',
         language: user.language || 'en',
         profileImage: user.profileImage || '',
+        selectedGames: {
+          pubg: user.gameAccounts?.pubg !== undefined,
+          mlbb: user.gameAccounts?.mlbb !== undefined
+        },
         gameAccounts: {
           pubg: {
             ign: user.gameAccounts?.pubg?.ign || '',
@@ -82,10 +110,22 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       return;
     }
 
+    // Prepare game accounts data based on selection
+    const gameAccounts: any = {};
+    if (formData.selectedGames.pubg) {
+      gameAccounts.pubg = formData.gameAccounts.pubg;
+    }
+    if (formData.selectedGames.mlbb) {
+      gameAccounts.mlbb = formData.gameAccounts.mlbb;
+    }
+
     try {
       const response = await apiRequest('POST', '/api/users', {
         action: 'updateProfile',
-        data: formData
+        data: {
+          ...formData,
+          gameAccounts
+        }
       });
       
       if (!response.ok) {
@@ -111,6 +151,16 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }));
+  };
+
+  const handleGameSelectionChange = (game: 'pubg' | 'mlbb', isSelected: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedGames: {
+        ...prev.selectedGames,
+        [game]: isSelected
+      }
     }));
   };
 
@@ -143,6 +193,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   };
 
   const selectedCountry = COUNTRIES.find(c => c.code === formData.country);
+  const countryCode = countryCodes[formData.country] || '+975'; // Default to Bhutan
 
   return (
     <>
@@ -213,32 +264,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       data-testid="pi-wallet"
                     />
                   </div>
-                  <div>
-                    <Label>Email *</Label>
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                      placeholder="your-email@gmail.com"
-                      data-testid="input-email"
-                    />
-                  </div>
-                  <div>
-                    <Label>Contact Number *</Label>
-                    <Input
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(e) => {
-                        // Only allow numbers
-                        const value = e.target.value.replace(/\D/g, '');
-                        handleInputChange('phone', value);
-                      }}
-                      placeholder="+97517875099"
-                      data-testid="input-phone"
-                    />
-                  </div>
-                  <div>
-                    <Label>Country</Label>
+                  <div className="md:col-span-2">
+                    <Label>Country *</Label>
                     <div className="flex space-x-2">
                       <Select 
                         value={formData.country} 
@@ -273,6 +300,36 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       </Button>
                     </div>
                   </div>
+                  <div className="md:col-span-2">
+                    <Label>Contact Number *</Label>
+                    <div className="flex">
+                      <div className="bg-muted border border-r-0 rounded-l-md px-3 flex items-center">
+                        {countryCode}
+                      </div>
+                      <Input
+                        type="tel"
+                        value={formData.phone}
+                        onChange={(e) => {
+                          // Only allow numbers
+                          const value = e.target.value.replace(/\D/g, '');
+                          handleInputChange('phone', value);
+                        }}
+                        placeholder="17875099"
+                        className="rounded-l-none"
+                        data-testid="input-phone"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Email *</Label>
+                    <Input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      placeholder="your-email@gmail.com"
+                      data-testid="input-email"
+                    />
+                  </div>
                   <div>
                     <Label>Language</Label>
                     <Select 
@@ -301,84 +358,129 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 <CardTitle>Game Accounts</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* PUBG Mobile */}
-                <div>
-                  <div className="flex items-center mb-3">
-                    <img 
-                      src={GAME_LOGOS.PUBG} 
-                      alt="PUBG Mobile" 
-                      className="w-8 h-8 mr-2"
-                    />
-                    <h3 className="text-lg font-semibold">PUBG Mobile</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>In-Game Name (IGN)</Label>
-                      <Input
-                        value={formData.gameAccounts.pubg.ign}
-                        onChange={(e) => handleGameAccountChange('pubg', 'ign', e.target.value)}
-                        placeholder="Your PUBG IGN"
-                        data-testid="pubg-ign"
+                {/* Game Selection */}
+                <div className="mb-4">
+                  <Label className="mb-2 block">Select Games You Play</Label>
+                  <div className="flex flex-wrap gap-4">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="play-pubg"
+                        checked={formData.selectedGames.pubg}
+                        onChange={(e) => handleGameSelectionChange('pubg', e.target.checked)}
+                        className="mr-2 h-5 w-5"
                       />
+                      <Label htmlFor="play-pubg" className="flex items-center">
+                        <img 
+                          src={GAME_LOGOS.PUBG} 
+                          alt="PUBG Mobile" 
+                          className="w-6 h-6 mr-2"
+                        />
+                        PUBG Mobile
+                      </Label>
                     </div>
-                    <div>
-                      <Label>Player UID</Label>
-                      <Input
-                        value={formData.gameAccounts.pubg.uid}
-                        onChange={(e) => {
-                          // Only allow numbers
-                          const value = e.target.value.replace(/\D/g, '');
-                          handleGameAccountChange('pubg', 'uid', value);
-                        }}
-                        placeholder="Your PUBG UID"
-                        className="font-mono"
-                        data-testid="pubg-uid"
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id="play-mlbb"
+                        checked={formData.selectedGames.mlbb}
+                        onChange={(e) => handleGameSelectionChange('mlbb', e.target.checked)}
+                        className="mr-2 h-5 w-5"
                       />
+                      <Label htmlFor="play-mlbb" className="flex items-center">
+                        <img 
+                          src={GAME_LOGOS.MLBB} 
+                          alt="Mobile Legends" 
+                          className="w-6 h-6 mr-2"
+                        />
+                        Mobile Legends
+                      </Label>
                     </div>
                   </div>
                 </div>
 
+                {/* PUBG Mobile */}
+                {formData.selectedGames.pubg && (
+                  <div className="border border-border rounded-lg p-4">
+                    <div className="flex items-center mb-3">
+                      <img 
+                        src={GAME_LOGOS.PUBG} 
+                        alt="PUBG Mobile" 
+                        className="w-8 h-8 mr-2"
+                      />
+                      <h3 className="text-lg font-semibold">PUBG Mobile</h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>In-Game Name (IGN)</Label>
+                        <Input
+                          value={formData.gameAccounts.pubg.ign}
+                          onChange={(e) => handleGameAccountChange('pubg', 'ign', e.target.value)}
+                          placeholder="Your PUBG IGN"
+                          data-testid="pubg-ign"
+                        />
+                      </div>
+                      <div>
+                        <Label>Player UID</Label>
+                        <Input
+                          value={formData.gameAccounts.pubg.uid}
+                          onChange={(e) => {
+                            // Only allow numbers
+                            const value = e.target.value.replace(/\D/g, '');
+                            handleGameAccountChange('pubg', 'uid', value);
+                          }}
+                          placeholder="Your PUBG UID"
+                          className="font-mono"
+                          data-testid="pubg-uid"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Mobile Legends */}
-                <div>
-                  <div className="flex items-center mb-3">
-                    <img 
-                      src={GAME_LOGOS.MLBB} 
-                      alt="Mobile Legends" 
-                      className="w-8 h-8 mr-2"
-                    />
-                    <h3 className="text-lg font-semibold">Mobile Legends</h3>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label>User ID</Label>
-                      <Input
-                        value={formData.gameAccounts.mlbb.userId}
-                        onChange={(e) => {
-                          // Only allow numbers
-                          const value = e.target.value.replace(/\D/g, '');
-                          handleGameAccountChange('mlbb', 'userId', value);
-                        }}
-                        placeholder="Your MLBB User ID"
-                        className="font-mono"
-                        data-testid="mlbb-user-id"
+                {formData.selectedGames.mlbb && (
+                  <div className="border border-border rounded-lg p-4">
+                    <div className="flex items-center mb-3">
+                      <img 
+                        src={GAME_LOGOS.MLBB} 
+                        alt="Mobile Legends" 
+                        className="w-8 h-8 mr-2"
                       />
+                      <h3 className="text-lg font-semibold">Mobile Legends</h3>
                     </div>
-                    <div>
-                      <Label>Zone ID</Label>
-                      <Input
-                        value={formData.gameAccounts.mlbb.zoneId}
-                        onChange={(e) => {
-                          // Only allow numbers
-                          const value = e.target.value.replace(/\D/g, '');
-                          handleGameAccountChange('mlbb', 'zoneId', value);
-                        }}
-                        placeholder="Your MLBB Zone ID"
-                        className="font-mono"
-                        data-testid="mlbb-zone-id"
-                      />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>User ID</Label>
+                        <Input
+                          value={formData.gameAccounts.mlbb.userId}
+                          onChange={(e) => {
+                            // Only allow numbers
+                            const value = e.target.value.replace(/\D/g, '');
+                            handleGameAccountChange('mlbb', 'userId', value);
+                          }}
+                          placeholder="Your MLBB User ID"
+                          className="font-mono"
+                          data-testid="mlbb-user-id"
+                        />
+                      </div>
+                      <div>
+                        <Label>Zone ID</Label>
+                        <Input
+                          value={formData.gameAccounts.mlbb.zoneId}
+                          onChange={(e) => {
+                            // Only allow numbers
+                            const value = e.target.value.replace(/\D/g, '');
+                            handleGameAccountChange('mlbb', 'zoneId', value);
+                          }}
+                          placeholder="Your MLBB Zone ID"
+                          className="font-mono"
+                          data-testid="mlbb-zone-id"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
