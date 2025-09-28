@@ -1,15 +1,32 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { piNetworkService } from "./services/pi-network";
-import { pricingService } from "./services/pricing";
-import { sendPurchaseConfirmationEmail } from "./services/email";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { insertUserSchema, insertPackageSchema } from "@shared/schema";
 import { z } from "zod";
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
+
+// Dynamic import functions for Vercel compatibility
+async function getStorage() {
+  const storageModule = await import("./storage");
+  return storageModule.storage;
+}
+
+async function getPiNetworkService() {
+  const piNetworkModule = await import("./services/pi-network");
+  return piNetworkModule.piNetworkService;
+}
+
+async function getPricingService() {
+  const pricingModule = await import("./services/pricing");
+  return pricingModule.pricingService;
+}
+
+async function getEmailService() {
+  const emailModule = await import("./services/email");
+  return emailModule.sendPurchaseConfirmationEmail;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Middleware for admin authentication
@@ -20,6 +37,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
+      const storage = await getStorage();
       const decoded = jwt.verify(token, JWT_SECRET) as any;
       const admin = await storage.getAdminByUsername(decoded.username);
       if (!admin || !admin.isActive) {
@@ -37,6 +55,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { action, data } = req.body;
     
     try {
+      const storage = await getStorage();
+      const piNetworkService = await getPiNetworkService();
+      
       switch (action) {
         case 'authenticate':
           const { accessToken } = data;
@@ -147,6 +168,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Consolidated API endpoint for package operations
   app.get('/api/packages', async (req: Request, res: Response) => {
     try {
+      const storage = await getStorage();
+      const pricingService = await getPricingService();
+      
       const packages = await storage.getActivePackages();
       const currentPiPrice = await pricingService.getCurrentPiPrice();
 
@@ -166,6 +190,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current Pi price
   app.get('/api/pi-price', async (req: Request, res: Response) => {
     try {
+      const pricingService = await getPricingService();
+      
       const price = await pricingService.getCurrentPiPrice();
       const lastPrice = pricingService.getLastPrice();
       
@@ -184,6 +210,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { action, data } = req.body;
     
     try {
+      const storage = await getStorage();
+      const pricingService = await getPricingService();
+      const piNetworkService = await getPiNetworkService();
+      const sendPurchaseConfirmationEmail = await getEmailService();
+      
       switch (action) {
         case 'approve':
           const { paymentId } = data;
@@ -300,9 +331,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user transactions
+  // Consolidated API endpoint for transaction operations
   app.get('/api/transactions', async (req: Request, res: Response) => {
     try {
+      const storage = await getStorage();
+      
       const token = req.headers.authorization?.replace('Bearer ', '');
       if (!token) {
         return res.status(401).json({ message: 'No token provided' });
@@ -319,11 +352,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Consolidated API endpoint for admin operations
+  // Admin routes
   app.post('/api/admin', authenticateAdmin, async (req: Request, res: Response) => {
     const { action, data } = req.body;
     
     try {
+      const storage = await getStorage();
+      
       switch (action) {
         case 'analytics':
           const analytics = await storage.getAnalytics();
@@ -338,8 +373,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.json(packages);
 
         case 'createPackage':
-          const packageData = insertPackageSchema.parse(data);
-          const newPackage = await storage.createPackage(packageData);
+          // Validate package data
+          const validatedData = insertPackageSchema.parse(data);
+          const newPackage = await storage.createPackage(validatedData);
           return res.json(newPackage);
 
         case 'updatePackage':
@@ -357,10 +393,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       console.error('Admin operation error:', error);
+      
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: 'Validation error', 
+          errors: error.errors 
+        });
+      }
+      
       return res.status(500).json({ message: 'Admin operation failed' });
     }
   });
 
-  const httpServer = createServer(app);
-  return httpServer;
+  // Health check endpoint
+  app.get('/api/health', (req: Request, res: Response) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  // Start server
+  const PORT = process.env.PORT || 3000;
+  const server = createServer(app);
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+
+  return server;
 }
