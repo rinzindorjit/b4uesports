@@ -1,29 +1,19 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "dist/index.js",
+      "use": "@vercel/node"
+    }
+  ],
   "routes": [
     {
       "src": "/api/(.*)",
       "dest": "/dist/index.js"
     },
     {
-      "src": "/assets/(.*)",
-      "dest": "/dist/public/assets/$1"
-    },
-    {
-      "src": "/(.*)\\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json|xml|txt|map|webp|avif|mp4|webm|ogg|mp3|wav|flac|aac|woff2|woff|ttf|eot|pdf|zip|rar|7z|tar|gz|bz2|doc|docx|xls|xlsx|ppt|pptx|odt|ods|odp|odg|odf|rtf|wasm|webmanifest|manifest|webapp)$",
-      "dest": "/dist/public/$1.$2"
-    },
-    {
-      "src": "/",
-      "dest": "/dist/public/index.html"
-    },
-    {
       "src": "/(.*)",
       "dest": "/dist/index.js"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "regions": ["iad1"]
+  ]
 }
