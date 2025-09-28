@@ -3,43 +3,17 @@
   "buildCommand": "node build-with-copy.cjs",
   "outputDirectory": "dist/public",
   "rewrites": [
-    {
-      "source": "/api/users",
-      "destination": "/api/users"
-    },
-    {
-      "source": "/api/packages",
-      "destination": "/api/packages"
-    },
-    {
-      "source": "/api/pi-price",
-      "destination": "/api/pi-price"
-    },
-    {
-      "source": "/api/payments",
-      "destination": "/api/payments"
-    },
-    {
-      "source": "/api/transactions",
-      "destination": "/api/transactions"
-    },
-    {
-      "source": "/api/admin",
-      "destination": "/api/admin"
-    },
-    {
-      "source": "/api/test",
-      "destination": "/api/test"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/dist/vercel-handler"
-    }
+    { "source": "/api/users", "destination": "/api/users" },
+    { "source": "/api/packages", "destination": "/api/packages" },
+    { "source": "/api/pi-price", "destination": "/api/pi-price" },
+    { "source": "/api/payments", "destination": "/api/payments" },
+    { "source": "/api/transactions", "destination": "/api/transactions" },
+    { "source": "/api/admin", "destination": "/api/admin" },
+    { "source": "/api/test", "destination": "/api/test" },
+    { "source": "/(.*)", "destination": "/dist/public/$1" }
   ],
   "builds": [
-    {
-      "src": "dist/vercel-handler.js",
-      "use": "@vercel/node"
-    }
+    { "src": "dist/vercel-handler.js", "use": "@vercel/node" },
+    { "src": "dist/public/**", "use": "@vercel/static" }
   ]
 }
