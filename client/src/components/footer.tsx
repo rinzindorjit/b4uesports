@@ -29,9 +29,9 @@ export default function Footer() {
                 </a>
               </p>
               <p className="text-muted-foreground">
-                <i className="fas fa-phone mr-2"></i>
-                <a href={`tel:${CONTACT_INFO.PHONE}`} className="hover:text-primary" data-testid="contact-phone">
-                  {CONTACT_INFO.PHONE}
+                <i className="fab fa-whatsapp mr-2"></i>
+                <a href="https://wa.me/+97517875099" target="_blank" rel="noopener noreferrer" className="hover:text-primary" data-testid="contact-whatsapp">
+                  WhatsApp: +975 17875099
                 </a>
               </p>
             </div>

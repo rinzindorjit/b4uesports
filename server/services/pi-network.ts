@@ -1,12 +1,19 @@
 import axios from 'axios';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Use Testnet API for all requests
 const PI_API_BASE = 'https://sandbox.minepi.com';
 const SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
 
-if (!SERVER_API_KEY) {
+// Only require PI_SERVER_API_KEY in production mode
+if (process.env.NODE_ENV !== 'development' && !SERVER_API_KEY) {
   throw new Error("PI_SERVER_API_KEY environment variable must be set");
 }
+
+// Use a mock API key in development mode
+const API_KEY = SERVER_API_KEY || 'mock_pi_server_api_key_for_development';
 
 export interface PiUser {
   uid: string;
@@ -55,7 +62,7 @@ export class PiNetworkService {
   private apiKey: string;
 
   constructor() {
-    this.apiKey = SERVER_API_KEY!;
+    this.apiKey = API_KEY;
   }
 
   async verifyAccessToken(accessToken: string): Promise<PiUser | null> {

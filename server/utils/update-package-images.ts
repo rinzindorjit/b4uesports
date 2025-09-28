@@ -28,8 +28,8 @@ async function updatePackageImages() {
 }
 
 // Run the update if this script is executed directly
-if (require.main === module) {
-  updatePackageImages();
-}
+// if (require.main === module) {
+//   updatePackageImages();
+// }
 
 export { updatePackageImages };

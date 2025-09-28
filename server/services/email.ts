@@ -1,12 +1,8 @@
-import { MailService } from '@sendgrid/mail';
+import axios from 'axios';
 
-if (!process.env.SENDGRID_API_KEY) {
-  console.warn("SENDGRID_API_KEY environment variable not set - email notifications will be disabled");
-}
-
-const mailService = new MailService();
-if (process.env.SENDGRID_API_KEY) {
-  mailService.setApiKey(process.env.SENDGRID_API_KEY);
+// Check for EmailJS configuration
+if (!process.env.EMAILJS_SERVICE_ID || !process.env.EMAILJS_TEMPLATE_ID || !process.env.EMAILJS_PUBLIC_KEY) {
+  console.warn("EmailJS environment variables not set - email notifications will be disabled");
 }
 
 interface PurchaseEmailParams {
@@ -22,8 +18,9 @@ interface PurchaseEmailParams {
 }
 
 export async function sendPurchaseConfirmationEmail(params: PurchaseEmailParams): Promise<boolean> {
-  if (!process.env.SENDGRID_API_KEY) {
-    console.log("Email notification skipped - SendGrid not configured");
+  // Check if EmailJS is configured
+  if (!process.env.EMAILJS_SERVICE_ID || !process.env.EMAILJS_TEMPLATE_ID || !process.env.EMAILJS_PUBLIC_KEY) {
+    console.log("Email notification skipped - EmailJS not configured");
     return false;
   }
 
@@ -111,15 +108,28 @@ export async function sendPurchaseConfirmationEmail(params: PurchaseEmailParams)
   `;
 
   try {
-    await mailService.send({
-      to: params.to,
-      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@b4uesports.com',
-      subject: `Purchase Confirmation - ${params.packageName} - B4U Esports`,
-      html: emailHTML,
+    // Send email via EmailJS
+    const response = await axios.post('https://api.emailjs.com/api/v1.0/email/send', {
+      service_id: process.env.EMAILJS_SERVICE_ID,
+      template_id: process.env.EMAILJS_TEMPLATE_ID,
+      user_id: process.env.EMAILJS_PUBLIC_KEY,
+      template_params: {
+        to_email: params.to,
+        from_name: 'B4U Esports',
+        subject: `Purchase Confirmation - ${params.packageName} - B4U Esports`,
+        message_html: emailHTML,
+        // Add any other template parameters you need
+      }
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
     });
+
+    console.log('Email sent successfully via EmailJS');
     return true;
   } catch (error) {
-    console.error('SendGrid email error:', error);
+    console.error('EmailJS email error:', error);
     return false;
   }
 }

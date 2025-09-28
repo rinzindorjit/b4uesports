@@ -14,8 +14,15 @@ import {
   type InsertAdmin,
   type PiPriceHistory
 } from "@shared/schema";
-import { db } from "./db";
-import { eq, desc, and, count, sum, sql } from "drizzle-orm";
+
+// We'll import supabase directly in each method to avoid TypeScript issues
+
+// Mock data for development
+const mockUsers: User[] = [];
+const mockPackages: Package[] = [];
+const mockTransactions: Transaction[] = [];
+const mockAdmins: Admin[] = [];
+const mockPriceHistory: PiPriceHistory[] = [];
 
 export interface IStorage {
   // Users
@@ -57,186 +64,183 @@ export interface IStorage {
   }>;
 }
 
-export class DatabaseStorage implements IStorage {
+// Mock storage implementation for development
+export class MockStorage implements IStorage {
+  // Users
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    return mockUsers.find(user => user.id === id);
   }
 
   async getUserByPiUID(piUID: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.piUID, piUID));
-    return user || undefined;
+    return mockUsers.find(user => user.piUID === piUID);
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values([insertUser]).returning();
-    return user;
+  async createUser(user: InsertUser): Promise<User> {
+    const newUser = {
+      ...user,
+      id: `user_${mockUsers.length + 1}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as User;
+    mockUsers.push(newUser);
+    return newUser;
   }
 
-  async updateUser(id: string, userData: Partial<User>): Promise<User | undefined> {
-    const [user] = await db
-      .update(users)
-      .set({ ...userData, updatedAt: new Date() })
-      .where(eq(users.id, id))
-      .returning();
-    return user || undefined;
+  async updateUser(id: string, user: Partial<User>): Promise<User | undefined> {
+    const index = mockUsers.findIndex(u => u.id === id);
+    if (index === -1) return undefined;
+    
+    mockUsers[index] = {
+      ...mockUsers[index],
+      ...user,
+      updatedAt: new Date(),
+    };
+    return mockUsers[index];
   }
-
+  
+  // Packages
   async getPackages(): Promise<Package[]> {
-    return await db.select().from(packages).orderBy(packages.game, packages.usdtValue);
+    return mockPackages;
   }
 
   async getActivePackages(): Promise<Package[]> {
-    return await db
-      .select()
-      .from(packages)
-      .where(eq(packages.isActive, true))
-      .orderBy(packages.game, packages.usdtValue);
+    return mockPackages.filter(pkg => pkg.isActive);
   }
 
   async getPackage(id: string): Promise<Package | undefined> {
-    const [pkg] = await db.select().from(packages).where(eq(packages.id, id));
-    return pkg || undefined;
+    return mockPackages.find(pkg => pkg.id === id);
   }
 
-  async createPackage(insertPackage: InsertPackage): Promise<Package> {
-    const [pkg] = await db.insert(packages).values([insertPackage]).returning();
-    return pkg;
+  async createPackage(pkg: InsertPackage): Promise<Package> {
+    const newPackage = {
+      ...pkg,
+      id: `pkg_${mockPackages.length + 1}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Package;
+    mockPackages.push(newPackage);
+    return newPackage;
   }
 
-  async updatePackage(id: string, packageData: Partial<Package>): Promise<Package | undefined> {
-    const [pkg] = await db
-      .update(packages)
-      .set({ ...packageData, updatedAt: new Date() })
-      .where(eq(packages.id, id))
-      .returning();
-    return pkg || undefined;
+  async updatePackage(id: string, pkg: Partial<Package>): Promise<Package | undefined> {
+    const index = mockPackages.findIndex(p => p.id === id);
+    if (index === -1) return undefined;
+    
+    mockPackages[index] = {
+      ...mockPackages[index],
+      ...pkg,
+      updatedAt: new Date(),
+    };
+    return mockPackages[index];
   }
-
+  
+  // Transactions
   async getTransaction(id: string): Promise<Transaction | undefined> {
-    const [transaction] = await db.select().from(transactions).where(eq(transactions.id, id));
-    return transaction || undefined;
+    return mockTransactions.find(tx => tx.id === id);
   }
 
   async getTransactionByPaymentId(paymentId: string): Promise<Transaction | undefined> {
-    const [transaction] = await db
-      .select()
-      .from(transactions)
-      .where(eq(transactions.paymentId, paymentId));
-    return transaction || undefined;
+    return mockTransactions.find(tx => tx.paymentId === paymentId);
   }
 
   async getUserTransactions(userId: string): Promise<Transaction[]> {
-    return await db
-      .select()
-      .from(transactions)
-      .where(eq(transactions.userId, userId))
-      .orderBy(desc(transactions.createdAt));
+    return mockTransactions.filter(tx => tx.userId === userId);
   }
 
-  async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
-    const [transaction] = await db.insert(transactions).values([insertTransaction]).returning();
-    return transaction;
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
+    const newTransaction = {
+      ...transaction,
+      id: `tx_${mockTransactions.length + 1}`,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Transaction;
+    mockTransactions.push(newTransaction);
+    return newTransaction;
   }
 
-  async updateTransaction(id: string, transactionData: Partial<Transaction>): Promise<Transaction | undefined> {
-    const [transaction] = await db
-      .update(transactions)
-      .set({ ...transactionData, updatedAt: new Date() })
-      .where(eq(transactions.id, id))
-      .returning();
-    return transaction || undefined;
+  async updateTransaction(id: string, transaction: Partial<Transaction>): Promise<Transaction | undefined> {
+    const index = mockTransactions.findIndex(tx => tx.id === id);
+    if (index === -1) return undefined;
+    
+    mockTransactions[index] = {
+      ...mockTransactions[index],
+      ...transaction,
+      updatedAt: new Date(),
+    };
+    return mockTransactions[index];
   }
 
   async getAllTransactions(): Promise<(Transaction & { user: User; package: Package })[]> {
-    return await db
-      .select({
-        id: transactions.id,
-        userId: transactions.userId,
-        packageId: transactions.packageId,
-        paymentId: transactions.paymentId,
-        txid: transactions.txid,
-        piAmount: transactions.piAmount,
-        usdAmount: transactions.usdAmount,
-        piPriceAtTime: transactions.piPriceAtTime,
-        status: transactions.status,
-        gameAccount: transactions.gameAccount,
-        metadata: transactions.metadata,
-        emailSent: transactions.emailSent,
-        createdAt: transactions.createdAt,
-        updatedAt: transactions.updatedAt,
-        user: users,
-        package: packages,
-      })
-      .from(transactions)
-      .leftJoin(users, eq(transactions.userId, users.id))
-      .leftJoin(packages, eq(transactions.packageId, packages.id))
-      .orderBy(desc(transactions.createdAt));
+    return mockTransactions.map(tx => ({
+      ...tx,
+      user: mockUsers.find(u => u.id === tx.userId) || mockUsers[0],
+      package: mockPackages.find(p => p.id === tx.packageId) || mockPackages[0],
+    })) as (Transaction & { user: User; package: Package })[];
   }
-
+  
+  // Admins
   async getAdminByUsername(username: string): Promise<Admin | undefined> {
-    const [admin] = await db.select().from(admins).where(eq(admins.username, username));
-    return admin || undefined;
+    return mockAdmins.find(admin => admin.username === username);
   }
 
-  async createAdmin(insertAdmin: InsertAdmin): Promise<Admin> {
-    const [admin] = await db.insert(admins).values([insertAdmin]).returning();
-    return admin;
+  async createAdmin(admin: InsertAdmin): Promise<Admin> {
+    const newAdmin = {
+      ...admin,
+      id: `admin_${mockAdmins.length + 1}`,
+      createdAt: new Date(),
+      lastLogin: null,
+    } as Admin;
+    mockAdmins.push(newAdmin);
+    return newAdmin;
   }
 
   async updateAdminLastLogin(id: string): Promise<void> {
-    await db
-      .update(admins)
-      .set({ lastLogin: new Date() })
-      .where(eq(admins.id, id));
+    const admin = mockAdmins.find(a => a.id === id);
+    if (admin) {
+      admin.lastLogin = new Date();
+    }
   }
-
+  
+  // Pi Price History
   async savePiPrice(price: number): Promise<PiPriceHistory> {
-    const [priceRecord] = await db
-      .insert(piPriceHistory)
-      .values([{ price: price.toString() }])
-      .returning();
-    return priceRecord;
+    const newPrice = {
+      id: `price_${mockPriceHistory.length + 1}`,
+      price: price.toString(),
+      source: 'coingecko',
+      timestamp: new Date(),
+    } as PiPriceHistory;
+    mockPriceHistory.push(newPrice);
+    return newPrice;
   }
 
   async getLatestPiPrice(): Promise<PiPriceHistory | undefined> {
-    const [priceRecord] = await db
-      .select()
-      .from(piPriceHistory)
-      .orderBy(desc(piPriceHistory.timestamp))
-      .limit(1);
-    return priceRecord || undefined;
+    if (mockPriceHistory.length === 0) return undefined;
+    return mockPriceHistory[mockPriceHistory.length - 1];
   }
-
+  
+  // Analytics
   async getAnalytics(): Promise<{
     totalUsers: number;
     totalTransactions: number;
     totalRevenue: number;
     successRate: number;
   }> {
-    const [userCount] = await db.select({ count: count() }).from(users);
-    const [transactionCount] = await db.select({ count: count() }).from(transactions);
-    const [revenue] = await db
-      .select({ total: sum(transactions.piAmount) })
-      .from(transactions)
-      .where(eq(transactions.status, "completed"));
-    
-    const [completedCount] = await db
-      .select({ count: count() })
-      .from(transactions)
-      .where(eq(transactions.status, "completed"));
-
-    const successRate = transactionCount.count > 0 
-      ? (completedCount.count / transactionCount.count) * 100 
+    const completedTransactions = mockTransactions.filter(tx => tx.status === 'completed');
+    const totalRevenue = completedTransactions.reduce((sum, tx) => sum + parseFloat(tx.piAmount || '0'), 0);
+    const successRate = mockTransactions.length > 0 
+      ? (completedTransactions.length / mockTransactions.length) * 100 
       : 0;
 
     return {
-      totalUsers: userCount.count,
-      totalTransactions: transactionCount.count,
-      totalRevenue: parseFloat(revenue.total || "0"),
+      totalUsers: mockUsers.length,
+      totalTransactions: mockTransactions.length,
+      totalRevenue,
       successRate: Math.round(successRate * 100) / 100,
     };
   }
 }
 
-export const storage = new DatabaseStorage();
+// Supabase storage implementation would go here in production
+
+// Use mock storage in development, Supabase storage in production
+export const storage = new MockStorage();

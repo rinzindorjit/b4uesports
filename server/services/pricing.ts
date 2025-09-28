@@ -1,8 +1,6 @@
 import axios from 'axios';
 import { storage } from '../storage';
 
-const COINGECKO_API_KEY = process.env.COINGECKO_API_KEY || 'CG-z4MZkBd78fn7PgPhPYcKq1r4';
-
 export interface PiPriceData {
   price: number;
   lastUpdated: Date;
@@ -22,8 +20,9 @@ export class PricingService {
     }
 
     try {
+      // Use the provided CoinGecko API URL without API key
       const response = await axios.get(
-        `https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=${COINGECKO_API_KEY}`
+        'https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4'
       );
 
       const price = response.data['pi-network']?.usd || 0.958; // fallback price

@@ -8,7 +8,7 @@ import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import PiAuthModal from '@/components/pi-auth-modal';
 import { Button } from '@/components/ui/button';
-import { BRAND_LOGOS, PACKAGE_IMAGES } from '@/lib/constants';
+import { BRAND_LOGOS, GAME_LOGOS } from '@/lib/constants';
 import type { Package } from '@/types/pi-network';
 
 export default function Landing() {
@@ -40,9 +40,6 @@ export default function Landing() {
   const { data: packages, isLoading: packagesLoading } = useQuery<Package[]>({
     queryKey: ['/api/packages'],
   });
-
-  const featuredPubgPackages = packages?.filter(pkg => pkg.game === 'PUBG').slice(0, 2) || [];
-  const featuredMlbbPackages = packages?.filter(pkg => pkg.game === 'MLBB').slice(0, 2) || [];
 
   return (
     <div className="min-h-screen bg-background text-foreground" data-testid="landing-page">
@@ -119,9 +116,9 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Featured Packages */}
+          {/* In-Game Tokens Section */}
           <div className="text-center mb-12" data-testid="featured-packages">
-            <h3 className="text-3xl font-bold mb-8">Featured Packages</h3>
+            <h3 className="text-3xl font-bold mb-8">In-Game Tokens</h3>
             
             {/* Live Pi Price Display */}
             {piPrice && (
@@ -137,55 +134,51 @@ export default function Landing() {
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* PUBG Package */}
+              {/* PUBG Tokens */}
               <div className="game-card p-8 rounded-xl" data-testid="featured-pubg">
-                <div className="flex items-center justify-center mb-6">
+                <div className="flex flex-col items-center justify-center mb-6">
                   <img 
-                    src={PACKAGE_IMAGES.PUBG} 
+                    src={GAME_LOGOS.PUBG} 
                     alt="PUBG Mobile" 
-                    className="w-16 h-16 mr-4 object-contain"
+                    className="w-24 h-24 object-contain mb-4"
                     data-testid="pubg-logo"
                   />
-                  <h4 className="text-2xl font-bold">PUBG Mobile</h4>
+                  <h4 className="text-2xl font-bold">PUBG Mobile UC</h4>
                 </div>
-                <div className="space-y-4">
-                  {featuredPubgPackages.map((pkg, index) => (
-                    <div key={pkg.id} className="flex justify-between items-center p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors" data-testid={`pubg-package-${index}`}>
-                      <span>{pkg.name}</span>
-                      <span className="font-mono text-green-400">
-                        {pkg.piPrice ? `${pkg.piPrice.toFixed(1)} π` : 'Loading...'}
-                      </span>
-                    </div>
-                  ))}
-                  {packagesLoading && (
-                    <div className="text-muted-foreground" data-testid="loading-packages">Loading packages...</div>
-                  )}
+                <div className="space-y-4 text-left">
+                  <p className="text-muted-foreground">
+                    Purchase UC (Unknown Cash) for PUBG Mobile to unlock premium items, 
+                    outfits, and boost your gaming experience with exclusive content.
+                  </p>
+                  <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                    <li>Instant delivery to your game account</li>
+                    <li>Secure payment with Pi Network</li>
+                    <li>Wide range of UC packages available</li>
+                  </ul>
                 </div>
               </div>
 
-              {/* MLBB Package */}
+              {/* MLBB Tokens */}
               <div className="game-card p-8 rounded-xl" data-testid="featured-mlbb">
-                <div className="flex items-center justify-center mb-6">
+                <div className="flex flex-col items-center justify-center mb-6">
                   <img 
-                    src={PACKAGE_IMAGES.MLBB} 
+                    src={GAME_LOGOS.MLBB} 
                     alt="Mobile Legends" 
-                    className="w-16 h-16 mr-4 object-contain"
+                    className="w-24 h-24 object-contain mb-4"
                     data-testid="mlbb-logo"
                   />
-                  <h4 className="text-2xl font-bold">Mobile Legends</h4>
+                  <h4 className="text-2xl font-bold">Mobile Legends Diamonds</h4>
                 </div>
-                <div className="space-y-4">
-                  {featuredMlbbPackages.map((pkg, index) => (
-                    <div key={pkg.id} className="flex justify-between items-center p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors" data-testid={`mlbb-package-${index}`}>
-                      <span>{pkg.name}</span>
-                      <span className="font-mono text-green-400">
-                        {pkg.piPrice ? `${pkg.piPrice.toFixed(1)} π` : 'Loading...'}
-                      </span>
-                    </div>
-                  ))}
-                  {packagesLoading && (
-                    <div className="text-muted-foreground" data-testid="loading-packages">Loading packages...</div>
-                  )}
+                <div className="space-y-4 text-left">
+                  <p className="text-muted-foreground">
+                    Get Diamonds for Mobile Legends to buy heroes, skins, and battle passes. 
+                    Enhance your gameplay with our fast and reliable token delivery system.
+                  </p>
+                  <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                    <li>Quick and secure delivery</li>
+                    <li>Competitive Pi pricing</li>
+                    <li>24/7 customer support</li>
+                  </ul>
                 </div>
               </div>
             </div>

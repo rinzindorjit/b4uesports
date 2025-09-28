@@ -6,7 +6,10 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
-          "dist/**"
+          "dist/**",
+          "client/**",
+          "shared/**",
+          "server/**"
         ]
       }
     }
@@ -23,5 +26,6 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  }
+  },
+  "regions": ["iad1"]
 }

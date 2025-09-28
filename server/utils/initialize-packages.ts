@@ -56,8 +56,8 @@ async function initializePackages() {
 }
 
 // Run the initialization if this script is executed directly
-if (require.main === module) {
-  initializePackages();
-}
+// if (require.main === module) {
+//   initializePackages();
+// }
 
 export { initializePackages };

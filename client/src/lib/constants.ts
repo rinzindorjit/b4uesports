@@ -1,6 +1,6 @@
 export const GAME_LOGOS = {
-  PUBG: "https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png",
-  MLBB: "https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png"
+  PUBG: "https://upload.wikimedia.org/wikipedia/en/4/47/PUBG_Mobile_Logo.jpg",
+  MLBB: "https://upload.wikimedia.org/wikipedia/en/0/07/Mobile_Legends_logo.png"
 };
 
 export const BRAND_LOGOS = {
