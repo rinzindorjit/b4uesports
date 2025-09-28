@@ -1,6 +1,6 @@
 export const GAME_LOGOS = {
-  PUBG: "https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png",
-  MLBB: "https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png"
+  PUBG: "https://cdn.midasbuy.com/images/pubgm_app-icon_512x512%281%29.e9f7efc0.png",
+  MLBB: "https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTT-Neggt-JpAh4eDx84JswmFwJMOa4pcfhqtcTcxtywIGC4IfB"
 };
 
 export const BRAND_LOGOS = {
