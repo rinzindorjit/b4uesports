@@ -98,7 +98,7 @@ export default function Dashboard() {
               <div className="pi-price-ticker px-6 py-3 rounded-lg" data-testid="pi-price-dashboard">
                 <div className="text-center">
                   <p className="text-sm text-white/80">Live Pi Price</p>
-                  <p className="text-2xl font-bold text-white">${piPrice.price.toFixed(3)}</p>
+                  <p className="text-2xl font-bold text-white">1 π = ${piPrice.price.toFixed(3)} USD</p>
                   <p className="text-xs text-white/60">Updated 60s ago</p>
                 </div>
               </div>

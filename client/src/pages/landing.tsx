@@ -65,17 +65,17 @@ export default function Landing() {
               <Button
                 onClick={handlePiLogin}
                 disabled={piLoading}
-                className="gradient-border inline-block p-0 h-auto bg-transparent hover:bg-transparent"
+                className="gradient-border inline-block p-0 h-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
                 data-testid="pi-login-button"
               >
-                <div className="gradient-border-content px-12 py-4 flex items-center space-x-4">
+                <div className="px-12 py-4 flex items-center space-x-4">
                   <img 
                     src={BRAND_LOGOS.PI} 
                     alt="Pi Network Logo" 
                     className="w-8 h-8 rounded-full"
                     data-testid="pi-logo-button"
                   />
-                  <span className="text-xl font-semibold">
+                  <span className="text-xl font-semibold text-white">
                     {piLoading ? 'Connecting...' : 'Sign In with Pi Network'}
                   </span>
                 </div>
@@ -126,7 +126,7 @@ export default function Landing() {
                 <div className="pi-price-ticker px-6 py-3 rounded-lg inline-block" data-testid="pi-price-ticker">
                   <div className="text-center">
                     <p className="text-sm text-white/80">Live Pi Price</p>
-                    <p className="text-2xl font-bold text-white">${piPrice.price.toFixed(3)}</p>
+                    <p className="text-2xl font-bold text-white">1 π = ${piPrice.price.toFixed(3)} USD</p>
                     <p className="text-xs text-white/60">Updated 60s ago</p>
                   </div>
                 </div>
