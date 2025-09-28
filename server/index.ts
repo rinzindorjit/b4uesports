@@ -1,9 +1,9 @@
 import express, { type Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
-import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
-import { initializePackages } from "./utils/initialize-packages";
-import { updatePackageImages } from "./utils/update-package-images";
+import { registerRoutes } from "./routes.ts";
+import { setupVite, serveStatic, log } from "./vite.ts";
+import { initializePackages } from "./utils/initialize-packages.ts";
+import { updatePackageImages } from "./utils/update-package-images.ts";
 
 dotenv.config();
 
