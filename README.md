@@ -1,3 +1,41 @@
+# B4U Esports
+
+B4U Esports is a gaming platform that allows users to purchase in-game currency for popular games like PUBG and Mobile Legends: Bang Bang using Pi Network cryptocurrency.
+
+## Features
+
+- User authentication with Pi Network
+- Purchase in-game currency with Pi coins
+- Real-time Pi price tracking
+- Email notifications for successful purchases
+- Admin dashboard for managing packages and transactions
+
+## Technologies Used
+
+- Frontend: React, TypeScript, Tailwind CSS
+- Backend: Node.js, Express
+- Database: PostgreSQL (with Drizzle ORM)
+- Payment Processing: Pi Network SDK
+- Deployment: Vercel
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables
+4. Run the development server: `npm run dev`
+
+## Environment Variables
+
+- `PI_SERVER_API_KEY`: Pi Network server API key
+- `JWT_SECRET`: Secret for JWT token signing
+- `DATABASE_URL`: PostgreSQL database connection string
+- `EMAILJS_SERVICE_ID`: EmailJS service ID for email notifications
+- `EMAILJS_TEMPLATE_ID`: EmailJS template ID for email notifications
+- `EMAILJS_PUBLIC_KEY`: EmailJS public key for email notifications
+
+## Force rebuild by adding a comment
+
 # B4U Esports - Pi Network Marketplace
 
 This is a gaming currency marketplace built with Pi Network integration, allowing users to purchase PUBG UC and Mobile Legends Diamonds using Pi coins.
