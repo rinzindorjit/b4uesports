@@ -11,72 +11,96 @@ const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fall
 async function getStorage() {
   // Use relative paths that work in both environments
   try {
-    // Try to import from the same directory (works in Vercel)
-    const storageModule = await import("./storage");
+    // Try to import from the server directory (works in Vercel)
+    const storageModule = await import("../server/storage");
     return storageModule.storage;
   } catch (error) {
     try {
-      // Fallback to import from parent directory (works in development)
-      const storageModule = await import("../server/storage");
+      // Fallback to import from dist/server directory (works in development)
+      const storageModule = await import("../dist/server/storage");
       return storageModule.storage;
     } catch (fallbackError) {
-      // Final fallback - rethrow original error
-      console.error('Failed to import storage module:', error);
-      throw error;
+      try {
+        // Additional fallback for direct relative import (works in some cases)
+        const storageModule = await import("./storage");
+        return storageModule.storage;
+      } catch (finalError) {
+        // Final fallback - rethrow original error
+        console.error('Failed to import storage module:', error);
+        throw error;
+      }
     }
   }
 }
 
 async function getPiNetworkService() {
   try {
-    // Try to import from the same directory (works in Vercel)
-    const piNetworkModule = await import("./services/pi-network");
+    // Try to import from the server directory (works in Vercel)
+    const piNetworkModule = await import("../server/services/pi-network");
     return piNetworkModule.piNetworkService;
   } catch (error) {
     try {
-      // Fallback to import from parent directory (works in development)
-      const piNetworkModule = await import("../server/services/pi-network");
+      // Fallback to import from dist/server directory (works in development)
+      const piNetworkModule = await import("../dist/server/services/pi-network");
       return piNetworkModule.piNetworkService;
     } catch (fallbackError) {
-      // Final fallback - rethrow original error
-      console.error('Failed to import Pi Network service:', error);
-      throw error;
+      try {
+        // Additional fallback for direct relative import (works in some cases)
+        const piNetworkModule = await import("./services/pi-network");
+        return piNetworkModule.piNetworkService;
+      } catch (finalError) {
+        // Final fallback - rethrow original error
+        console.error('Failed to import Pi Network service:', error);
+        throw error;
+      }
     }
   }
 }
 
 async function getPricingService() {
   try {
-    // Try to import from the same directory (works in Vercel)
-    const pricingModule = await import("./services/pricing");
+    // Try to import from the server directory (works in Vercel)
+    const pricingModule = await import("../server/services/pricing");
     return pricingModule.pricingService;
   } catch (error) {
     try {
-      // Fallback to import from parent directory (works in development)
-      const pricingModule = await import("../server/services/pricing");
+      // Fallback to import from dist/server directory (works in development)
+      const pricingModule = await import("../dist/server/services/pricing");
       return pricingModule.pricingService;
     } catch (fallbackError) {
-      // Final fallback - rethrow original error
-      console.error('Failed to import pricing service:', error);
-      throw error;
+      try {
+        // Additional fallback for direct relative import (works in some cases)
+        const pricingModule = await import("./services/pricing");
+        return pricingModule.pricingService;
+      } catch (finalError) {
+        // Final fallback - rethrow original error
+        console.error('Failed to import pricing service:', error);
+        throw error;
+      }
     }
   }
 }
 
 async function getEmailService() {
   try {
-    // Try to import from the same directory (works in Vercel)
-    const emailModule = await import("./services/email");
+    // Try to import from the server directory (works in Vercel)
+    const emailModule = await import("../server/services/email");
     return emailModule.sendPurchaseConfirmationEmail;
   } catch (error) {
     try {
-      // Fallback to import from parent directory (works in development)
-      const emailModule = await import("../server/services/email");
+      // Fallback to import from dist/server directory (works in development)
+      const emailModule = await import("../dist/server/services/email");
       return emailModule.sendPurchaseConfirmationEmail;
     } catch (fallbackError) {
-      // Final fallback - rethrow original error
-      console.error('Failed to import email service:', error);
-      throw error;
+      try {
+        // Additional fallback for direct relative import (works in some cases)
+        const emailModule = await import("./services/email");
+        return emailModule.sendPurchaseConfirmationEmail;
+      } catch (finalError) {
+        // Final fallback - rethrow original error
+        console.error('Failed to import email service:', error);
+        throw error;
+      }
     }
   }
 }

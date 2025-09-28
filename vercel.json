@@ -33,7 +33,13 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/dist/vercel-handler"
+    }
+  ],
+  "builds": [
+    {
+      "src": "dist/vercel-handler.js",
+      "use": "@vercel/node"
     }
   ]
 }
