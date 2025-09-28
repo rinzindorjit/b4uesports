@@ -1,3 +1,70 @@
+# B4U Esports - Pi Network Marketplace
+
+This is a gaming currency marketplace built with Pi Network integration, allowing users to purchase PUBG UC and Mobile Legends Diamonds using Pi coins.
+
+## Features
+
+- Pi Network Testnet integration for secure payments
+- Real-time Pi/USD pricing from CoinGecko API
+- Support for PUBG Mobile UC and Mobile Legends Diamonds purchases
+- Responsive design for all devices
+- Admin dashboard for managing packages and transactions
+- Email notifications for purchase confirmations
+
+## Tech Stack
+
+- Frontend: React + TypeScript + Vite
+- Backend: Node.js + Express
+- Database: Supabase
+- Authentication: Pi Network SDK
+- Deployment: Vercel
+- Styling: Tailwind CSS + Shadcn UI
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# Pi Network
+PI_SERVER_API_KEY=your_pi_server_api_key
+
+# Email Service
+EMAILJS_SERVICE_ID=your_emailjs_service_id
+EMAILJS_TEMPLATE_ID=your_emailjs_template_id
+EMAILJS_PUBLIC_KEY=your_emailjs_public_key
+
+# Database
+DATABASE_URL=your_supabase_connection_string
+
+# Security
+JWT_SECRET=your_jwt_secret
+
+# APIs
+COINGECKO_API_KEY=your_coingecko_api_key
+```
+
+## Setup
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables
+4. Run development server: `npm run dev`
+
+## Deployment
+
+This application is deployed on Vercel with automatic framework detection.
+
+## Recent Updates
+
+- Fixed Vercel deployment configuration to allow automatic framework detection
+- Resolved TypeScript compilation errors
+- Fixed module import issues for ESBuild bundling
+- Improved static asset routing
+
+## License
+
+MIT
+
 # B4U Esports - Pi Network Gaming Marketplace
 
 ## Overview
