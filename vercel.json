@@ -2,6 +2,40 @@
   "version": 2,
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "dist/public",
+  "rewrites": [
+    {
+      "source": "/api/users",
+      "destination": "/api/users"
+    },
+    {
+      "source": "/api/packages",
+      "destination": "/api/packages"
+    },
+    {
+      "source": "/api/pi-price",
+      "destination": "/api/pi-price"
+    },
+    {
+      "source": "/api/payments",
+      "destination": "/api/payments"
+    },
+    {
+      "source": "/api/transactions",
+      "destination": "/api/transactions"
+    },
+    {
+      "source": "/api/admin",
+      "destination": "/api/admin"
+    },
+    {
+      "source": "/api/test",
+      "destination": "/api/test"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/dist/vercel-handler"
+    }
+  ],
   "builds": [
     {
       "src": "dist/vercel-handler.js",
@@ -10,40 +44,6 @@
     {
       "src": "api/*.ts",
       "use": "@vercel/node"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/users",
-      "dest": "/api/users.ts"
-    },
-    {
-      "src": "/api/packages",
-      "dest": "/api/packages.ts"
-    },
-    {
-      "src": "/api/pi-price",
-      "dest": "/api/pi-price.ts"
-    },
-    {
-      "src": "/api/payments",
-      "dest": "/api/payments.ts"
-    },
-    {
-      "src": "/api/transactions",
-      "dest": "/api/transactions.ts"
-    },
-    {
-      "src": "/api/admin",
-      "dest": "/api/admin.ts"
-    },
-    {
-      "src": "/api/test",
-      "dest": "/api/test.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/dist/vercel-handler.js"
     }
   ]
 }

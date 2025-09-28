@@ -19,27 +19,10 @@ const handler = serverless(app);
 export default handler;
 
 // Export individual API endpoints for direct access
-export async function usersHandler(req: any, res: any) {
-  // This will be handled by the main handler
-  return handler(req, res);
-}
-
-export async function packagesHandler(req: any, res: any) {
-  return handler(req, res);
-}
-
-export async function piPriceHandler(req: any, res: any) {
-  return handler(req, res);
-}
-
-export async function paymentsHandler(req: any, res: any) {
-  return handler(req, res);
-}
-
-export async function transactionsHandler(req: any, res: any) {
-  return handler(req, res);
-}
-
-export async function adminHandler(req: any, res: any) {
-  return handler(req, res);
-}
+export { default as users } from '../api/users';
+export { default as packages } from '../api/packages';
+export { default as piPrice } from '../api/pi-price';
+export { default as payments } from '../api/payments';
+export { default as transactions } from '../api/transactions';
+export { default as admin } from '../api/admin';
+export { default as test } from '../api/test';
