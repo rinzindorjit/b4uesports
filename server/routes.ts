@@ -9,23 +9,61 @@ const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fall
 
 // Dynamic import functions for Vercel compatibility
 async function getStorage() {
-  const storageModule = await import("./storage");
-  return storageModule.storage;
+  // In Vercel environment, files are in dist/server/
+  // In development, files are in server/
+  const isVercel = !!process.env.VERCEL;
+  const basePath = isVercel ? "./dist/server/" : "./server/";
+  
+  try {
+    const storageModule = await import(`${basePath}storage`);
+    return storageModule.storage;
+  } catch (error) {
+    // Fallback to direct import for development
+    const storageModule = await import("./storage");
+    return storageModule.storage;
+  }
 }
 
 async function getPiNetworkService() {
-  const piNetworkModule = await import("./services/pi-network");
-  return piNetworkModule.piNetworkService;
+  const isVercel = !!process.env.VERCEL;
+  const basePath = isVercel ? "./dist/server/" : "./server/";
+  
+  try {
+    const piNetworkModule = await import(`${basePath}services/pi-network`);
+    return piNetworkModule.piNetworkService;
+  } catch (error) {
+    // Fallback to direct import for development
+    const piNetworkModule = await import("./services/pi-network");
+    return piNetworkModule.piNetworkService;
+  }
 }
 
 async function getPricingService() {
-  const pricingModule = await import("./services/pricing");
-  return pricingModule.pricingService;
+  const isVercel = !!process.env.VERCEL;
+  const basePath = isVercel ? "./dist/server/" : "./server/";
+  
+  try {
+    const pricingModule = await import(`${basePath}services/pricing`);
+    return pricingModule.pricingService;
+  } catch (error) {
+    // Fallback to direct import for development
+    const pricingModule = await import("./services/pricing");
+    return pricingModule.pricingService;
+  }
 }
 
 async function getEmailService() {
-  const emailModule = await import("./services/email");
-  return emailModule.sendPurchaseConfirmationEmail;
+  const isVercel = !!process.env.VERCEL;
+  const basePath = isVercel ? "./dist/server/" : "./server/";
+  
+  try {
+    const emailModule = await import(`${basePath}services/email`);
+    return emailModule.sendPurchaseConfirmationEmail;
+  } catch (error) {
+    // Fallback to direct import for development
+    const emailModule = await import("./services/email");
+    return emailModule.sendPurchaseConfirmationEmail;
+  }
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -174,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const packages = await storage.getActivePackages();
       const currentPiPrice = await pricingService.getCurrentPiPrice();
 
-      const packagesWithPiPricing = packages.map(pkg => ({
+      const packagesWithPiPricing = packages.map((pkg: any) => ({
         ...pkg,
         piPrice: pricingService.calculatePiAmount(parseFloat(pkg.usdtValue)),
         currentPiPrice,

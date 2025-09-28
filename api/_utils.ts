@@ -31,8 +31,19 @@ export {
 // Dynamic import functions for Vercel serverless environment
 export async function getStorage() {
   try {
-    const storageModule = await import('../server/storage');
-    return storageModule.storage;
+    // In Vercel environment, files are in dist/server/
+    // In development, files are in server/
+    const isVercel = !!process.env.VERCEL;
+    const basePath = isVercel ? "./dist/server/" : "./server/";
+    
+    try {
+      const storageModule = await import(`${basePath}storage`);
+      return storageModule.storage;
+    } catch (error) {
+      // Fallback to direct import for development
+      const storageModule = await import("../server/storage");
+      return storageModule.storage;
+    }
   } catch (error) {
     console.error('Failed to import storage module:', error);
     throw new Error('Storage module not available');
@@ -41,8 +52,19 @@ export async function getStorage() {
 
 export async function getPricingService() {
   try {
-    const pricingModule = await import('../server/services/pricing');
-    return pricingModule.pricingService;
+    // In Vercel environment, files are in dist/server/
+    // In development, files are in server/
+    const isVercel = !!process.env.VERCEL;
+    const basePath = isVercel ? "./dist/server/" : "./server/";
+    
+    try {
+      const pricingModule = await import(`${basePath}services/pricing`);
+      return pricingModule.pricingService;
+    } catch (error) {
+      // Fallback to direct import for development
+      const pricingModule = await import("../server/services/pricing");
+      return pricingModule.pricingService;
+    }
   } catch (error) {
     console.error('Failed to import pricing service:', error);
     throw new Error('Pricing service not available');
@@ -51,8 +73,19 @@ export async function getPricingService() {
 
 export async function getPiNetworkService() {
   try {
-    const piNetworkModule = await import('../server/services/pi-network');
-    return piNetworkModule.piNetworkService;
+    // In Vercel environment, files are in dist/server/
+    // In development, files are in server/
+    const isVercel = !!process.env.VERCEL;
+    const basePath = isVercel ? "./dist/server/" : "./server/";
+    
+    try {
+      const piNetworkModule = await import(`${basePath}services/pi-network`);
+      return piNetworkModule.piNetworkService;
+    } catch (error) {
+      // Fallback to direct import for development
+      const piNetworkModule = await import("../server/services/pi-network");
+      return piNetworkModule.piNetworkService;
+    }
   } catch (error) {
     console.error('Failed to import Pi Network service:', error);
     throw new Error('Pi Network service not available');
@@ -61,8 +94,19 @@ export async function getPiNetworkService() {
 
 export async function getEmailService() {
   try {
-    const emailModule = await import('../server/services/email');
-    return emailModule.sendPurchaseConfirmationEmail;
+    // In Vercel environment, files are in dist/server/
+    // In development, files are in server/
+    const isVercel = !!process.env.VERCEL;
+    const basePath = isVercel ? "./dist/server/" : "./server/";
+    
+    try {
+      const emailModule = await import(`${basePath}services/email`);
+      return emailModule.sendPurchaseConfirmationEmail;
+    } catch (error) {
+      // Fallback to direct import for development
+      const emailModule = await import("../server/services/email");
+      return emailModule.sendPurchaseConfirmationEmail;
+    }
   } catch (error) {
     console.error('Failed to import email service:', error);
     throw new Error('Email service not available');
