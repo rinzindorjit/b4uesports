@@ -9,60 +9,75 @@ const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fall
 
 // Dynamic import functions for Vercel compatibility
 async function getStorage() {
-  // In Vercel environment, files are in dist/server/
-  // In development, files are in server/
-  const isVercel = !!process.env.VERCEL;
-  const basePath = isVercel ? "./dist/server/" : "./server/";
-  
+  // Use relative paths that work in both environments
   try {
-    const storageModule = await import(`${basePath}storage`);
-    return storageModule.storage;
-  } catch (error) {
-    // Fallback to direct import for development
+    // Try to import from the same directory (works in Vercel)
     const storageModule = await import("./storage");
     return storageModule.storage;
+  } catch (error) {
+    try {
+      // Fallback to import from parent directory (works in development)
+      const storageModule = await import("../server/storage");
+      return storageModule.storage;
+    } catch (fallbackError) {
+      // Final fallback - rethrow original error
+      console.error('Failed to import storage module:', error);
+      throw error;
+    }
   }
 }
 
 async function getPiNetworkService() {
-  const isVercel = !!process.env.VERCEL;
-  const basePath = isVercel ? "./dist/server/" : "./server/";
-  
   try {
-    const piNetworkModule = await import(`${basePath}services/pi-network`);
-    return piNetworkModule.piNetworkService;
-  } catch (error) {
-    // Fallback to direct import for development
+    // Try to import from the same directory (works in Vercel)
     const piNetworkModule = await import("./services/pi-network");
     return piNetworkModule.piNetworkService;
+  } catch (error) {
+    try {
+      // Fallback to import from parent directory (works in development)
+      const piNetworkModule = await import("../server/services/pi-network");
+      return piNetworkModule.piNetworkService;
+    } catch (fallbackError) {
+      // Final fallback - rethrow original error
+      console.error('Failed to import Pi Network service:', error);
+      throw error;
+    }
   }
 }
 
 async function getPricingService() {
-  const isVercel = !!process.env.VERCEL;
-  const basePath = isVercel ? "./dist/server/" : "./server/";
-  
   try {
-    const pricingModule = await import(`${basePath}services/pricing`);
-    return pricingModule.pricingService;
-  } catch (error) {
-    // Fallback to direct import for development
+    // Try to import from the same directory (works in Vercel)
     const pricingModule = await import("./services/pricing");
     return pricingModule.pricingService;
+  } catch (error) {
+    try {
+      // Fallback to import from parent directory (works in development)
+      const pricingModule = await import("../server/services/pricing");
+      return pricingModule.pricingService;
+    } catch (fallbackError) {
+      // Final fallback - rethrow original error
+      console.error('Failed to import pricing service:', error);
+      throw error;
+    }
   }
 }
 
 async function getEmailService() {
-  const isVercel = !!process.env.VERCEL;
-  const basePath = isVercel ? "./dist/server/" : "./server/";
-  
   try {
-    const emailModule = await import(`${basePath}services/email`);
-    return emailModule.sendPurchaseConfirmationEmail;
-  } catch (error) {
-    // Fallback to direct import for development
+    // Try to import from the same directory (works in Vercel)
     const emailModule = await import("./services/email");
     return emailModule.sendPurchaseConfirmationEmail;
+  } catch (error) {
+    try {
+      // Fallback to import from parent directory (works in development)
+      const emailModule = await import("../server/services/email");
+      return emailModule.sendPurchaseConfirmationEmail;
+    } catch (fallbackError) {
+      // Final fallback - rethrow original error
+      console.error('Failed to import email service:', error);
+      throw error;
+    }
   }
 }
 
