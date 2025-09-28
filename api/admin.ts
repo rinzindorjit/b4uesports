@@ -1,13 +1,22 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage, JWT_SECRET } from './_utils';
 import jwt from 'jsonwebtoken';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
-  try {
-    if (request.method !== 'POST') {
-      return response.status(405).json({ message: 'Method not allowed' });
-    }
+  // Set CORS headers
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
+  }
 
+  if (request.method !== 'POST') {
+    return response.status(405).json({ message: 'Method not allowed' });
+  }
+
+  try {
     const authHeader = request.headers.authorization;
     const token = authHeader?.replace('Bearer ', '');
     if (!token) {
@@ -16,8 +25,14 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
     const { action, data } = request.body;
     
+    const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
+    
     try {
       const decoded = jwt.verify(token, JWT_SECRET) as any;
+      
+      // Import modules dynamically to avoid issues with serverless environment
+      const { storage } = await import('./_utils').then(mod => mod.importServerModules());
+      
       const admin = await storage.getAdminByUsername(decoded.username);
       if (!admin || !admin.isActive) {
         return response.status(401).json({ message: 'Invalid admin token' });
@@ -25,6 +40,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
     } catch (error) {
       return response.status(401).json({ message: 'Invalid token' });
     }
+
+    // Import modules dynamically to avoid issues with serverless environment
+    const { storage } = await import('./_utils').then(mod => mod.importServerModules());
 
     switch (action) {
       case 'analytics':

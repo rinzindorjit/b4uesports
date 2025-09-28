@@ -5,7 +5,8 @@ import { sendPurchaseConfirmationEmail } from '../server/services/email';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
+// Export JWT_SECRET directly
+export const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
 
 // Helper function to create JSON responses
 export function createResponse(status: number, body: any) {
@@ -24,6 +25,20 @@ export function createResponse(status: number, body: any) {
 export function handleError(error: any, message: string = 'Internal Server Error') {
   console.error(message, error);
   return createResponse(500, { message });
+}
+
+export async function importServerModules() {
+  const storageModule = await import('../server/storage');
+  const pricingModule = await import('../server/services/pricing');
+  const piNetworkModule = await import('../server/services/pi-network');
+  const emailModule = await import('../server/services/email');
+  
+  return {
+    storage: storageModule.storage,
+    pricingService: pricingModule.pricingService,
+    piNetworkService: piNetworkModule.piNetworkService,
+    sendPurchaseConfirmationEmail: emailModule.sendPurchaseConfirmationEmail,
+  };
 }
 
 // Authentication middleware
@@ -69,5 +84,5 @@ export {
   pricingService,
   piNetworkService,
   sendPurchaseConfirmationEmail,
-  JWT_SECRET,
+  // Remove JWT_SECRET from here since we already exported it above
 };

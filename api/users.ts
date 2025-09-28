@@ -1,10 +1,31 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage, pricingService, piNetworkService, JWT_SECRET } from './_utils';
+import '../server/storage';
+import '../server/services/pi-network';
+import '../server/services/pricing';
+import '../server/services/email';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
+// Since we're in a serverless environment, we need to import the actual implementations
+// Let me create a simpler approach by using the existing server modules
+
 export default async function handler(request: VercelRequest, response: VercelResponse) {
+  // Set CORS headers
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
+  }
+
   try {
+    // Import modules dynamically to avoid issues with serverless environment
+    const { storage } = await import('../server/storage');
+    const { piNetworkService } = await import('../server/services/pi-network');
+    const { JWT_SECRET } = await import('./_utils');
+
     const { action, data } = request.body;
     
     switch (action) {
@@ -68,6 +89,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
           return response.status(401).json({ message: 'Invalid credentials' });
         }
 
+        // Import storage again for the updateAdminLastLogin function
         await storage.updateAdminLastLogin(admin.id);
 
         const adminToken = jwt.sign({ adminId: admin.id, username: admin.username }, JWT_SECRET, { expiresIn: '8h' });

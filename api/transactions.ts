@@ -1,18 +1,32 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage, JWT_SECRET } from './_utils';
 import jwt from 'jsonwebtoken';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
-  try {
-    if (request.method !== 'GET') {
-      return response.status(405).json({ message: 'Method not allowed' });
-    }
+  // Set CORS headers
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
+  }
 
+  if (request.method !== 'GET') {
+    return response.status(405).json({ message: 'Method not allowed' });
+  }
+
+  try {
     const authHeader = request.headers.authorization;
     const token = authHeader?.replace('Bearer ', '');
     if (!token) {
       return response.status(401).json({ message: 'No token provided' });
     }
+
+    const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
+    
+    // Import modules dynamically to avoid issues with serverless environment
+    const { storage } = await import('./_utils').then(mod => mod.importServerModules());
 
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     const userId = decoded.userId;

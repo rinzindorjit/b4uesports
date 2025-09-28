@@ -1,11 +1,23 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage, pricingService } from './_utils';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
+  // Set CORS headers
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
+  }
+
+  if (request.method !== 'GET') {
+    return response.status(405).json({ message: 'Method not allowed' });
+  }
+
   try {
-    if (request.method !== 'GET') {
-      return response.status(405).json({ message: 'Method not allowed' });
-    }
+    // Import modules dynamically to avoid issues with serverless environment
+    const { storage, pricingService } = await import('./_utils').then(mod => mod.importServerModules());
 
     const packages = await storage.getActivePackages();
     const currentPiPrice = await pricingService.getCurrentPiPrice();

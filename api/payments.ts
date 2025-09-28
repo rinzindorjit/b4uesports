@@ -1,15 +1,28 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { storage, pricingService, piNetworkService, sendPurchaseConfirmationEmail, JWT_SECRET } from './_utils';
 import jwt from 'jsonwebtoken';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
-  try {
-    if (request.method !== 'POST') {
-      return response.status(405).json({ message: 'Method not allowed' });
-    }
+  // Set CORS headers
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
+  }
 
+  if (request.method !== 'POST') {
+    return response.status(405).json({ message: 'Method not allowed' });
+  }
+
+  try {
     const { action, data } = request.body;
     
+    // Import modules dynamically to avoid issues with serverless environment
+    const { storage, pricingService, piNetworkService, sendPurchaseConfirmationEmail } = await import('./_utils').then(mod => mod.importServerModules());
+    const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
+
     switch (action) {
       case 'approve':
         const { paymentId } = data;
