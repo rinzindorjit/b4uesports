@@ -135,51 +135,91 @@ export default function Landing() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {/* PUBG Tokens */}
-              <div className="game-card p-8 rounded-xl" data-testid="featured-pubg">
+              <div className="game-card p-6 rounded-xl" data-testid="featured-pubg">
                 <div className="flex flex-col items-center justify-center mb-6">
                   <img 
                     src={GAME_LOGOS.PUBG} 
                     alt="PUBG Mobile" 
-                    className="w-24 h-24 object-contain mb-4"
+                    className="w-20 h-20 object-contain mb-3"
                     data-testid="pubg-logo"
                   />
-                  <h4 className="text-2xl font-bold">PUBG Mobile UC</h4>
+                  <h4 className="text-xl font-bold">PUBG Mobile UC</h4>
                 </div>
-                <div className="space-y-4 text-left">
-                  <p className="text-muted-foreground">
-                    Purchase UC (Unknown Cash) for PUBG Mobile to unlock premium items, 
-                    outfits, and boost your gaming experience with exclusive content.
-                  </p>
-                  <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                    <li>Instant delivery to your game account</li>
-                    <li>Secure payment with Pi Network</li>
-                    <li>Wide range of UC packages available</li>
-                  </ul>
-                </div>
+                
+                {/* PUBG Packages */}
+                {packagesLoading ? (
+                  <div className="text-center py-4">Loading packages...</div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    {packages
+                      ?.filter(pkg => pkg.game === 'PUBG')
+                      .map(pkg => (
+                        <div 
+                          key={pkg.id} 
+                          className="flex justify-between items-center p-3 bg-card rounded-lg border border-border"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <img 
+                              src={pkg.image} 
+                              alt={pkg.name} 
+                              className="w-10 h-10 object-contain"
+                            />
+                            <span className="font-medium">{pkg.name}</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-primary">
+                              {pkg.piPrice ? `${pkg.piPrice.toFixed(2)} π` : 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
               </div>
 
               {/* MLBB Tokens */}
-              <div className="game-card p-8 rounded-xl" data-testid="featured-mlbb">
+              <div className="game-card p-6 rounded-xl" data-testid="featured-mlbb">
                 <div className="flex flex-col items-center justify-center mb-6">
                   <img 
                     src={GAME_LOGOS.MLBB} 
                     alt="Mobile Legends" 
-                    className="w-24 h-24 object-contain mb-4"
+                    className="w-20 h-20 object-contain mb-3"
                     data-testid="mlbb-logo"
                   />
-                  <h4 className="text-2xl font-bold">Mobile Legends Diamonds</h4>
+                  <h4 className="text-xl font-bold">Mobile Legends Diamonds</h4>
                 </div>
-                <div className="space-y-4 text-left">
-                  <p className="text-muted-foreground">
-                    Get Diamonds for Mobile Legends to buy heroes, skins, and battle passes. 
-                    Enhance your gameplay with our fast and reliable token delivery system.
-                  </p>
-                  <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                    <li>Quick and secure delivery</li>
-                    <li>Competitive Pi pricing</li>
-                    <li>24/7 customer support</li>
-                  </ul>
-                </div>
+                
+                {/* MLBB Packages */}
+                {packagesLoading ? (
+                  <div className="text-center py-4">Loading packages...</div>
+                ) : (
+                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    {packages
+                      ?.filter(pkg => pkg.game === 'MLBB')
+                      .map(pkg => (
+                        <div 
+                          key={pkg.id} 
+                          className="flex justify-between items-center p-3 bg-card rounded-lg border border-border"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <img 
+                              src={pkg.image} 
+                              alt={pkg.name} 
+                              className="w-10 h-10 object-contain"
+                            />
+                            <span className="font-medium">{pkg.name}</span>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-primary">
+                              {pkg.piPrice ? `${pkg.piPrice.toFixed(2)} π` : 'N/A'}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    }
+                  </div>
+                )}
               </div>
             </div>
           </div>
