@@ -2,14 +2,13 @@
   "version": 2,
   "builds": [
     {
-      "src": "server/index.ts",
+      "src": "dist/index.js",
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
           "dist/**",
           "client/**",
-          "shared/**",
-          "server/**"
+          "shared/**"
         ]
       }
     }
@@ -17,11 +16,11 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server/index.ts"
+      "dest": "dist/index.js"
     },
     {
       "src": "/(.*)",
-      "dest": "server/index.ts"
+      "dest": "dist/index.js"
     }
   ],
   "env": {
