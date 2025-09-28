@@ -136,14 +136,17 @@ export default function Landing() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               {/* PUBG Tokens */}
               <div className="game-card p-6 rounded-xl" data-testid="featured-pubg">
-                <div className="flex flex-col items-center justify-center mb-6">
+                <div className="flex flex-col items-center justify-center mb-4">
                   <img 
                     src={GAME_LOGOS.PUBG} 
                     alt="PUBG Mobile" 
                     className="w-20 h-20 object-contain mb-3"
                     data-testid="pubg-logo"
                   />
-                  <h4 className="text-xl font-bold">PUBG Mobile UC</h4>
+                  <h4 className="text-xl font-bold mb-2">PUBG Mobile UC</h4>
+                  <p className="text-muted-foreground text-sm mb-4 text-center max-w-xs">
+                    Purchase UC (Unknown Cash) for PUBG Mobile to unlock crates, outfits, and other in-game items.
+                  </p>
                 </div>
                 
                 {/* PUBG Packages */}
@@ -180,14 +183,17 @@ export default function Landing() {
 
               {/* MLBB Tokens */}
               <div className="game-card p-6 rounded-xl" data-testid="featured-mlbb">
-                <div className="flex flex-col items-center justify-center mb-6">
+                <div className="flex flex-col items-center justify-center mb-4">
                   <img 
                     src={GAME_LOGOS.MLBB} 
                     alt="Mobile Legends" 
                     className="w-20 h-20 object-contain mb-3"
                     data-testid="mlbb-logo"
                   />
-                  <h4 className="text-xl font-bold">Mobile Legends Diamonds</h4>
+                  <h4 className="text-xl font-bold mb-2">Mobile Legends Diamonds</h4>
+                  <p className="text-muted-foreground text-sm mb-4 text-center max-w-xs">
+                    Buy Diamonds for Mobile Legends to purchase heroes, skins, battle emblems, and other premium items.
+                  </p>
                 </div>
                 
                 {/* MLBB Packages */}
