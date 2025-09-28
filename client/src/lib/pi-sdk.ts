@@ -1,3 +1,5 @@
+import { waitForPiSDK } from '@/lib/utils';
+
 declare global {
   interface Window {
     Pi: {
@@ -45,8 +47,20 @@ export class PiSDK {
         sandbox 
       });
       this.initialized = true;
+      console.log('Pi SDK initialized with sandbox:', sandbox);
     } else {
-      console.error('Pi SDK not loaded');
+      console.warn('Pi SDK not loaded yet, will retry');
+      // Retry initialization after a short delay if Pi is not available
+      setTimeout(() => {
+        if (typeof window !== 'undefined' && window.Pi && !this.initialized) {
+          window.Pi.init({ 
+            version: "2.0", 
+            sandbox 
+          });
+          this.initialized = true;
+          console.log('Pi SDK initialized with sandbox (retry):', sandbox);
+        }
+      }, 1000);
     }
   }
 
@@ -54,12 +68,25 @@ export class PiSDK {
     scopes: string[] = ['payments', 'username'],
     onIncompletePaymentFound?: (payment: any) => void
   ): Promise<{ accessToken: string; user: { uid: string; username: string } } | null> {
-    if (!this.initialized || !window.Pi) {
-      throw new Error('Pi SDK not initialized');
+    // Ensure Pi SDK is loaded
+    try {
+      await waitForPiSDK();
+    } catch (error) {
+      console.error('Pi SDK failed to load:', error);
+      throw new Error('Pi SDK not available');
+    }
+
+    // Initialize if not already done
+    if (!this.initialized) {
+      this.init(true); // Always use sandbox mode for Testnet
+      // Wait a bit for initialization
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
 
     try {
+      console.log('Calling Pi.authenticate with scopes:', scopes);
       const authResult = await window.Pi.authenticate(scopes, onIncompletePaymentFound);
+      console.log('Pi authentication successful:', authResult);
       return authResult;
     } catch (error) {
       console.error('Pi authentication failed:', error);
@@ -84,6 +111,7 @@ export class PiSDK {
       throw new Error('Pi SDK not initialized');
     }
 
+    console.log('Creating Pi payment:', paymentData);
     window.Pi.createPayment(paymentData, callbacks);
   }
 

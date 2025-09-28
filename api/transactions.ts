@@ -26,7 +26,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
     
     // Import modules dynamically to avoid issues with serverless environment
-    const { storage } = await import('./_utils').then(mod => mod.importServerModules());
+    const storageModule = await import('../server/storage');
+    const { storage } = storageModule;
 
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     const userId = decoded.userId;

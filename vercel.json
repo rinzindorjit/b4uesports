@@ -4,7 +4,7 @@
   "outputDirectory": "dist/public",
   "builds": [
     {
-      "src": "server/index.ts",
+      "src": "dist/vercel-handler.js",
       "use": "@vercel/node"
     },
     {
@@ -43,7 +43,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/server/index.ts"
+      "dest": "/dist/vercel-handler.js"
     }
   ]
 }

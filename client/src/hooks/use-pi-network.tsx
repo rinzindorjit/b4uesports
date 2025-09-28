@@ -28,11 +28,6 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Initialize Pi SDK
-    const isProduction = process.env.NODE_ENV === 'production';
-    // Always use sandbox mode for Testnet
-    piSDK.init(true); // sandbox mode for Testnet
-
     // Check for existing session
     const savedToken = localStorage.getItem('pi_token');
     const savedUser = localStorage.getItem('pi_user');
@@ -49,6 +44,11 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   const authenticate = async () => {
     setIsLoading(true);
     try {
+      // Initialize Pi SDK if not already initialized
+      const isProduction = process.env.NODE_ENV === 'production';
+      // Always use sandbox mode for Testnet
+      piSDK.init(true); // sandbox mode for Testnet
+
       // Define the onIncompletePaymentFound callback
       const onIncompletePaymentFound = (payment: PaymentDTO) => {
         console.log('Incomplete payment found:', payment);
@@ -129,6 +129,13 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       setIsAuthenticated(false);
       setUser(null);
       setToken(null);
+      
+      // Show error toast
+      toast({
+        title: "Authentication Failed",
+        description: error instanceof Error ? error.message : "Failed to connect to Pi Network",
+        variant: "destructive",
+      });
     }
     setIsLoading(false);
   };

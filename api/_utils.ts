@@ -27,6 +27,11 @@ export function handleError(error: any, message: string = 'Internal Server Error
   return createResponse(500, { message });
 }
 
+export {
+  jwt,
+  bcrypt,
+};
+
 export async function importServerModules() {
   const storageModule = await import('../server/storage');
   const pricingModule = await import('../server/services/pricing');

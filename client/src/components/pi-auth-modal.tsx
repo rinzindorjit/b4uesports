@@ -22,17 +22,19 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
 
   const handleAuthenticate = async () => {
     setStep('processing');
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
     onAuthenticate();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open && !isLoading) {
+        onClose();
+      }
+    }}>
       <DialogContent className="max-w-md w-full mx-4 sm:mx-auto" data-testid="pi-auth-modal">
         <DialogHeader>
           <DialogTitle className="text-xl md:text-2xl text-center">
-            {step === 'consent' ? 'Connect with Pi Network' : 'Processing...'}
+            {step === 'consent' ? 'Connect with Pi Network' : 'Connecting...'}
           </DialogTitle>
         </DialogHeader>
 
@@ -52,12 +54,12 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
             </div>
 
             <Card>
-              <CardContent className="p-4">
-                <h3 className="font-semibold mb-2">Permissions requested:</h3>
-                <ul className="space-y-2 text-sm">
+              <CardContent className="pt-6">
+                <h3 className="font-semibold mb-3">Permissions requested:</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center">
                     <i className="fas fa-check-circle text-green-500 mr-2"></i>
-                    View your Pi Network username
+                    Access your username for personalization
                   </li>
                   <li className="flex items-center">
                     <i className="fas fa-check-circle text-green-500 mr-2"></i>
@@ -84,6 +86,7 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
                 onClick={onClose} 
                 className="flex-1 text-sm md:text-base"
                 data-testid="auth-cancel"
+                disabled={isLoading}
               >
                 Cancel
               </Button>
@@ -91,6 +94,7 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
                 onClick={handleAuthenticate} 
                 className="flex-1 text-sm md:text-base"
                 data-testid="auth-approve"
+                disabled={isLoading}
               >
                 Approve
               </Button>
@@ -102,7 +106,14 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
               <i className="fas fa-spinner fa-spin text-2xl text-primary-foreground"></i>
             </div>
             <p className="text-lg font-semibold mb-2">Connecting to Pi Network</p>
-            <p className="text-muted-foreground text-sm md:text-base">Please wait while we authenticate your account...</p>
+            <p className="text-muted-foreground text-sm md:text-base">Please check your Pi Browser for authentication request...</p>
+            
+            <div className="mt-6 p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
+              <p className="text-xs text-blue-300">
+                <i className="fas fa-lightbulb mr-2"></i>
+                If you don't see a prompt in your Pi Browser, please make sure you're using the Pi Browser app and have the Pi Network extension installed.
+              </p>
+            </div>
           </div>
         )}
       </DialogContent>

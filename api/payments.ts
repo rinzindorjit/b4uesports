@@ -20,7 +20,16 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const { action, data } = request.body;
     
     // Import modules dynamically to avoid issues with serverless environment
-    const { storage, pricingService, piNetworkService, sendPurchaseConfirmationEmail } = await import('./_utils').then(mod => mod.importServerModules());
+    const storageModule = await import('../server/storage');
+    const pricingModule = await import('../server/services/pricing');
+    const piNetworkModule = await import('../server/services/pi-network');
+    const emailModule = await import('../server/services/email');
+    
+    const { storage } = storageModule;
+    const { pricingService } = pricingModule;
+    const { piNetworkService } = piNetworkModule;
+    const { sendPurchaseConfirmationEmail } = emailModule;
+    
     const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
 
     switch (action) {

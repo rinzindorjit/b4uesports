@@ -19,18 +19,6 @@
     
     <!-- Pi SDK -->
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
-    <script>
-      // Initialize Pi SDK
-      window.addEventListener('load', function() {
-        if (typeof Pi !== 'undefined') {
-          // Use sandbox mode for development, production mode for production
-          const isProduction = window.location.hostname !== 'localhost' && 
-                              window.location.hostname !== '127.0.0.1' && 
-                              window.location.hostname !== '0.0.0.0';
-          Pi.init({ version: "2.0", sandbox: !isProduction });
-        }
-      });
-    </script>
   </head>
   <body>
     <div id="root"></div>

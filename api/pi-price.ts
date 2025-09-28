@@ -17,7 +17,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
   try {
     // Import modules dynamically to avoid issues with serverless environment
-    const { pricingService } = await import('./_utils').then(mod => mod.importServerModules());
+    const pricingModule = await import('../server/services/pricing');
+    const { pricingService } = pricingModule;
 
     const price = await pricingService.getCurrentPiPrice();
     const lastPrice = pricingService.getLastPrice();

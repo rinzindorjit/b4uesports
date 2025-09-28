@@ -1,13 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import '../server/storage';
-import '../server/services/pi-network';
-import '../server/services/pricing';
-import '../server/services/email';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-
-// Since we're in a serverless environment, we need to import the actual implementations
-// Let me create a simpler approach by using the existing server modules
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers
@@ -22,9 +15,13 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
   try {
     // Import modules dynamically to avoid issues with serverless environment
-    const { storage } = await import('../server/storage');
-    const { piNetworkService } = await import('../server/services/pi-network');
-    const { JWT_SECRET } = await import('./_utils');
+    const storageModule = await import('../server/storage');
+    const piNetworkModule = await import('../server/services/pi-network');
+    const utilsModule = await import('./_utils');
+    
+    const { storage } = storageModule;
+    const { piNetworkService } = piNetworkModule;
+    const { JWT_SECRET } = utilsModule;
 
     const { action, data } = request.body;
     

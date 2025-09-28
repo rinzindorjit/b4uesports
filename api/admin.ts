@@ -31,7 +31,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
       const decoded = jwt.verify(token, JWT_SECRET) as any;
       
       // Import modules dynamically to avoid issues with serverless environment
-      const { storage } = await import('./_utils').then(mod => mod.importServerModules());
+      const storageModule = await import('../server/storage');
+      const { storage } = storageModule;
       
       const admin = await storage.getAdminByUsername(decoded.username);
       if (!admin || !admin.isActive) {
@@ -42,7 +43,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
     }
 
     // Import modules dynamically to avoid issues with serverless environment
-    const { storage } = await import('./_utils').then(mod => mod.importServerModules());
+    const storageModule = await import('../server/storage');
+    const { storage } = storageModule;
 
     switch (action) {
       case 'analytics':

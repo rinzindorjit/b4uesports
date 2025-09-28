@@ -8,19 +8,19 @@ import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import ProfileModal from '@/components/profile-modal';
 import PurchaseModal from '@/components/purchase-modal';
-import PackageCard from '@/components/package-card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { GAME_LOGOS } from '@/lib/constants';
 import type { Package, Transaction } from '@/types/pi-network';
 
 export default function Dashboard() {
   const { user, isAuthenticated, logout, token } = usePiNetwork();
-  const { data: piPriceData, isLoading: piPriceLoading, error: piPriceError } = usePiPrice();
+  const { data: piPrice } = usePiPrice();
   const [, setLocation] = useLocation();
-  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
 
   // Redirect to landing if not authenticated
   if (!isAuthenticated || !user) {
@@ -63,408 +63,179 @@ export default function Dashboard() {
   const completedTransactions = transactions?.filter(tx => tx.status === 'completed').length || 0;
 
   return (
-    <div className="min-h-screen bg-background text-foreground" data-testid="dashboard-page">
+    <div className="min-h-screen bg-background text-foreground">
       <ParticleBackground />
-      <Navigation isTestnet={true} />
+      <Navigation 
+        isTestnet={import.meta.env.DEV} 
+      />
       
       {/* Dashboard Header */}
-      <div className="bg-card border-b border-border" data-testid="dashboard-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <div className="flex items-center space-x-4">
-              {user.profileImage ? (
-                <img 
-                  src={user.profileImage} 
-                  alt={user.username} 
-                  className="w-16 h-16 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-                  <i className="fas fa-user text-2xl text-muted-foreground"></i>
+      <section className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Welcome back, <span className="text-primary">{user.username}</span>
+            </h1>
+            <p className="text-xl text-muted-foreground mb-6">
+              Your Pi wallet: <span className="font-mono">{formatWalletAddress(user.walletAddress)}</span>
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              {piPrice && (
+                <div className="bg-primary/10 backdrop-blur-sm rounded-full px-6 py-3 border border-primary/20">
+                  <span className="text-primary font-bold">Live Pi Price: </span>
+                  <span className="font-mono">${piPrice.price.toFixed(5)}</span>
                 </div>
               )}
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground" data-testid="user-greeting">
-                  Welcome back, <span className="text-primary">{user.username}</span>!
-                </h1>
-                <p className="text-muted-foreground font-mono text-sm md:text-base" data-testid="user-wallet">
-                  Wallet: {formatWalletAddress(user.walletAddress)}
-                </p>
-              </div>
-            </div>
-            
-            {/* Live Pi Price Ticker */}
-            <div className="pi-price-ticker px-4 py-3 rounded-lg w-full md:w-auto text-center md:text-left" data-testid="pi-price-dashboard">
-              <div>
-                <p className="text-xs text-white/80 mb-1">Live Pi Price</p>
-                {piPriceLoading ? (
-                  <p className="text-lg font-bold text-white">Loading...</p>
-                ) : piPriceError ? (
-                  <div>
-                    <p className="text-lg font-bold text-white">Price unavailable</p>
-                    <p className="text-xs text-white/60">Retrying in 60s</p>
-                  </div>
-                ) : piPriceData && piPriceData.price > 0 ? (
-                  <div>
-                    <p className="text-lg font-bold text-white">1 π = ${piPriceData.price.toFixed(4)} USD</p>
-                    <p className="text-xs text-white/60">
-                      Updated {Math.floor((Date.now() - new Date(piPriceData.lastUpdated).getTime()) / 1000)}s ago
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-lg font-bold text-white">Price unavailable</p>
-                    <p className="text-xs text-white/60">Retrying in 60s</p>
-                  </div>
-                )}
+              
+              <div className="flex gap-4">
+                <div className="bg-card rounded-lg p-4 border border-border">
+                  <p className="text-sm text-muted-foreground">Total Spent</p>
+                  <p className="text-2xl font-bold text-primary">{totalSpent.toFixed(2)} π</p>
+                </div>
+                <div className="bg-card rounded-lg p-4 border border-border">
+                  <p className="text-sm text-muted-foreground">Transactions</p>
+                  <p className="text-2xl font-bold text-primary">{completedTransactions}</p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6" data-testid="user-stats">
-            <Card>
-              <CardContent className="p-3 md:p-4">
-                <h3 className="text-xs md:text-sm text-muted-foreground">Total Spent</h3>
-                <p className="text-lg md:text-2xl font-bold text-green-400 font-mono" data-testid="stat-total-spent">
-                  {totalSpent.toFixed(1)} π
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3 md:p-4">
-                <h3 className="text-xs md:text-sm text-muted-foreground">Transactions</h3>
-                <p className="text-lg md:text-2xl font-bold" data-testid="stat-transaction-count">
-                  {completedTransactions}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3 md:p-4">
-                <h3 className="text-xs md:text-sm text-muted-foreground">Country</h3>
-                <p className="text-lg md:text-2xl font-bold text-blue-400" data-testid="stat-country">
-                  {user.country}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-3 md:p-4">
-                <h3 className="text-xs md:text-sm text-muted-foreground">Status</h3>
-                <p className="text-lg md:text-2xl font-bold text-green-400" data-testid="stat-status">
-                  Active
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
+          {/* Game Packages */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            {/* PUBG Mobile Packages */}
+            <div className="bg-card rounded-2xl p-6 border border-border shadow-lg">
+              <div className="flex items-center mb-6">
+                <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-12 h-12 mr-4" />
+                <h2 className="text-2xl font-bold">PUBG Mobile UC</h2>
+              </div>
+              
+              {packagesLoading ? (
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="h-16 bg-muted rounded-lg animate-pulse"></div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2">
+                  {pubgPackages.map(pkg => (
+                    <div 
+                      key={pkg.id} 
+                      className="flex flex-col p-4 bg-muted rounded-lg border border-border hover:border-primary transition-colors cursor-pointer"
+                      onClick={() => handlePurchaseClick(pkg)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">{pkg.name}</span>
+                        <Badge variant="secondary">{pkg.inGameAmount} UC</Badge>
+                      </div>
+                      <div className="flex justify-between items-center mt-auto pt-2">
+                        <span className="text-sm text-muted-foreground">
+                          ~${parseFloat(pkg.usdtValue).toFixed(2)} USD
+                        </span>
+                        <span className="font-bold text-primary">
+                          {pkg.piPrice ? `${pkg.piPrice.toFixed(2)} π` : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-      {/* Dashboard Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-          {/* Package Shop */}
-          <div className="lg:col-span-2" data-testid="package-shop">
-            <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Package Shop</h2>
+            {/* Mobile Legends Packages */}
+            <div className="bg-card rounded-2xl p-6 border border-border shadow-lg">
+              <div className="flex items-center mb-6">
+                <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-12 h-12 mr-4" />
+                <h2 className="text-2xl font-bold">Mobile Legends Diamonds</h2>
+              </div>
+              
+              {packagesLoading ? (
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="h-16 bg-muted rounded-lg animate-pulse"></div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2">
+                  {mlbbPackages.map(pkg => (
+                    <div 
+                      key={pkg.id} 
+                      className="flex flex-col p-4 bg-muted rounded-lg border border-border hover:border-primary transition-colors cursor-pointer"
+                      onClick={() => handlePurchaseClick(pkg)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium">{pkg.name}</span>
+                        <Badge variant="secondary">{pkg.inGameAmount} Diamonds</Badge>
+                      </div>
+                      <div className="flex justify-between items-center mt-auto pt-2">
+                        <span className="text-sm text-muted-foreground">
+                          ~${parseFloat(pkg.usdtValue).toFixed(2)} USD
+                        </span>
+                        <span className="font-bold text-primary">
+                          {pkg.piPrice ? `${pkg.piPrice.toFixed(2)} π` : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Transactions */}
+          <div className="bg-card rounded-2xl p-6 border border-border shadow-lg mb-12">
+            <h2 className="text-2xl font-bold mb-6">Recent Transactions</h2>
             
-            <Tabs defaultValue="pubg" className="w-full">
-              <TabsList className="grid w-full grid-cols-2" data-testid="game-tabs">
-                <TabsTrigger value="pubg" data-testid="tab-pubg" className="flex items-center justify-center">
-                  <img 
-                    src="https://cdn.midasbuy.com/images/pubgm_app-icon_512x512%281%29.e9f7efc0.png" 
-                    alt="PUBG Mobile" 
-                    className="w-6 h-6 mr-2 object-contain"
-                  />
-                  PUBG Mobile
-                </TabsTrigger>
-                <TabsTrigger value="mlbb" data-testid="tab-mlbb" className="flex items-center justify-center">
-                  <img 
-                    src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcTT-Neggt-JpAh4eDx84JswmFwJMOa4pcfhqtcTcxtywIGC4IfB" 
-                    alt="Mobile Legends" 
-                    className="w-6 h-6 mr-2 object-contain"
-                  />
-                  Mobile Legends
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="pubg" className="mt-6 md:mt-8">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold">PUBG Mobile UC Packages</h3>
-                  <p className="text-sm text-muted-foreground">Purchase UC (Unknown Cash) to unlock crates, outfits, and other in-game items.</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" data-testid="pubg-packages">
-                  {packagesLoading ? (
-                    <div className="col-span-2 text-center text-muted-foreground" data-testid="loading-packages">
-                      Loading packages...
-                    </div>
-                  ) : pubgPackages.length === 0 ? (
-                    // Display default PUBG packages when none are loaded
-                    <>
-                      {[
-                        { id: 'pubg-60', name: '60 UC', usdtValue: '1.5000', inGameAmount: 60 },
-                        { id: 'pubg-325', name: '325 UC', usdtValue: '6.5000', inGameAmount: 325 },
-                        { id: 'pubg-660', name: '660 UC', usdtValue: '12.0000', inGameAmount: 660 },
-                        { id: 'pubg-1800', name: '1800 UC', usdtValue: '25.0000', inGameAmount: 1800 },
-                        { id: 'pubg-3850', name: '3850 UC', usdtValue: '49.0000', inGameAmount: 3850 },
-                        { id: 'pubg-8100', name: '8100 UC', usdtValue: '96.0000', inGameAmount: 8100 },
-                        { id: 'pubg-16200', name: '16200 UC', usdtValue: '186.0000', inGameAmount: 16200 },
-                        { id: 'pubg-24300', name: '24300 UC', usdtValue: '278.0000', inGameAmount: 24300 },
-                        { id: 'pubg-32400', name: '32400 UC', usdtValue: '369.0000', inGameAmount: 32400 },
-                        { id: 'pubg-40500', name: '40500 UC', usdtValue: '459.0000', inGameAmount: 40500 },
-                      ].map((pkg) => {
-                        // Calculate Pi price based on current Pi price or fallback
-                        const piPrice = piPriceData?.price ? parseFloat(pkg.usdtValue) / piPriceData.price : 0;
-                        
-                        return (
-                          <div 
-                            key={pkg.id} 
-                            className="game-card p-4 md:p-6 rounded-lg border border-border bg-card hover:transform hover:-translate-y-1 transition-all duration-300"
-                          >
-                            <div className="flex items-center mb-3 md:mb-4">
-                              <img 
-                                src="https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png" 
-                                alt="PUBG Mobile" 
-                                className="w-10 h-10 md:w-12 md:h-12 mr-2 md:mr-3 object-contain"
-                              />
-                              <div>
-                                <h3 className="text-lg md:text-xl font-bold">{pkg.name}</h3>
-                                <p className="text-muted-foreground text-xs md:text-sm">
-                                  UC Package
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex justify-between items-center mb-4">
-                              <span className="text-xl md:text-2xl font-bold text-green-400 font-mono">
-                                {piPrice > 0 ? `${piPrice.toFixed(1)} π` : 'Price unavailable'}
-                              </span>
-                              {/* Hidden USDT value for internal calculation only */}
-                              <span className="text-xs md:text-sm text-muted-foreground hidden">
-                                ≈ ${pkg.usdtValue}
-                              </span>
-                            </div>
-                            
-                            <Button 
-                              onClick={() => {
-                                // Create a mock package object for the purchase modal
-                                const mockPackage = {
-                                  id: pkg.id,
-                                  game: 'PUBG',
-                                  name: pkg.name,
-                                  inGameAmount: pkg.inGameAmount,
-                                  usdtValue: pkg.usdtValue,
-                                  image: "https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png",
-                                  isActive: true,
-                                  piPrice: piPrice > 0 ? piPrice : undefined
-                                };
-                                handlePurchaseClick(mockPackage);
-                              }}
-                              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm md:text-base"
-                            >
-                              Buy Now
-                            </Button>
-                          </div>
-                        );
-                      })}
-                    </>
-                  ) : (
-                    pubgPackages.map((pkg) => (
-                      <PackageCard
-                        key={pkg.id}
-                        package={pkg}
-                        onPurchase={() => handlePurchaseClick(pkg)}
-                        data-testid={`package-card-${pkg.id}`}
-                      />
-                    ))
-                  )}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="mlbb" className="mt-6 md:mt-8">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold">Mobile Legends Diamonds</h3>
-                  <p className="text-sm text-muted-foreground">Buy Diamonds to purchase heroes, skins, battle emblems, and other premium items.</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" data-testid="mlbb-packages">
-                  {packagesLoading ? (
-                    <div className="col-span-2 text-center text-muted-foreground" data-testid="loading-packages">
-                      Loading packages...
-                    </div>
-                  ) : mlbbPackages.length === 0 ? (
-                    // Display default MLBB packages when none are loaded
-                    <>
-                      {[
-                        { id: 'mlbb-56', name: '56 Diamonds', usdtValue: '3.0000', inGameAmount: 56 },
-                        { id: 'mlbb-278', name: '278 Diamonds', usdtValue: '6.0000', inGameAmount: 278 },
-                        { id: 'mlbb-571', name: '571 Diamonds', usdtValue: '11.0000', inGameAmount: 571 },
-                        { id: 'mlbb-1783', name: '1783 Diamonds', usdtValue: '33.0000', inGameAmount: 1783 },
-                        { id: 'mlbb-3005', name: '3005 Diamonds', usdtValue: '52.0000', inGameAmount: 3005 },
-                        { id: 'mlbb-6012', name: '6012 Diamonds', usdtValue: '99.0000', inGameAmount: 6012 },
-                        { id: 'mlbb-12000', name: '12000 Diamonds', usdtValue: '200.0000', inGameAmount: 12000 },
-                      ].map((pkg) => {
-                        // Calculate Pi price based on current Pi price or fallback
-                        const piPrice = piPriceData?.price ? parseFloat(pkg.usdtValue) / piPriceData.price : 0;
-                        
-                        return (
-                          <div 
-                            key={pkg.id} 
-                            className="game-card p-4 md:p-6 rounded-lg border border-border bg-card hover:transform hover:-translate-y-1 transition-all duration-300"
-                          >
-                            <div className="flex items-center mb-3 md:mb-4">
-                              <img 
-                                src="https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png" 
-                                alt="Mobile Legends" 
-                                className="w-10 h-10 md:w-12 md:h-12 mr-2 md:mr-3 object-contain"
-                              />
-                              <div>
-                                <h3 className="text-lg md:text-xl font-bold">{pkg.name}</h3>
-                                <p className="text-muted-foreground text-xs md:text-sm">
-                                  Diamonds Package
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <div className="flex justify-between items-center mb-4">
-                              <span className="text-xl md:text-2xl font-bold text-green-400 font-mono">
-                                {piPrice > 0 ? `${piPrice.toFixed(1)} π` : 'Price unavailable'}
-                              </span>
-                              {/* Hidden USDT value for internal calculation only */}
-                              <span className="text-xs md:text-sm text-muted-foreground hidden">
-                                ≈ ${pkg.usdtValue}
-                              </span>
-                            </div>
-                            
-                            <Button 
-                              onClick={() => {
-                                // Create a mock package object for the purchase modal
-                                const mockPackage = {
-                                  id: pkg.id,
-                                  game: 'MLBB',
-                                  name: pkg.name,
-                                  inGameAmount: pkg.inGameAmount,
-                                  usdtValue: pkg.usdtValue,
-                                  image: "https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png",
-                                  isActive: true,
-                                  piPrice: piPrice > 0 ? piPrice : undefined
-                                };
-                                handlePurchaseClick(mockPackage);
-                              }}
-                              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-sm md:text-base"
-                            >
-                              Buy Now
-                            </Button>
-                          </div>
-                        );
-                      })}
-                    </>
-                  ) : (
-                    mlbbPackages.map((pkg) => (
-                      <PackageCard
-                        key={pkg.id}
-                        package={pkg}
-                        onPurchase={() => handlePurchaseClick(pkg)}
-                        data-testid={`package-card-${pkg.id}`}
-                      />
-                    ))
-                  )}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6 md:space-y-8" data-testid="dashboard-sidebar">
-            {/* Quick Actions */}
-            <Card data-testid="quick-actions">
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  onClick={() => setIsProfileModalOpen(true)}
-                  className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground text-sm md:text-base"
-                  data-testid="button-edit-profile"
-                >
-                  <i className="fas fa-user mr-2"></i>Edit Profile
-                </Button>
-                <Button 
-                  variant="outline"
-                  className="w-full text-sm md:text-base"
-                  data-testid="button-view-history"
-                >
-                  <i className="fas fa-history mr-2"></i>View History
-                </Button>
-                <Button 
-                  onClick={handleLogout}
-                  variant="destructive"
-                  className="w-full text-sm md:text-base"
-                  data-testid="button-logout"
-                >
-                  <i className="fas fa-sign-out-alt mr-2"></i>Logout
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Transactions */}
-            <Card data-testid="recent-transactions">
-              <CardHeader>
-                <CardTitle>Recent Transactions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {transactionsLoading ? (
-                  <div className="text-muted-foreground" data-testid="loading-transactions">Loading...</div>
-                ) : recentTransactions.length === 0 ? (
-                  <div className="text-muted-foreground" data-testid="no-transactions">No transactions yet</div>
-                ) : (
-                  <div className="space-y-3 md:space-y-4">
-                    {recentTransactions.map((transaction, index) => (
-                      <div 
-                        key={transaction.id} 
-                        className="border-b border-border pb-2 md:pb-3 last:border-b-0"
-                        data-testid={`transaction-${index}`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-semibold text-sm">
-                              {packages?.find(p => p.id === transaction.packageId)?.name || 'Unknown Package'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(transaction.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-mono text-green-400 text-sm">
-                              -{transaction.piAmount} π
-                            </p>
-                            <p className="text-xs capitalize text-green-400">
-                              {transaction.status === 'completed' ? '✅ Completed' : 
-                               transaction.status === 'pending' ? '🔄 Pending' : 
-                               transaction.status === 'failed' ? '❌ Failed' : transaction.status}
-                            </p>
-                          </div>
+            {transactionsLoading ? (
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-16 bg-muted rounded-lg animate-pulse"></div>
+                ))}
+              </div>
+            ) : recentTransactions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No transactions yet</p>
+                <p className="text-sm mt-2">Purchase some packages to see your transaction history</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentTransactions.map(tx => {
+                  const pkg = packages?.find(p => p.id === tx.packageId);
+                  return (
+                    <div key={tx.id} className="flex justify-between items-center p-4 bg-muted rounded-lg border border-border">
+                      <div>
+                        <div className="font-medium">{pkg?.name || 'Unknown Package'}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(tx.createdAt).toLocaleDateString()}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      <div className="text-right">
+                        <div className="font-bold text-primary">{parseFloat(tx.piAmount).toFixed(2)} π</div>
+                        <div className="text-sm text-muted-foreground">
+                          <Badge variant={tx.status === 'completed' ? 'default' : 'secondary'}>
+                            {tx.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Modals */}
-      <ProfileModal 
-        isOpen={isProfileModalOpen} 
-        onClose={() => setIsProfileModalOpen(false)} 
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
       
       {selectedPackage && (
-        <PurchaseModal 
-          isOpen={isPurchaseModalOpen} 
-          onClose={() => {
-            setIsPurchaseModalOpen(false);
-            setSelectedPackage(null);
-          }}
+        <PurchaseModal
+          isOpen={isPurchaseModalOpen}
+          onClose={() => setIsPurchaseModalOpen(false)}
           package={selectedPackage}
         />
       )}
