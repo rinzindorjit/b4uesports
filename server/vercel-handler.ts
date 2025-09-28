@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: false }));
 // Register routes dynamically
 (async () => {
   try {
-    const { registerRoutes } = await import('./routes.js');
+    const { registerRoutes } = await import('./routes');
     await registerRoutes(app);
   } catch (error) {
     console.error('Failed to register routes:', error);

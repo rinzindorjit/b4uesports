@@ -24,17 +24,36 @@ function copyFolderRecursive(source, destination) {
 try {
   // Run the main build command
   console.log('Running main build...');
-  execSync('npx vite build && npx esbuild server/index.ts server/vercel-handler.ts --platform=node --packages=external --bundle --format=esm --outdir=dist', { 
+  execSync('npx vite build && npx esbuild server/index.ts server/vercel-handler.ts server/routes.ts --platform=node --packages=external --bundle --format=esm --outdir=dist', { 
     stdio: 'inherit' 
   });
   
-  // Copy server files
+  // Copy only necessary server files (not the ones that are bundled)
   console.log('Copying server files...');
   const sourceDir = join(process.cwd(), 'server');
   const destDir = join(process.cwd(), 'dist', 'server');
   
-  console.log(`Copying files from ${sourceDir} to ${destDir}`);
-  copyFolderRecursive(sourceDir, destDir);
+  // Create the server directory
+  if (!existsSync(destDir)) {
+    mkdirSync(destDir, { recursive: true });
+  }
+  
+  // Copy only the files that are not bundled
+  const filesToCopy = ['storage.ts', 'services', 'types', 'utils', 'vite.ts'];
+  
+  for (const file of filesToCopy) {
+    const sourcePath = join(sourceDir, file);
+    const destPath = join(destDir, file);
+    
+    if (existsSync(sourcePath)) {
+      if (statSync(sourcePath).isDirectory()) {
+        copyFolderRecursive(sourcePath, destPath);
+      } else {
+        copyFileSync(sourcePath, destPath);
+      }
+    }
+  }
+  
   console.log('Server files copied successfully!');
   
 } catch (error) {
