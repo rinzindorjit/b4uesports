@@ -36,6 +36,7 @@ B4U Esports is a gaming platform that allows users to purchase in-game currency 
 
 ## Force rebuild by adding a comment
 Updated vercel.json configuration
+Updated package.json to use .cjs extension
 
 # B4U Esports - Pi Network Marketplace
 
