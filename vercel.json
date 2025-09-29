@@ -11,9 +11,5 @@
       "source": "/(.*)",
       "destination": "/dist/public/$1"
     }
-  ],
-  "builds": [
-    { "src": "dist/vercel-handler.js", "use": "@vercel/node" },
-    { "src": "dist/public/**", "use": "@vercel/static" }
   ]
 }
