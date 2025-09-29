@@ -35,6 +35,7 @@ B4U Esports is a gaming platform that allows users to purchase in-game currency 
 - `EMAILJS_PUBLIC_KEY`: EmailJS public key for email notifications
 
 ## Force rebuild by adding a comment
+Updated vercel.json configuration
 
 # B4U Esports - Pi Network Marketplace
 
