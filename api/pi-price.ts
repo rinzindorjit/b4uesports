@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getPricingService } from './_utils';
+import { getPricingService } from './_utils.ts';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers

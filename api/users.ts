@@ -1,7 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
-import { JWT_SECRET, getStorage, getPiNetworkService } from './_utils';
+import { JWT_SECRET, getStorage, getPiNetworkService, jwt, bcrypt } from './_utils.ts';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers
