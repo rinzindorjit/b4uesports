@@ -44,6 +44,12 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   const authenticate = async () => {
     setIsLoading(true);
     try {
+      // Show initial loading message
+      toast({
+        title: "Connecting to Pi Network",
+        description: "Please wait while we connect to Pi Network...",
+      });
+
       // Initialize Pi SDK if not already initialized
       const isProduction = process.env.NODE_ENV === 'production';
       // Always use sandbox mode for Testnet
@@ -101,10 +107,28 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
         });
       };
 
+      // Add a timeout for the entire authentication process
+      const authTimeout = setTimeout(() => {
+        setIsLoading(false);
+        toast({
+          title: "Authentication Timeout",
+          description: "The authentication process is taking longer than expected. Please check your Pi Browser for pending requests or try again.",
+          variant: "destructive",
+        });
+      }, 60000); // 60 seconds timeout
+
       const authResult = await piSDK.authenticate(['payments', 'username'], onIncompletePaymentFound);
+      clearTimeout(authTimeout); // Clear the timeout if authentication completes
+      
       if (!authResult) {
-        throw new Error('Authentication failed');
+        throw new Error('Authentication failed - No response from Pi Network');
       }
+
+      // Update toast to show backend verification
+      toast({
+        title: "Verifying with Backend",
+        description: "Please wait while we verify your credentials...",
+      });
 
       // Send access token to backend for verification
       const response = await apiRequest('POST', '/api/users', {
@@ -113,6 +137,11 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
           accessToken: authResult.accessToken,
         }
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Backend verification failed with status ${response.status}`);
+      }
       
       const data = await response.json();
       
@@ -124,7 +153,13 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       localStorage.setItem('pi_token', data.token);
       localStorage.setItem('pi_user', JSON.stringify(data.user));
       
-    } catch (error) {
+      // Show success message
+      toast({
+        title: "Authentication Successful",
+        description: `Welcome, ${data.user.username}!`,
+      });
+      
+    } catch (error: any) {
       console.error('Authentication error:', error);
       setIsAuthenticated(false);
       setUser(null);
@@ -133,7 +168,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       // Show error toast
       toast({
         title: "Authentication Failed",
-        description: error instanceof Error ? error.message : "Failed to connect to Pi Network",
+        description: error instanceof Error ? error.message : "Failed to connect to Pi Network. Please make sure you're using the Pi Browser and try again.",
         variant: "destructive",
       });
     }
@@ -146,6 +181,11 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     setToken(null);
     localStorage.removeItem('pi_token');
     localStorage.removeItem('pi_user');
+    
+    toast({
+      title: "Logged Out",
+      description: "You have been successfully logged out.",
+    });
   };
 
   const createPayment = (paymentData: PaymentData, callbacks: PaymentCallbacks) => {
@@ -167,10 +207,15 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     const enhancedCallbacks = {
       onReadyForServerApproval: async (paymentId: string) => {
         try {
-          await apiRequest('POST', '/api/payments', {
+          const response = await apiRequest('POST', '/api/payments', {
             action: 'approve',
             data: { paymentId }
           });
+          
+          if (!response.ok) {
+            throw new Error(`Server approval failed with status ${response.status}`);
+          }
+          
           callbacks.onReadyForServerApproval(paymentId);
         } catch (error) {
           console.error('Payment approval failed:', error);
@@ -179,18 +224,36 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       },
       onReadyForServerCompletion: async (paymentId: string, txid: string) => {
         try {
-          await apiRequest('POST', '/api/payments', {
+          const response = await apiRequest('POST', '/api/payments', {
             action: 'complete',
             data: { paymentId, txid }
           });
+          
+          if (!response.ok) {
+            throw new Error(`Server completion failed with status ${response.status}`);
+          }
+          
           callbacks.onReadyForServerCompletion(paymentId, txid);
         } catch (error) {
           console.error('Payment completion failed:', error);
           callbacks.onError(error as Error);
         }
       },
-      onCancel: callbacks.onCancel,
-      onError: callbacks.onError,
+      onCancel: (paymentId: string) => {
+        toast({
+          title: "Payment Cancelled",
+          description: "Payment was cancelled. No Pi was deducted.",
+        });
+        callbacks.onCancel(paymentId);
+      },
+      onError: (error: Error, payment?: any) => {
+        toast({
+          title: "Payment Error",
+          description: error.message || "An error occurred during payment processing.",
+          variant: "destructive",
+        });
+        callbacks.onError(error, payment);
+      },
     };
 
     piSDK.createPayment(enhancedPaymentData, enhancedCallbacks);

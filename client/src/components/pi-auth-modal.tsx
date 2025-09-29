@@ -106,13 +106,29 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
               <i className="fas fa-spinner fa-spin text-2xl text-primary-foreground"></i>
             </div>
             <p className="text-lg font-semibold mb-2">Connecting to Pi Network</p>
-            <p className="text-muted-foreground text-sm md:text-base">Please check your Pi Browser for authentication request...</p>
+            <p className="text-muted-foreground text-sm md:text-base mb-6">Please check your Pi Browser for authentication request...</p>
             
-            <div className="mt-6 p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
-              <p className="text-xs text-blue-300">
-                <i className="fas fa-lightbulb mr-2"></i>
-                If you don't see a prompt in your Pi Browser, please make sure you're using the Pi Browser app and have the Pi Network extension installed.
-              </p>
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
+                <p className="text-xs text-blue-300">
+                  <i className="fas fa-mobile-alt mr-2"></i>
+                  <strong>Using Pi Browser on mobile?</strong> Check for pop-up notifications or banners asking for authentication approval.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-amber-500/10 rounded-lg border border-amber-500/30">
+                <p className="text-xs text-amber-300">
+                  <i className="fas fa-sync mr-2"></i>
+                  <strong>Not seeing a prompt?</strong> Try refreshing the page or restarting the Pi Browser app.
+                </p>
+              </div>
+              
+              <div className="p-4 bg-red-500/10 rounded-lg border border-red-500/30">
+                <p className="text-xs text-red-300">
+                  <i className="fas fa-exclamation-triangle mr-2"></i>
+                  <strong>Still having issues?</strong> Make sure you're using the official Pi Browser app, not a regular web browser.
+                </p>
+              </div>
             </div>
           </div>
         )}

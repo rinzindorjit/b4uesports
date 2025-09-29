@@ -84,6 +84,21 @@ export default function Landing() {
                 <span className="font-mono">${piPrice.price.toFixed(5)}</span>
               </div>
             )}
+            
+            {/* Important Notice */}
+            <div className="mt-6 p-4 bg-amber-500/20 border border-amber-500/30 rounded-lg max-w-2xl mx-auto">
+              <p className="text-amber-100 text-sm">
+                <i className="fas fa-exclamation-circle mr-2"></i>
+                <strong>Important:</strong> Please use the official <strong>Pi Browser</strong> app for the best experience. 
+                If you're experiencing connection issues:
+              </p>
+              <ul className="text-amber-100 text-sm mt-2 list-disc list-inside text-left">
+                <li>Make sure you're using the Pi Browser app, not a regular web browser</li>
+                <li>Check for pop-up notifications or banners in the Pi Browser asking for authentication approval</li>
+                <li>Try refreshing the page or restarting the Pi Browser app</li>
+                <li>Ensure you have the latest version of the Pi Browser installed</li>
+              </ul>
+            </div>
           </div>
 
           {/* Key Features Section */}
@@ -200,17 +215,16 @@ export default function Landing() {
                         className="flex justify-between items-center p-3 bg-card rounded-lg border border-border"
                       >
                         <div className="flex items-center space-x-3">
-                          <img 
-                            src={pkg.image} 
-                            alt={pkg.name} 
-                            className="w-10 h-10 object-contain"
-                          />
-                          <span className="font-medium">{pkg.name}</span>
+                          <div>
+                            <h3 className="font-medium">{pkg.name}</h3>
+                            <p className="text-sm text-muted-foreground">{pkg.inGameAmount} UC</p>
+                          </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-primary">
-                            {pkg.piPrice ? `${pkg.piPrice.toFixed(2)} π` : 'N/A'}
-                          </div>
+                          <p className="font-semibold">{pkg.piPrice || 0} π</p>
+                          <p className="text-xs text-muted-foreground">
+                            ${(pkg.piPrice ? (pkg.piPrice * (piPrice?.price || 0)).toFixed(2) : '0.00')} USD
+                          </p>
                         </div>
                       </div>
                     ))
@@ -242,17 +256,16 @@ export default function Landing() {
                         className="flex justify-between items-center p-3 bg-card rounded-lg border border-border"
                       >
                         <div className="flex items-center space-x-3">
-                          <img 
-                            src={pkg.image} 
-                            alt={pkg.name} 
-                            className="w-10 h-10 object-contain"
-                          />
-                          <span className="font-medium">{pkg.name}</span>
+                          <div>
+                            <h3 className="font-medium">{pkg.name}</h3>
+                            <p className="text-sm text-muted-foreground">{pkg.inGameAmount} Diamonds</p>
+                          </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-bold text-primary">
-                            {pkg.piPrice ? `${pkg.piPrice.toFixed(2)} π` : 'N/A'}
-                          </div>
+                          <p className="font-semibold">{pkg.piPrice || 0} π</p>
+                          <p className="text-xs text-muted-foreground">
+                            ${(pkg.piPrice ? (pkg.piPrice * (piPrice?.price || 0)).toFixed(2) : '0.00')} USD
+                          </p>
                         </div>
                       </div>
                     ))
@@ -263,16 +276,15 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
-      {/* Pi Authentication Modal */}
-      <PiAuthModal
+      
+      <Footer />
+      
+      <PiAuthModal 
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onAuthenticate={handleAuthenticate}
         isLoading={piLoading}
       />
-
-      <Footer />
     </div>
   );
 }
