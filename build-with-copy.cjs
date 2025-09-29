@@ -28,7 +28,7 @@ try {
     stdio: 'inherit' 
   });
   
-  // Copy only necessary server files (not the ones that are bundled)
+  // Copy server files
   console.log('Copying server files...');
   const sourceDir = join(process.cwd(), 'server');
   const destDir = join(process.cwd(), 'dist', 'server');
@@ -54,7 +54,20 @@ try {
     }
   }
   
-  console.log('Server files copied successfully!');
+  // Copy API files to dist/api directory
+  console.log('Copying API files...');
+  const apiSourceDir = join(process.cwd(), 'api');
+  const apiDestDir = join(process.cwd(), 'dist', 'api');
+  
+  // Create the API directory
+  if (!existsSync(apiDestDir)) {
+    mkdirSync(apiDestDir, { recursive: true });
+  }
+  
+  // Copy all API files
+  copyFolderRecursive(apiSourceDir, apiDestDir);
+  
+  console.log('Server and API files copied successfully!');
   
 } catch (error) {
   console.error('Build failed:', error.message);
