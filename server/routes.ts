@@ -105,7 +105,7 @@ async function getEmailService() {
   }
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express): Promise<void> {
   // Middleware for admin authentication
   const authenticateAdmin = async (req: Request, res: Response, next: any) => {
     const token = req.headers.authorization?.replace('Bearer ', '');
@@ -486,13 +486,4 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/health', (req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
-
-  // Start server
-  const PORT = process.env.PORT || 3000;
-  const server = createServer(app);
-  server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-
-  return server;
 }

@@ -21,19 +21,25 @@ export default async function handler(request: VercelRequest, response: VercelRe
     
     switch (action) {
       case 'authenticate':
+        console.log('Authentication request received');
         const { accessToken } = data;
         if (!accessToken) {
+          console.log('No access token provided');
           return response.status(400).json({ message: 'Access token required' });
         }
 
+        console.log('Verifying access token with Pi Network');
         const piUser = await piNetworkService.verifyAccessToken(accessToken);
         if (!piUser) {
+          console.log('Invalid Pi Network token');
           return response.status(401).json({ message: 'Invalid Pi Network token' });
         }
 
+        console.log('Pi Network user verified:', piUser);
         // Check if user exists, if not create new user
         let user = await storage.getUserByPiUID(piUser.uid);
         if (!user) {
+          console.log('Creating new user for Pi UID:', piUser.uid);
           // Create minimal user profile - they'll complete it later
           const newUser = {
             piUID: piUser.uid,
@@ -45,10 +51,13 @@ export default async function handler(request: VercelRequest, response: VercelRe
             walletAddress: '', // Will be updated when they make their first transaction
           };
           user = await storage.createUser(newUser);
+        } else {
+          console.log('Existing user found for Pi UID:', piUser.uid);
         }
 
         // Generate JWT token for session
         const userToken = jwt.sign({ userId: user.id, piUID: user.piUID }, JWT_SECRET, { expiresIn: '7d' });
+        console.log('Generated JWT token for user:', user.id);
 
         return response.status(200).json({
           user: {

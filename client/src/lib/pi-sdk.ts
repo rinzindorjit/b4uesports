@@ -116,6 +116,8 @@ export class PiSDK {
         throw new Error('Authentication timed out. Please check your Pi Browser for pending authentication requests and approve them.');
       } else if (error.message && error.message.includes('cancelled')) {
         throw new Error('Authentication was cancelled in the Pi Browser.');
+      } else if (error.message && error.message.includes('Pi Network is not available')) {
+        throw new Error('Pi Network is not available. Please make sure you are using the Pi Browser app.');
       } else {
         throw new Error(`Authentication failed: ${error.message || 'Unknown error'}. Please try again and make sure you are using the Pi Browser.`);
       }

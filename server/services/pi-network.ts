@@ -67,14 +67,16 @@ export class PiNetworkService {
 
   async verifyAccessToken(accessToken: string): Promise<PiUser | null> {
     try {
+      console.log('Verifying access token with Pi Network API');
       const response = await axios.get(`${PI_API_BASE}/v2/me`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
       });
+      console.log('Pi Network API response:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('Pi Network token verification failed:', error);
+    } catch (error: any) {
+      console.error('Pi Network token verification failed:', error.response?.data || error.message);
       return null;
     }
   }

@@ -14,18 +14,21 @@ export function waitForPiSDK(timeoutMs: number = 5000): Promise<void> {
   return new Promise((resolve, reject) => {
     // If Pi SDK is already loaded, resolve immediately
     if (typeof window !== 'undefined' && window.Pi) {
+      console.log('Pi SDK already loaded');
       resolve();
       return;
     }
 
     // Set up a timeout to reject the promise if SDK doesn't load in time
     const timeout = setTimeout(() => {
+      console.error(`Pi SDK failed to load within ${timeoutMs}ms`);
       reject(new Error(`Pi SDK failed to load within ${timeoutMs}ms. Please make sure you are using the Pi Browser and refresh the page.`));
     }, timeoutMs);
 
     // Poll for Pi SDK availability
     const interval = setInterval(() => {
       if (typeof window !== 'undefined' && window.Pi) {
+        console.log('Pi SDK loaded successfully');
         clearTimeout(timeout);
         clearInterval(interval);
         resolve();

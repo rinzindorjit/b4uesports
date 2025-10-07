@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
+import { createServer, type Server } from "http";
 import { registerRoutes } from "./routes.js";
 import { setupVite, serveStatic, log } from "./vite.js";
 import { initializePackages } from "./utils/initialize-packages.js";
@@ -8,6 +9,8 @@ import { updatePackageImages } from "./utils/update-package-images.js";
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -54,7 +57,7 @@ if (isDevelopment && !isVercel) {
     await updatePackageImages();
   }
   
-  const server = await registerRoutes(app);
+  await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -86,7 +89,6 @@ if (isDevelopment && !isVercel) {
     server.listen({
       port,
       host: "0.0.0.0",
-      reusePort: true,
     }, () => {
       log(`serving on port ${port}`);
     });

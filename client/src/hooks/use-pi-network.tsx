@@ -165,10 +165,27 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       setUser(null);
       setToken(null);
       
-      // Show error toast
+      // Show error toast with more specific information
+      let errorMessage = "Failed to connect to Pi Network. Please make sure you're using the Pi Browser and try again.";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      // Provide more specific guidance based on error type
+      if (errorMessage.includes('Pi SDK not available')) {
+        errorMessage += " Make sure you're using the Pi Browser app, not a regular web browser.";
+      } else if (errorMessage.includes('timeout')) {
+        errorMessage += " Check your Pi Browser for pending authentication requests and approve them.";
+      } else if (errorMessage.includes('Invalid Pi Network token')) {
+        errorMessage += " Please try again and make sure you approve the authentication request in the Pi Browser.";
+      } else if (errorMessage.includes('Backend verification failed')) {
+        errorMessage += " There might be an issue with our servers. Please try again later.";
+      }
+      
       toast({
         title: "Authentication Failed",
-        description: error instanceof Error ? error.message : "Failed to connect to Pi Network. Please make sure you're using the Pi Browser and try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     }
