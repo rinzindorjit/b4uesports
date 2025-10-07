@@ -79,7 +79,7 @@ export class PiSDK {
   ): Promise<{ accessToken: string; user: { uid: string; username: string } } | null> {
     // Ensure Pi SDK is loaded
     try {
-      await waitForPiSDK(15000); // Increase timeout to 15 seconds
+      await waitForPiSDK(20000); // Increase timeout to 20 seconds for better mobile support
     } catch (error) {
       console.error('Pi SDK failed to load:', error);
       throw new Error('Pi SDK not available. Please make sure you are using the Pi Browser and refresh the page.');
@@ -89,7 +89,7 @@ export class PiSDK {
     if (!this.initialized) {
       this.init(true); // Always use sandbox mode for Testnet
       // Wait a bit for initialization
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
 
     // Additional check to ensure Pi is available
@@ -102,7 +102,7 @@ export class PiSDK {
       // Add a timeout to the authentication call
       const authPromise = window.Pi.authenticate(scopes, onIncompletePaymentFound);
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser for pending requests')), 45000)
+        setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser for pending requests')), 90000)
       );
       
       const authResult = await Promise.race([authPromise, timeoutPromise]) as { accessToken: string; user: { uid: string; username: string } };
@@ -113,7 +113,7 @@ export class PiSDK {
       
       // More specific error handling
       if (error.message && error.message.includes('timeout')) {
-        throw new Error('Authentication timed out. Please check your Pi Browser for pending authentication requests and approve them.');
+        throw new Error('Authentication timed out. Please check your Pi Browser for pending authentication requests and approve them. On mobile, look for a notification banner.');
       } else if (error.message && error.message.includes('cancelled')) {
         throw new Error('Authentication was cancelled in the Pi Browser.');
       } else if (error.message && error.message.includes('Pi Network is not available')) {

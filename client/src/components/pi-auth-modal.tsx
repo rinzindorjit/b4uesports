@@ -31,7 +31,7 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
         onClose();
       }
     }}>
-      <DialogContent className="max-w-md w-full mx-4 sm:mx-auto" data-testid="pi-auth-modal">
+      <DialogContent className="max-w-md w-full mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto" data-testid="pi-auth-modal">
         <DialogHeader>
           <DialogTitle className="text-xl md:text-2xl text-center">
             {step === 'consent' ? 'Connect with Pi Network' : 'Connecting...'}
@@ -57,17 +57,17 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
               <CardContent className="pt-6">
                 <h3 className="font-semibold mb-3">Permissions requested:</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center">
-                    <i className="fas fa-check-circle text-green-500 mr-2"></i>
-                    Access your username for personalization
+                  <li className="flex items-start">
+                    <i className="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+                    <span>Access your username for personalization</span>
                   </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check-circle text-green-500 mr-2"></i>
-                    Process payments for purchases
+                  <li className="flex items-start">
+                    <i className="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+                    <span>Process payments for purchases</span>
                   </li>
-                  <li className="flex items-center">
-                    <i className="fas fa-check-circle text-green-500 mr-2"></i>
-                    Access your wallet address
+                  <li className="flex items-start">
+                    <i className="fas fa-check-circle text-green-500 mr-2 mt-1"></i>
+                    <span>Access your wallet address</span>
                   </li>
                 </ul>
               </CardContent>
@@ -80,11 +80,11 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
               </p>
             </div>
 
-            <div className="flex space-x-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button 
                 variant="outline" 
                 onClick={onClose} 
-                className="flex-1 text-sm md:text-base"
+                className="w-full text-sm md:text-base"
                 data-testid="auth-cancel"
                 disabled={isLoading}
               >
@@ -92,7 +92,7 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
               </Button>
               <Button 
                 onClick={handleAuthenticate} 
-                className="flex-1 text-sm md:text-base"
+                className="w-full text-sm md:text-base"
                 data-testid="auth-approve"
                 disabled={isLoading}
               >
@@ -101,12 +101,35 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
             </div>
           </div>
         ) : (
-          <div className="text-center py-8">
+          <div className="text-center py-6">
             <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
               <i className="fas fa-spinner fa-spin text-2xl text-primary-foreground"></i>
             </div>
-            <p className="text-lg font-semibold mb-2">Connecting to Pi Network</p>
-            <p className="text-muted-foreground text-sm md:text-base">Please check your Pi Browser for authentication request...</p>
+            <p className="text-lg font-semibold mb-3">Connecting to Pi Network</p>
+            <p className="text-muted-foreground text-sm md:text-base mb-6">Please check your Pi Browser for authentication request...</p>
+            
+            <div className="space-y-4 text-left">
+              <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
+                <p className="text-xs text-blue-300">
+                  <i className="fas fa-mobile-alt mr-2"></i>
+                  <strong>Mobile Users:</strong> Look for a notification banner in your Pi Browser asking for authentication approval.
+                </p>
+              </div>
+              
+              <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/30">
+                <p className="text-xs text-amber-300">
+                  <i className="fas fa-sync mr-2"></i>
+                  <strong>Not seeing a prompt?</strong> Try refreshing the page or restarting the Pi Browser app.
+                </p>
+              </div>
+              
+              <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/30">
+                <p className="text-xs text-red-300">
+                  <i className="fas fa-exclamation-triangle mr-2"></i>
+                  <strong>Still having issues?</strong> Make sure you're using the official Pi Browser app.
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </DialogContent>

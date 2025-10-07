@@ -33,6 +33,6 @@ export function waitForPiSDK(timeoutMs: number = 5000): Promise<void> {
         clearInterval(interval);
         resolve();
       }
-    }, 200); // Check more frequently for better responsiveness
+    }, 300); // Check every 300ms for better mobile responsiveness
   });
 }

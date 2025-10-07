@@ -115,7 +115,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
           description: "The authentication process is taking longer than expected. Please check your Pi Browser for pending requests or try again.",
           variant: "destructive",
         });
-      }, 60000); // 60 seconds timeout
+      }, 90000); // Increased timeout to 90 seconds for better mobile support
 
       const authResult = await piSDK.authenticate(['payments', 'username'], onIncompletePaymentFound);
       clearTimeout(authTimeout); // Clear the timeout if authentication completes
@@ -176,7 +176,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       if (errorMessage.includes('Pi SDK not available')) {
         errorMessage += " Make sure you're using the Pi Browser app, not a regular web browser.";
       } else if (errorMessage.includes('timeout')) {
-        errorMessage += " Check your Pi Browser for pending authentication requests and approve them.";
+        errorMessage += " Check your Pi Browser for pending authentication requests and approve them. On mobile, look for a notification banner.";
       } else if (errorMessage.includes('Invalid Pi Network token')) {
         errorMessage += " Please try again and make sure you approve the authentication request in the Pi Browser.";
       } else if (errorMessage.includes('Backend verification failed')) {
