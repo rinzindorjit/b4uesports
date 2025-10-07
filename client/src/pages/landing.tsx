@@ -38,10 +38,6 @@ export default function Landing() {
     }
   };
 
-  const { data: packages, isLoading: packagesLoading } = useQuery<Package[]>({
-    queryKey: ['/api/packages'],
-  });
-
   return (
     <div className="min-h-screen bg-background text-foreground" data-testid="landing-page">
       <ParticleBackground />
@@ -173,91 +169,6 @@ export default function Landing() {
                 </div>
               </CardContent>
             </Card>
-          </div>
-
-          {/* Featured Packages */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* PUBG Mobile */}
-            <div className="bg-card rounded-2xl p-6 border border-border shadow-lg" data-testid="pubg-section">
-              <div className="flex items-center mb-6">
-                <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-12 h-12 mr-4" />
-                <h2 className="text-2xl font-bold">PUBG Mobile UC</h2>
-              </div>
-              
-              {packagesLoading ? (
-                <div className="space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-16 bg-muted rounded-lg animate-pulse"></div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                  {packages
-                    ?.filter(pkg => pkg.game === 'PUBG')
-                    .map(pkg => (
-                      <div 
-                        key={pkg.id} 
-                        className="flex justify-between items-center p-3 bg-card rounded-lg border border-border"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div>
-                            <h3 className="font-medium">{pkg.name}</h3>
-                            <p className="text-sm text-muted-foreground">{pkg.inGameAmount} UC</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">{pkg.piPrice || 0} π</p>
-                          <p className="text-xs text-muted-foreground">
-                            ${(pkg.piPrice ? (pkg.piPrice * (piPrice?.price || 0)).toFixed(2) : '0.00')} USD
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
-              )}
-            </div>
-
-            {/* Mobile Legends */}
-            <div className="bg-card rounded-2xl p-6 border border-border shadow-lg" data-testid="mlbb-section">
-              <div className="flex items-center mb-6">
-                <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-12 h-12 mr-4" />
-                <h2 className="text-2xl font-bold">Mobile Legends Diamonds</h2>
-              </div>
-              
-              {packagesLoading ? (
-                <div className="space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-16 bg-muted rounded-lg animate-pulse"></div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                  {packages
-                    ?.filter(pkg => pkg.game === 'MLBB')
-                    .map(pkg => (
-                      <div 
-                        key={pkg.id} 
-                        className="flex justify-between items-center p-3 bg-card rounded-lg border border-border"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div>
-                            <h3 className="font-medium">{pkg.name}</h3>
-                            <p className="text-sm text-muted-foreground">{pkg.inGameAmount} Diamonds</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold">{pkg.piPrice || 0} π</p>
-                          <p className="text-xs text-muted-foreground">
-                            ${(pkg.piPrice ? (pkg.piPrice * (piPrice?.price || 0)).toFixed(2) : '0.00')} USD
-                          </p>
-                        </div>
-                      </div>
-                    ))
-                  }
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </section>
