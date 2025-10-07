@@ -1,5 +1,5 @@
 const { execSync } = require('child_process');
-const { copyFileSync, existsSync, mkdirSync, readdirSync, statSync } = require('fs');
+const { copyFileSync, existsSync, mkdirSync, readdirSync, statSync, unlinkSync } = require('fs');
 const { join } = require('path');
 
 function copyFolderRecursive(source, destination) {
@@ -74,6 +74,15 @@ try {
   const files = readdirSync(apiSourceDir);
   const tsFiles = files.filter(file => file.endsWith('.ts'));
   
+  // Remove existing .ts files from the destination directory to avoid conflicts
+  const destFiles = readdirSync(apiDestDir);
+  const destTsFiles = destFiles.filter(file => file.endsWith('.ts'));
+  for (const file of destTsFiles) {
+    const destPath = join(apiDestDir, file);
+    unlinkSync(destPath);
+    console.log(`Removed existing .ts file: ${file}`);
+  }
+  
   // Compile each TypeScript file individually
   for (const file of tsFiles) {
     const sourcePath = join(apiSourceDir, file);
@@ -83,6 +92,23 @@ try {
     execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=esm --outfile="${destPath}"`, {
       stdio: 'inherit'
     });
+  }
+  
+  // Post-process compiled files to fix import extensions
+  const compiledFiles = readdirSync(apiDestDir);
+  const compiledJsFiles = compiledFiles.filter(file => file.endsWith('.js'));
+  
+  for (const file of compiledJsFiles) {
+    const filePath = join(apiDestDir, file);
+    let content = require('fs').readFileSync(filePath, 'utf8');
+    
+    // Check if the file contains the specific import we're looking for
+    if (content.includes('from "./_utils"')) {
+      content = content.replace('from "./_utils"', 'from "./_utils.js"');
+      // Write the file only if content was changed
+      require('fs').writeFileSync(filePath, content, 'utf8');
+      console.log(`Fixed import extensions in ${file}`);
+    }
   }
   
   console.log('Build completed successfully!');
