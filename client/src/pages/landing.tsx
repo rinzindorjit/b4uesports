@@ -84,21 +84,6 @@ export default function Landing() {
                 <span className="font-mono">${piPrice.price.toFixed(5)}</span>
               </div>
             )}
-            
-            {/* Important Notice */}
-            <div className="mt-6 p-4 bg-amber-500/20 border border-amber-500/30 rounded-lg max-w-2xl mx-auto">
-              <p className="text-amber-100 text-sm">
-                <i className="fas fa-exclamation-circle mr-2"></i>
-                <strong>Important:</strong> Please use the official <strong>Pi Browser</strong> app for the best experience. 
-                If you're experiencing connection issues:
-              </p>
-              <ul className="text-amber-100 text-sm mt-2 list-disc list-inside text-left">
-                <li>Make sure you're using the Pi Browser app, not a regular web browser</li>
-                <li>Check for pop-up notifications or banners in the Pi Browser asking for authentication approval</li>
-                <li>Try refreshing the page or restarting the Pi Browser app</li>
-                <li>Ensure you have the latest version of the Pi Browser installed</li>
-              </ul>
-            </div>
           </div>
 
           {/* Key Features Section */}
