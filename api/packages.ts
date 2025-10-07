@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getStorage, getPricingService } from './_utils.ts';
+import { getStorage, getPricingService } from './_utils';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers
@@ -20,11 +20,11 @@ export default async function handler(request: VercelRequest, response: VercelRe
     // Get services dynamically
     const storage = await getStorage();
     const pricingService = await getPricingService();
-
+    
     const packages = await storage.getActivePackages();
     const currentPiPrice = await pricingService.getCurrentPiPrice();
 
-    const packagesWithPiPricing = packages.map(pkg => ({
+    const packagesWithPiPricing = packages.map((pkg: any) => ({
       ...pkg,
       piPrice: pricingService.calculatePiAmount(parseFloat(pkg.usdtValue)),
       currentPiPrice,

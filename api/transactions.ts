@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { JWT_SECRET, getStorage, jwt } from './_utils.ts';
+import { JWT_SECRET, getStorage, jwt } from './_utils';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers
@@ -17,14 +17,14 @@ export default async function handler(request: VercelRequest, response: VercelRe
   }
 
   try {
+    // Get services dynamically
+    const storage = await getStorage();
+    
     const authHeader = request.headers.authorization;
     const token = authHeader?.replace('Bearer ', '');
     if (!token) {
       return response.status(401).json({ message: 'No token provided' });
     }
-
-    // Get service dynamically
-    const storage = await getStorage();
 
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     const userId = decoded.userId;

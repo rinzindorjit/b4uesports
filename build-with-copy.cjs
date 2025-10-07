@@ -22,9 +22,15 @@ function copyFolderRecursive(source, destination) {
 }
 
 try {
-  // Run the main build command
-  console.log('Running main build...');
-  execSync('npx vite build && npx esbuild server/index.ts server/vercel-handler.ts server/routes.ts --platform=node --packages=external --bundle --format=esm --outdir=dist', { 
+  // Run the main build command for client
+  console.log('Running client build...');
+  execSync('npx vite build', { 
+    stdio: 'inherit' 
+  });
+  
+  // Bundle server files
+  console.log('Bundling server files...');
+  execSync('npx esbuild server/index.ts server/vercel-handler.ts server/routes.ts --platform=node --packages=external --bundle --format=esm --outdir=dist', { 
     stdio: 'inherit' 
   });
   
@@ -54,8 +60,8 @@ try {
     }
   }
   
-  // Copy API files to dist/api directory
-  console.log('Copying API files...');
+  // Compile API TypeScript files to JavaScript without bundling
+  console.log('Compiling API files...');
   const apiSourceDir = join(process.cwd(), 'api');
   const apiDestDir = join(process.cwd(), 'dist', 'api');
   
@@ -64,10 +70,22 @@ try {
     mkdirSync(apiDestDir, { recursive: true });
   }
   
-  // Copy all API files
-  copyFolderRecursive(apiSourceDir, apiDestDir);
+  // Get all .ts files in the api directory
+  const files = readdirSync(apiSourceDir);
+  const tsFiles = files.filter(file => file.endsWith('.ts'));
   
-  console.log('Server and API files copied successfully!');
+  // Compile each TypeScript file individually
+  for (const file of tsFiles) {
+    const sourcePath = join(apiSourceDir, file);
+    const destPath = join(apiDestDir, file.replace('.ts', '.js'));
+    
+    console.log(`Compiling ${file}...`);
+    execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=esm --outfile="${destPath}"`, {
+      stdio: 'inherit'
+    });
+  }
+  
+  console.log('Build completed successfully!');
   
 } catch (error) {
   console.error('Build failed:', error.message);

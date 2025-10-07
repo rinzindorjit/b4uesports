@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { JWT_SECRET, getStorage, jwt } from './_utils.ts';
+import { JWT_SECRET, getStorage, jwt } from './_utils';
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers
@@ -17,30 +17,24 @@ export default async function handler(request: VercelRequest, response: VercelRe
   }
 
   try {
+    const { action, data } = request.body;
+    
+    // Get services dynamically
+    const storage = await getStorage();
+
+    // Authenticate admin
     const authHeader = request.headers.authorization;
     const token = authHeader?.replace('Bearer ', '');
+    
     if (!token) {
       return response.status(401).json({ message: 'No token provided' });
     }
 
-    const { action, data } = request.body;
-    
-    try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
-      
-      // Get service dynamically
-      const storage = await getStorage();
-      
-      const admin = await storage.getAdminByUsername(decoded.username);
-      if (!admin || !admin.isActive) {
-        return response.status(401).json({ message: 'Invalid admin token' });
-      }
-    } catch (error) {
-      return response.status(401).json({ message: 'Invalid token' });
+    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const admin = await storage.getAdminByUsername(decoded.username);
+    if (!admin || !admin.isActive) {
+      return response.status(401).json({ message: 'Invalid admin token' });
     }
-
-    // Get service dynamically
-    const storage = await getStorage();
 
     switch (action) {
       case 'analytics':
@@ -56,9 +50,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
         return response.status(200).json(packages);
 
       case 'createPackage':
-        // Assuming insertPackageSchema is available
-        const packageData = data;
-        const newPackage = await storage.createPackage(packageData);
+        // Validate package data
+        const newPackage = await storage.createPackage(data);
         return response.status(200).json(newPackage);
 
       case 'updatePackage':
