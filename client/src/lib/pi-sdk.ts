@@ -43,12 +43,13 @@ export class PiSDK {
     
     if (typeof window !== 'undefined' && window.Pi) {
       try {
+        // Always use version "2.0" as required by Pi Network
         window.Pi.init({ 
           version: "2.0", 
           sandbox 
         });
         this.initialized = true;
-        console.log('Pi SDK initialized with sandbox:', sandbox);
+        console.log('Pi SDK initialized with version 2.0, sandbox:', sandbox);
       } catch (error) {
         console.error('Pi SDK initialization failed:', error);
         return;
@@ -59,12 +60,13 @@ export class PiSDK {
       setTimeout(() => {
         if (typeof window !== 'undefined' && window.Pi && !this.initialized) {
           try {
+            // Always use version "2.0" as required by Pi Network
             window.Pi.init({ 
               version: "2.0", 
               sandbox 
             });
             this.initialized = true;
-            console.log('Pi SDK initialized with sandbox (retry):', sandbox);
+            console.log('Pi SDK initialized with version 2.0, sandbox (retry):', sandbox);
           } catch (error) {
             console.error('Pi SDK initialization failed on retry:', error);
           }
@@ -87,7 +89,8 @@ export class PiSDK {
 
     // Initialize if not already done
     if (!this.initialized) {
-      this.init(true); // Always use sandbox mode for Testnet
+      // Always use sandbox mode for Testnet
+      this.init(true);
       // Wait a bit for initialization
       await new Promise(resolve => setTimeout(resolve, 3000));
     }
@@ -99,8 +102,9 @@ export class PiSDK {
 
     try {
       console.log('Calling Pi.authenticate with scopes:', scopes);
-      // Add a timeout to the authentication call
+      // Add a timeout to the authentication call with proper Pi Network timeout values
       const authPromise = window.Pi.authenticate(scopes, onIncompletePaymentFound);
+      // Use 90 seconds timeout as recommended for mobile compatibility
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser for pending requests')), 90000)
       );

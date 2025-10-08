@@ -21,14 +21,16 @@ export default async function handler(request: VercelRequest, response: VercelRe
     
     switch (action) {
       case 'authenticate':
-        console.log('Authentication request received');
+        console.log('Authentication request received for Pi Network Testnet');
         const { accessToken } = data;
         if (!accessToken) {
           console.log('No access token provided');
           return response.status(400).json({ message: 'Access token required' });
         }
 
-        console.log('Verifying access token with Pi Network');
+        console.log('Verifying access token with Pi Network Testnet API');
+        // Verify the user's identity by requesting the /me endpoint from your backend
+        // using the access token obtained with the Pi.authenticate method
         const piUser = await piNetworkService.verifyAccessToken(accessToken);
         if (!piUser) {
           console.log('Invalid Pi Network token');
@@ -55,7 +57,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
           console.log('Existing user found for Pi UID:', piUser.uid);
         }
 
-        // Generate JWT token for session
+        // Generate JWT token for session as required by Pi Network guidelines
         const userToken = jwt.sign({ userId: user.id, piUID: user.piUID }, JWT_SECRET, { expiresIn: '7d' });
         console.log('Generated JWT token for user:', user.id);
 

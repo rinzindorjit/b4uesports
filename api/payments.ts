@@ -32,13 +32,13 @@ export default async function handler(request: VercelRequest, response: VercelRe
           return response.status(400).json({ message: 'Payment ID required' });
         }
 
-        // Get payment details from Pi Network
+        // Get payment details from Pi Network Testnet
         const payment = await piNetworkService.getPayment(paymentId);
         if (!payment) {
           return response.status(404).json({ message: 'Payment not found' });
         }
 
-        // Validate payment metadata
+        // Validate payment metadata as required by Pi Network
         if (!payment.metadata?.type || payment.metadata.type !== 'backend') {
           return response.status(400).json({ message: 'Invalid payment metadata' });
         }
@@ -65,7 +65,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
           transaction = await storage.createTransaction(transactionData);
         }
 
-        // Approve payment with Pi Network
+        // Approve payment with Pi Network Testnet as required by Pi Network
         const approved = await piNetworkService.approvePayment(paymentId);
         if (!approved) {
           await storage.updateTransaction(transaction.id, { status: 'failed' });
@@ -88,7 +88,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
           return response.status(404).json({ message: 'Transaction not found' });
         }
 
-        // Complete payment with Pi Network
+        // Complete payment with Pi Network Testnet as required by Pi Network
         const completed = await piNetworkService.completePayment(completePaymentId, txid);
         if (!completed) {
           await storage.updateTransaction(completeTransaction.id, { status: 'failed' });
@@ -111,6 +111,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
               ? `${completeTransaction.gameAccount.ign} (${completeTransaction.gameAccount.uid})`
               : `${completeTransaction.gameAccount.userId}:${completeTransaction.gameAccount.zoneId}`;
 
+            // Always indicate Testnet in emails for testing purposes
             const emailSent = await sendPurchaseConfirmationEmail({
               to: user.email,
               username: user.username,
@@ -120,7 +121,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
               gameAccount: gameAccountString,
               transactionId: completeTransaction.id,
               paymentId: completePaymentId,
-              isTestnet: true, // Always testnet
+              isTestnet: true, // Always Testnet for this implementation
             });
 
             await storage.updateTransaction(completeTransaction.id, { emailSent });

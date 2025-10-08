@@ -3,7 +3,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Use Testnet API for all requests
+// Use Testnet API for all requests as required for testing
+// For Testnet, always use sandbox.minepi.com
 const PI_API_BASE = 'https://sandbox.minepi.com';
 const SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
 
@@ -67,13 +68,14 @@ export class PiNetworkService {
 
   async verifyAccessToken(accessToken: string): Promise<PiUser | null> {
     try {
-      console.log('Verifying access token with Pi Network API');
+      console.log('Verifying access token with Pi Network Testnet API');
+      // For Testnet, always use the sandbox API endpoint
       const response = await axios.get(`${PI_API_BASE}/v2/me`, {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
         },
       });
-      console.log('Pi Network API response:', response.data);
+      console.log('Pi Network Testnet API response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Pi Network token verification failed:', error.response?.data || error.message);
@@ -83,6 +85,7 @@ export class PiNetworkService {
 
   async approvePayment(paymentId: string): Promise<boolean> {
     try {
+      // For Testnet, always use the sandbox API endpoint
       await axios.post(
         `${PI_API_BASE}/v2/payments/${paymentId}/approve`,
         {},
@@ -102,6 +105,7 @@ export class PiNetworkService {
 
   async completePayment(paymentId: string, txid: string): Promise<boolean> {
     try {
+      // For Testnet, always use the sandbox API endpoint
       await axios.post(
         `${PI_API_BASE}/v2/payments/${paymentId}/complete`,
         { txid },
@@ -121,6 +125,7 @@ export class PiNetworkService {
 
   async getPayment(paymentId: string): Promise<PaymentDTO | null> {
     try {
+      // For Testnet, always use the sandbox API endpoint
       const response = await axios.get(`${PI_API_BASE}/v2/payments/${paymentId}`, {
         headers: {
           'Authorization': `Key ${this.apiKey}`,
@@ -135,6 +140,7 @@ export class PiNetworkService {
 
   async cancelPayment(paymentId: string): Promise<boolean> {
     try {
+      // For Testnet, always use the sandbox API endpoint
       await axios.post(
         `${PI_API_BASE}/v2/payments/${paymentId}/cancel`,
         {},

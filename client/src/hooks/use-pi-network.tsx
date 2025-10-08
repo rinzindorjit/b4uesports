@@ -51,21 +51,22 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       });
 
       // Initialize Pi SDK if not already initialized
-      const isProduction = process.env.NODE_ENV === 'production';
       // Always use sandbox mode for Testnet
-      piSDK.init(true); // sandbox mode for Testnet
+      piSDK.init(true);
 
-      // Define the onIncompletePaymentFound callback
+      // Define the onIncompletePaymentFound callback as required by Pi Network
       const onIncompletePaymentFound = (payment: PaymentDTO) => {
         console.log('Incomplete payment found:', payment);
-        // Handle incomplete payment
+        // Handle incomplete payment according to Pi Network requirements
         toast({
           title: "Incomplete Payment Found",
           description: `Please complete your previous payment of ${payment.amount} π for "${payment.memo}"`,
           variant: "destructive",
         });
         
-        // Try to complete the payment with minimal metadata
+        // According to Pi Network documentation, it's the developer's responsibility
+        // to complete the corresponding payment when this callback is invoked
+        // We'll try to complete it with the existing data
         const paymentData: PaymentData = {
           amount: payment.amount,
           memo: payment.memo,
@@ -108,6 +109,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       };
 
       // Add a timeout for the entire authentication process
+      // Use 90 seconds as recommended for mobile compatibility
       const authTimeout = setTimeout(() => {
         setIsLoading(false);
         toast({
@@ -115,8 +117,9 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
           description: "The authentication process is taking longer than expected. Please check your Pi Browser for pending requests or try again.",
           variant: "destructive",
         });
-      }, 90000); // Increased timeout to 90 seconds for better mobile support
+      }, 90000);
 
+      // Authenticate with Pi Network using required scopes
       const authResult = await piSDK.authenticate(['payments', 'username'], onIncompletePaymentFound);
       clearTimeout(authTimeout); // Clear the timeout if authentication completes
       
@@ -130,7 +133,9 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
         description: "Please wait while we verify your credentials...",
       });
 
-      // Send access token to backend for verification
+      // Send access token to backend for verification according to Pi Network guidelines
+      // The user information obtained with this method should not be passed to your backend
+      // and should only be used for presentation logic
       const response = await apiRequest('POST', '/api/users', {
         action: 'authenticate',
         data: {
@@ -210,7 +215,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       throw new Error('User not authenticated');
     }
 
-    // Add user context to metadata
+    // Add user context to metadata as required by Pi Network
     const enhancedPaymentData = {
       ...paymentData,
       metadata: {
@@ -220,10 +225,11 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       },
     };
 
-    // Enhanced callbacks with API calls
+    // Enhanced callbacks with API calls for server-side approval and completion
     const enhancedCallbacks = {
       onReadyForServerApproval: async (paymentId: string) => {
         try {
+          // Server-Side Approval as required by Pi Network
           const response = await apiRequest('POST', '/api/payments', {
             action: 'approve',
             data: { paymentId }
@@ -241,6 +247,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       },
       onReadyForServerCompletion: async (paymentId: string, txid: string) => {
         try {
+          // Server-Side Completion as required by Pi Network
           const response = await apiRequest('POST', '/api/payments', {
             action: 'complete',
             data: { paymentId, txid }
