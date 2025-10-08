@@ -8,6 +8,7 @@ import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
 import ProfileModal from '@/components/profile-modal';
 import PurchaseModal from '@/components/purchase-modal';
+import PackageCard from '@/components/package-card';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -121,83 +122,71 @@ export default function Dashboard() {
           </div>
 
           {/* Game Packages */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* PUBG Mobile Packages */}
-            <div className="bg-card rounded-2xl p-6 border border-border shadow-lg">
-              <div className="flex items-center mb-6">
-                <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-12 h-12 mr-4" />
-                <h2 className="text-2xl font-bold">PUBG Mobile UC</h2>
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold text-center mb-8">Game Package Shop</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* PUBG Mobile Packages */}
+              <div className="bg-card rounded-2xl p-6 border border-border shadow-lg">
+                <div className="flex items-center justify-center mb-6">
+                  <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-16 h-16 mr-4 rounded-lg" />
+                  <h2 className="text-2xl font-bold">PUBG Mobile UC</h2>
+                </div>
+                
+                {packagesLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-32 bg-muted rounded-lg animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : pubgPackages.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No PUBG Mobile packages available</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {pubgPackages.map(pkg => (
+                      <PackageCard 
+                        key={pkg.id} 
+                        package={pkg} 
+                        onPurchase={() => handlePurchaseClick(pkg)}
+                        data-testid={`pubg-package-${pkg.id}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-              
-              {packagesLoading ? (
-                <div className="space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-16 bg-muted rounded-lg animate-pulse"></div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2">
-                  {pubgPackages.map(pkg => (
-                    <div 
-                      key={pkg.id} 
-                      className="flex flex-col p-4 bg-muted rounded-lg border border-border hover:border-primary transition-colors cursor-pointer"
-                      onClick={() => handlePurchaseClick(pkg)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{pkg.name}</span>
-                        <Badge variant="secondary">{pkg.inGameAmount} UC</Badge>
-                      </div>
-                      <div className="flex justify-between items-center mt-auto pt-2">
-                        <span className="text-sm text-muted-foreground">
-                          ~${parseFloat(pkg.usdtValue).toFixed(2)} USD
-                        </span>
-                        <span className="font-bold text-primary">
-                          {pkg.piPrice ? `${pkg.piPrice.toFixed(2)} π` : 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
 
-            {/* Mobile Legends Packages */}
-            <div className="bg-card rounded-2xl p-6 border border-border shadow-lg">
-              <div className="flex items-center mb-6">
-                <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-12 h-12 mr-4" />
-                <h2 className="text-2xl font-bold">Mobile Legends Diamonds</h2>
+              {/* Mobile Legends Packages */}
+              <div className="bg-card rounded-2xl p-6 border border-border shadow-lg">
+                <div className="flex items-center justify-center mb-6">
+                  <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-16 h-16 mr-4 rounded-lg" />
+                  <h2 className="text-2xl font-bold">Mobile Legends Diamonds</h2>
+                </div>
+                
+                {packagesLoading ? (
+                  <div className="space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="h-32 bg-muted rounded-lg animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : mlbbPackages.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No Mobile Legends packages available</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {mlbbPackages.map(pkg => (
+                      <PackageCard 
+                        key={pkg.id} 
+                        package={pkg} 
+                        onPurchase={() => handlePurchaseClick(pkg)}
+                        data-testid={`mlbb-package-${pkg.id}`}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
-              
-              {packagesLoading ? (
-                <div className="space-y-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-16 bg-muted rounded-lg animate-pulse"></div>
-                  ))}
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2">
-                  {mlbbPackages.map(pkg => (
-                    <div 
-                      key={pkg.id} 
-                      className="flex flex-col p-4 bg-muted rounded-lg border border-border hover:border-primary transition-colors cursor-pointer"
-                      onClick={() => handlePurchaseClick(pkg)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{pkg.name}</span>
-                        <Badge variant="secondary">{pkg.inGameAmount} Diamonds</Badge>
-                      </div>
-                      <div className="flex justify-between items-center mt-auto pt-2">
-                        <span className="text-sm text-muted-foreground">
-                          ~${parseFloat(pkg.usdtValue).toFixed(2)} USD
-                        </span>
-                        <span className="font-bold text-primary">
-                          {pkg.piPrice ? `${pkg.piPrice.toFixed(2)} π` : 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
