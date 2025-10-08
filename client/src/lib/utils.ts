@@ -12,15 +12,30 @@ export function cn(...inputs: ClassValue[]) {
 export function isPiBrowser(): boolean {
   if (typeof window === 'undefined') return false;
   
-  // Check for Pi Browser user agent
+  // Check for Pi Browser user agent (more comprehensive check)
   const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-  if (userAgent && userAgent.indexOf('PiBrowser') !== -1) {
-    return true;
+  if (userAgent) {
+    const lowerUserAgent = userAgent.toLowerCase();
+    if (lowerUserAgent.includes('pi') && 
+        (lowerUserAgent.includes('browser') || 
+         lowerUserAgent.includes('minepi'))) {
+      return true;
+    }
   }
   
   // Check for Pi object on window
   if (window.Pi) {
     return true;
+  }
+  
+  // Additional check for Pi Browser environment
+  try {
+    // Check for specific Pi Browser properties
+    if ((window as any).PiBrowser || (window as any).minePi) {
+      return true;
+    }
+  } catch (e) {
+    // Ignore errors
   }
   
   return false;
@@ -34,8 +49,8 @@ export function isPiBrowser(): boolean {
 export function waitForPiSDK(timeoutMs: number = 30000): Promise<void> {
   return new Promise((resolve, reject) => {
     // If Pi SDK is already loaded, resolve immediately
-    if (typeof window !== 'undefined' && window.Pi) {
-      console.log('Pi SDK already loaded');
+    if (typeof window !== 'undefined' && window.Pi && typeof window.Pi.init === 'function') {
+      console.log('Pi SDK already loaded and ready');
       resolve();
       return;
     }
@@ -43,7 +58,7 @@ export function waitForPiSDK(timeoutMs: number = 30000): Promise<void> {
     // Set up a timeout to reject the promise if SDK doesn't load in time
     const timeout = setTimeout(() => {
       console.error(`Pi SDK failed to load within ${timeoutMs}ms`);
-      reject(new Error(`Pi SDK failed to load within ${timeoutMs}ms. Please make sure you are using the Pi Browser app and have a stable internet connection.`));
+      reject(new Error(`Pi SDK failed to load within ${timeoutMs}ms. Please make sure you are using the Pi Browser app, have a stable internet connection, and refresh the page.`));
     }, timeoutMs);
 
     // Poll for Pi SDK availability with adaptive polling intervals
@@ -53,7 +68,7 @@ export function waitForPiSDK(timeoutMs: number = 30000): Promise<void> {
     
     const startPolling = () => {
       intervalId = setInterval(() => {
-        // Check if Pi SDK is available
+        // Check if Pi SDK is available and has the required functions
         if (typeof window !== 'undefined' && window.Pi && typeof window.Pi.init === 'function') {
           console.log('Pi SDK loaded and ready');
           clearTimeout(timeout);
@@ -103,7 +118,7 @@ export async function loadPiSDK(): Promise<void> {
     if (existingScript) {
       console.log('Pi SDK script already exists in DOM');
       
-      // If script is already loaded, resolve immediately
+      // If script is already loaded and marked as loaded, resolve immediately
       if (existingScript.hasAttribute('data-loaded')) {
         console.log('Pi SDK script already loaded');
         resolve();

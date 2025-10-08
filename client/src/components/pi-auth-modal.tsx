@@ -39,7 +39,7 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
         onClose();
       }
     }}>
-      <DialogContent className="max-w-md w-full mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto mobile-popup" data-testid="pi-auth-modal">
+      <DialogContent className="max-w-md w-full mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto mobile-popup responsive-modal" data-testid="pi-auth-modal">
         <DialogHeader>
           <DialogTitle className="text-xl md:text-2xl text-center">
             {step === 'consent' ? 'Connect with Pi Network' : 'Connecting...'}
@@ -131,7 +131,7 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
               <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/30">
                 <p className="text-xs text-blue-300">
                   <i className="fas fa-mobile-alt mr-1"></i>
-                  <strong>Mobile:</strong> Look for notification banner.
+                  <strong>Mobile:</strong> Look for notification banner at the top of your screen.
                 </p>
               </div>
               

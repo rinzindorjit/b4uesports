@@ -84,13 +84,27 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     if (isLoading) return;
     
     setIsLoading(true);
+    let authTimeout: NodeJS.Timeout | null = null;
     
     try {
       // Show initial loading message
       toast({
         title: "Connecting to Pi Network",
-        description: "Please check your Pi Browser for authentication request...",
+        description: "Loading Pi SDK...",
       });
+
+      // Reset SDK state to ensure clean initialization
+      piSDK.reset();
+      
+      // Add a timeout for the entire authentication process
+      authTimeout = setTimeout(() => {
+        setIsLoading(false);
+        toast({
+          title: "Authentication Timeout",
+          description: "The authentication process is taking longer than expected. Please check your Pi Browser for pending requests or try again.",
+          variant: "destructive",
+        });
+      }, 120000);
 
       // Define the onIncompletePaymentFound callback
       const onIncompletePaymentFound = (payment: PaymentDTO) => {
@@ -102,9 +116,31 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
         });
       };
 
-      // Simple authentication flow
+      // Update toast to show SDK initialization
+      toast({
+        title: "Connecting to Pi Network",
+        description: "Initializing Pi SDK...",
+      });
+
+      // Initialize Pi SDK
+      console.log('Initializing Pi SDK...');
+      await piSDK.init(true); // Always use sandbox for Testnet
+      
+      // Update toast to show authentication request
+      toast({
+        title: "Connecting to Pi Network",
+        description: "Please check your Pi Browser for authentication request...",
+      });
+
+      // Perform authentication
       console.log('Starting authentication...');
       const authResult = await piSDK.authenticate(['payments', 'username'], onIncompletePaymentFound);
+      
+      // Clear the timeout if authentication completes
+      if (authTimeout) {
+        clearTimeout(authTimeout);
+        authTimeout = null;
+      }
       
       if (!authResult) {
         throw new Error('Authentication failed. Please try again.');
@@ -153,10 +189,28 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       setUser(null);
       setToken(null);
       
+      // Clear the timeout if it exists
+      if (authTimeout) {
+        clearTimeout(authTimeout);
+      }
+      
       let errorMessage = "Failed to connect to Pi Network. Please make sure you're using the Pi Browser app.";
       
       if (error instanceof Error) {
         errorMessage = error.message;
+      }
+      
+      // Provide more specific guidance
+      if (errorMessage.includes('Pi SDK not available')) {
+        errorMessage = "Pi SDK not available. Please make sure you're using the Pi Browser app and refresh the page.";
+      } else if (errorMessage.includes('timeout')) {
+        errorMessage = "Authentication timed out. Please check your Pi Browser for pending requests. On mobile, look for a notification banner.";
+      } else if (errorMessage.includes('cancelled')) {
+        errorMessage = "Authentication was cancelled. Please try again and approve the authentication request in the Pi Browser.";
+      } else if (errorMessage.includes('initialize')) {
+        errorMessage = "Failed to initialize Pi SDK. Please refresh the page and try again.";
+      } else if (errorMessage.includes('load')) {
+        errorMessage = "Failed to load Pi SDK. Please check your internet connection and make sure you are using the Pi Browser app.";
       }
       
       toast({
