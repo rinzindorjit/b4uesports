@@ -14,8 +14,16 @@ export async function apiRequest(
 ): Promise<Response> {
   // Ensure the URL is correctly formatted
   const apiUrl = import.meta.env.VITE_API_URL || '';
-  // For relative URLs (when deployed to the same domain as the API), don't prepend apiUrl
-  const fullUrl = url.startsWith('/api') ? (apiUrl ? `${apiUrl}${url}` : url) : (apiUrl ? `${apiUrl}/api/${url}` : `/api/${url}`);
+  // For relative URLs, when deployed to the same domain as the API, Vercel strips the /api prefix
+  // So we need to remove it from the URL when apiUrl is not set
+  let fullUrl = url;
+  if (apiUrl) {
+    // When using a separate API URL, use the full path
+    fullUrl = url.startsWith('/api') ? `${apiUrl}${url}` : `${apiUrl}/api/${url}`;
+  } else {
+    // When deployed to the same domain, Vercel strips /api prefix, so we should too
+    fullUrl = url.startsWith('/api/') ? url.substring(4) : url;
+  }
   
   // Get token from localStorage
   const token = localStorage.getItem('pi_token');
@@ -47,8 +55,16 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const url = queryKey.join("/") as string;
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    // For relative URLs (when deployed to the same domain as the API), don't prepend apiUrl
-    const fullUrl = url.startsWith('/api') ? (apiUrl ? `${apiUrl}${url}` : url) : (apiUrl ? `${apiUrl}/api/${url}` : `/api/${url}`);
+    // For relative URLs, when deployed to the same domain as the API, Vercel strips the /api prefix
+    // So we need to remove it from the URL when apiUrl is not set
+    let fullUrl = url;
+    if (apiUrl) {
+      // When using a separate API URL, use the full path
+      fullUrl = url.startsWith('/api') ? `${apiUrl}${url}` : `${apiUrl}/api/${url}`;
+    } else {
+      // When deployed to the same domain, Vercel strips /api prefix, so we should too
+      fullUrl = url.startsWith('/api/') ? url.substring(4) : url;
+    }
     
     // Get token from localStorage
     const token = localStorage.getItem('pi_token');
