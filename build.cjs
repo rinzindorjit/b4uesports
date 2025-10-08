@@ -86,14 +86,6 @@ try {
     writeFileSync(filePath, content, 'utf8');
   }
   
-  // Remove TypeScript files after compilation to avoid conflicts
-  console.log('Removing TypeScript files to avoid conflicts...');
-  for (const file of tsFiles) {
-    const filePath = join(apiSourceDir, file);
-    unlinkSync(filePath);
-    console.log(`Removed ${filePath}`);
-  }
-  
   console.log('Build completed successfully!');
 } catch (error) {
   console.error('Build failed:', error.message);
