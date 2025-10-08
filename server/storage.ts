@@ -14,8 +14,7 @@ import {
   type InsertAdmin,
   type PiPriceHistory
 } from "@shared/schema";
-
-// We'll import supabase directly in each method to avoid TypeScript issues
+import bcrypt from 'bcrypt';
 
 // Mock data for development
 const mockUsers: User[] = [];
@@ -90,6 +89,35 @@ function initializeMockPackages() {
 
 // Initialize mock packages on module load
 initializeMockPackages();
+
+// Initialize default admin user
+function initializeMockAdmin() {
+  if (mockAdmins.length === 0) {
+    // Create a default admin user with username 'admin' and password 'admin123'
+    // For mock data, we'll use a pre-hashed password for 'admin123'
+    // Hashed value of 'admin123' with bcrypt cost factor 10
+    const hashedPassword = '$2b$10$nl1.TXf.KMXSeDczktt9yerr1XjYgJWzKGnsP8fL7Vsqrzs2im4Hi'; // bcrypt hash of 'admin123'
+    
+    mockAdmins.push({
+      id: 'admin_1',
+      username: 'admin',
+      password: hashedPassword,
+      email: 'admin@b4uesports.com',
+      role: 'admin',
+      isActive: true,
+      createdAt: new Date(),
+      lastLogin: null,
+    });
+    
+    console.log('Default admin user created:');
+    console.log('Username: admin');
+    console.log('Password: admin123');
+    console.log('Please change this password after first login for security.');
+  }
+}
+
+// Initialize mock admin on module load
+initializeMockAdmin();
 
 export interface IStorage {
   // Users
