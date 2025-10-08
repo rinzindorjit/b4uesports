@@ -20,9 +20,9 @@ export class PricingService {
     }
 
     try {
-      // Use the provided CoinGecko API URL without API key
+      // Use the provided CoinGecko API URL without API key (free tier)
       const response = await axios.get(
-        'https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4'
+        'https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd'
       );
 
       const price = response.data['pi-network']?.usd || 0.958; // fallback price
