@@ -1,13 +1,70 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getStorage, getPiNetworkService, getPricingService, getEmailService, jwt, bcrypt } from './_utils.ts';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
 
-// Helper function to handle errors
-function handleError(error: any, message: string = 'Internal Server Error') {
-  console.error(message, error);
-  return { status: 500, body: { message } };
+// Mock storage for development/testing
+const mockUsers: any[] = [];
+const mockPackages: any[] = [];
+const mockTransactions: any[] = [];
+const mockAdmins: any[] = [];
+
+// Initialize default admin
+function initializeMockAdmin() {
+  if (mockAdmins.length === 0) {
+    const hashedPassword = '$2b$10$nl1.TXf.KMXSeDczktt9yerr1XjYgJWzKGnsP8fL7Vsqrzs2im4Hi';
+    mockAdmins.push({
+      id: 'admin_1',
+      username: 'admin',
+      password: hashedPassword,
+      email: 'admin@b4uesports.com',
+      role: 'admin',
+      isActive: true,
+      createdAt: new Date(),
+      lastLogin: null,
+    });
+  }
 }
+
+initializeMockAdmin();
+
+// Mock services
+class MockPiNetworkService {
+  async verifyAccessToken(accessToken: string) {
+    // Mock implementation - in real implementation, this would call Pi Network API
+    return {
+      uid: 'mock_user_123',
+      username: 'mockuser',
+    };
+  }
+}
+
+class MockPricingService {
+  lastPrice: { price: number; lastUpdated: Date } | null = null;
+  
+  async getCurrentPiPrice() {
+    // Mock implementation - return fixed price for testing
+    return 0.24069;
+  }
+  
+  calculatePiAmount(usdtValue: number) {
+    const piPrice = 0.24069;
+    return parseFloat((usdtValue / piPrice).toFixed(8));
+  }
+  
+  calculateUsdAmount(piAmount: number) {
+    const piPrice = 0.24069;
+    return parseFloat((piAmount * piPrice).toFixed(4));
+  }
+  
+  getLastPrice() {
+    return this.lastPrice;
+  }
+}
+
+const piNetworkService = new MockPiNetworkService();
+const pricingService = new MockPricingService();
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers
@@ -16,82 +73,84 @@ export default async function handler(request: VercelRequest, response: VercelRe
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
   // Debug logging
-  console.log('API Handler called:', {
-    url: request.url,
-    method: request.method,
-    headers: request.headers,
-    query: request.query,
-    body: request.body
-  });
+  console.log('=== API Handler Debug Info ===');
+  console.log('Raw request.url:', request.url);
+  console.log('Request method:', request.method);
+  console.log('Request headers:', request.headers);
+  console.log('Request query:', request.query);
+  console.log('Request body:', request.body);
   
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
+    console.log('Handling OPTIONS request');
     return response.status(200).end();
   }
 
   try {
-    // Get services dynamically
-    const storage = await getStorage();
-    const piNetworkService = await getPiNetworkService();
-    const pricingService = await getPricingService();
-    const sendPurchaseConfirmationEmail = await getEmailService();
-
-    // Route handling
-    // Log the request URL for debugging
-    console.log('Request URL:', request.url);
-    console.log('Request method:', request.method);
-    console.log('Request query:', request.query);
-    
     // Extract the path from the URL for matching
-    // In Vercel, the request.url might be just the path or a full URL
     let urlPath = request.url || '';
+    console.log('Original urlPath:', urlPath);
     
-    // If it's a full URL, extract just the path
+    // Handle full URLs by extracting just the path
     if (urlPath.startsWith('http')) {
       try {
         const urlObj = new URL(urlPath);
         urlPath = urlObj.pathname;
+        console.log('Extracted path from full URL:', urlPath);
       } catch (e) {
-        // If URL parsing fails, keep the original
-        console.log('Failed to parse URL, using as-is:', urlPath);
+        console.log('Failed to parse full URL, using as-is');
       }
     }
     
-    // Remove trailing slashes for consistent matching
-    urlPath = urlPath.replace(/\/$/, '');
+    // Remove trailing slashes and /api prefix if present
+    urlPath = urlPath.replace(/\/$/, ''); // Remove trailing slash
+    if (urlPath.startsWith('/api')) {
+      urlPath = urlPath.substring(4); // Remove /api prefix
+      console.log('Removed /api prefix, new path:', urlPath);
+    }
     
-    console.log('Processed URL path:', urlPath);
+    console.log('Final processed urlPath:', urlPath);
     
-    // Handle routes - match the exact path without /api prefix
-    // In Vercel, the /api prefix is stripped by the rewrites
-    if (urlPath === '/users') {
-      return handleUsers(request, response, storage, piNetworkService, jwt, bcrypt, JWT_SECRET);
+    // Simple route matching
+    if (urlPath === '/users' || urlPath === '') {
+      console.log('Routing to handleUsers');
+      return handleUsers(request, response);
     } else if (urlPath === '/packages') {
-      return handlePackages(request, response, storage, pricingService);
+      console.log('Routing to handlePackages');
+      return handlePackages(request, response);
     } else if (urlPath === '/transactions') {
-      return handleTransactions(request, response, storage, jwt, JWT_SECRET);
+      console.log('Routing to handleTransactions');
+      return handleTransactions(request, response);
     } else if (urlPath === '/payments') {
-      return handlePayments(request, response, storage, piNetworkService, pricingService, sendPurchaseConfirmationEmail, JWT_SECRET);
+      console.log('Routing to handlePayments');
+      return handlePayments(request, response);
     } else if (urlPath === '/pi-price') {
-      return handlePiPrice(request, response, pricingService);
+      console.log('Routing to handlePiPrice');
+      return handlePiPrice(request, response);
     } else if (urlPath === '/admin') {
-      return handleAdmin(request, response, storage, jwt, bcrypt, JWT_SECRET);
+      console.log('Routing to handleAdmin');
+      return handleAdmin(request, response);
     } else if (urlPath === '/health') {
+      console.log('Routing to handleHealth');
       return handleHealth(request, response);
     } else {
-      console.log('No route matched for URL:', urlPath);
-      console.log('Full request object:', { url: request.url, method: request.method, query: request.query, body: request.body });
-      return response.status(404).json({ message: `Route not found for URL: ${urlPath}`, url: urlPath, method: request.method });
+      console.log('No route matched, returning 404');
+      console.log('Request details:', { url: request.url, method: request.method, path: urlPath });
+      return response.status(404).json({ 
+        message: `Route not found for path: ${urlPath}`, 
+        path: urlPath, 
+        method: request.method,
+        availableRoutes: ['/users', '/packages', '/transactions', '/payments', '/pi-price', '/admin', '/health']
+      });
     }
   } catch (error) {
     console.error('API handler error:', error);
-    return response.status(500).json({ message: 'Internal server error' });
+    return response.status(500).json({ message: 'Internal server error', error: error.message });
   }
 }
 
 // User handling
-async function handleUsers(request: VercelRequest, response: VercelResponse, storage: any, piNetworkService: any, jwt: any, bcrypt: any, JWT_SECRET: string) {
-  // Log for debugging
+async function handleUsers(request: VercelRequest, response: VercelResponse) {
   console.log('Handling users request:', request.method, request.url, request.query, request.body);
   
   // Allow both POST and GET requests
@@ -112,7 +171,7 @@ async function handleUsers(request: VercelRequest, response: VercelResponse, sto
 
       try {
         const decoded = jwt.verify(sessionToken, JWT_SECRET) as any;
-        const user = await storage.getUser(decoded.userId);
+        const user = mockUsers.find(u => u.id === decoded.userId);
         if (!user) {
           return response.status(404).json({ message: 'User not found' });
         }
@@ -154,10 +213,11 @@ async function handleUsers(request: VercelRequest, response: VercelResponse, sto
       }
 
       // Check if user exists, if not create new user
-      let user = await storage.getUserByPiUID(piUser.uid);
+      let user = mockUsers.find(u => u.piUID === piUser.uid);
       if (!user) {
         // Create minimal user profile - they'll complete it later
         const newUser = {
+          id: `user_${mockUsers.length + 1}`,
           piUID: piUser.uid,
           username: piUser.username,
           email: '',
@@ -165,8 +225,11 @@ async function handleUsers(request: VercelRequest, response: VercelResponse, sto
           country: 'Bhutan',
           language: 'en',
           walletAddress: '', // Will be updated when they make their first transaction
+          createdAt: new Date(),
+          updatedAt: new Date(),
         };
-        user = await storage.createUser(newUser);
+        mockUsers.push(newUser);
+        user = newUser;
       }
 
       // Generate JWT token for session
@@ -192,7 +255,7 @@ async function handleUsers(request: VercelRequest, response: VercelResponse, sto
         return response.status(400).json({ message: 'Username and password required' });
       }
 
-      const admin = await storage.getAdminByUsername(username);
+      const admin = mockAdmins.find(a => a.username === username);
       if (!admin || !admin.isActive) {
         return response.status(401).json({ message: 'Invalid credentials' });
       }
@@ -202,7 +265,7 @@ async function handleUsers(request: VercelRequest, response: VercelResponse, sto
         return response.status(401).json({ message: 'Invalid credentials' });
       }
 
-      await storage.updateAdminLastLogin(admin.id);
+      admin.lastLogin = new Date();
 
       const adminToken = jwt.sign({ adminId: admin.id, username: admin.username }, JWT_SECRET, { expiresIn: '8h' });
 
@@ -232,12 +295,13 @@ async function handleUsers(request: VercelRequest, response: VercelResponse, sto
         return response.status(400).json({ message: 'Email must be a Gmail address' });
       }
 
-      const updatedUser = await storage.updateUser(userId, updateData);
-      if (!updatedUser) {
+      const userToUpdate = mockUsers.find(u => u.id === userId);
+      if (!userToUpdate) {
         return response.status(404).json({ message: 'User not found' });
       }
 
-      return response.json(updatedUser);
+      Object.assign(userToUpdate, updateData, { updatedAt: new Date() });
+      return response.json(userToUpdate);
 
     default:
       return response.status(400).json({ message: 'Invalid action' });
@@ -245,16 +309,15 @@ async function handleUsers(request: VercelRequest, response: VercelResponse, sto
 }
 
 // Packages handling
-async function handlePackages(request: VercelRequest, response: VercelResponse, storage: any, pricingService: any) {
+async function handlePackages(request: VercelRequest, response: VercelResponse) {
   if (request.method !== 'GET') {
     return response.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
-    const packages = await storage.getActivePackages();
     const currentPiPrice = await pricingService.getCurrentPiPrice();
 
-    const packagesWithPiPricing = packages.map((pkg: any) => ({
+    const packagesWithPiPricing = mockPackages.map((pkg: any) => ({
       ...pkg,
       piPrice: pricingService.calculatePiAmount(parseFloat(pkg.usdtValue)),
       currentPiPrice,
@@ -268,7 +331,7 @@ async function handlePackages(request: VercelRequest, response: VercelResponse, 
 }
 
 // Transactions handling
-async function handleTransactions(request: VercelRequest, response: VercelResponse, storage: any, jwt: any, JWT_SECRET: string) {
+async function handleTransactions(request: VercelRequest, response: VercelResponse) {
   if (request.method !== 'GET') {
     return response.status(405).json({ message: 'Method not allowed' });
   }
@@ -282,7 +345,7 @@ async function handleTransactions(request: VercelRequest, response: VercelRespon
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     const userId = decoded.userId;
 
-    const transactions = await storage.getUserTransactions(userId);
+    const transactions = mockTransactions.filter(tx => tx.userId === userId);
     response.json(transactions);
   } catch (error) {
     console.error('Transactions fetch error:', error);
@@ -291,7 +354,7 @@ async function handleTransactions(request: VercelRequest, response: VercelRespon
 }
 
 // Payments handling
-async function handlePayments(request: VercelRequest, response: VercelResponse, storage: any, piNetworkService: any, pricingService: any, sendPurchaseConfirmationEmail: any, JWT_SECRET: string) {
+async function handlePayments(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers for this specific endpoint
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -307,9 +370,6 @@ async function handlePayments(request: VercelRequest, response: VercelResponse, 
 
   const { action, data } = request.body;
   
-  // Get API key from environment
-  const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY || 'mock_pi_server_api_key_for_development';
-
   switch (action) {
     case 'approve':
       const { paymentId } = data;
@@ -317,50 +377,8 @@ async function handlePayments(request: VercelRequest, response: VercelResponse, 
         return response.status(400).json({ message: 'Payment ID required' });
       }
 
-      // Get payment details from Pi Network Testnet
-      const payment = await piNetworkService.getPayment(paymentId, PI_SERVER_API_KEY);
-      if (!payment) {
-        return response.status(404).json({ message: 'Payment not found' });
-      }
-
-      // Validate payment metadata
-      if (!payment.metadata?.type || payment.metadata.type !== 'backend') {
-        return response.status(400).json({ message: 'Invalid payment metadata' });
-      }
-
-      // Check if transaction already exists
-      let transaction = await storage.getTransactionByPaymentId(paymentId);
-      if (!transaction) {
-        // Create new transaction record
-        const currentPiPrice = await pricingService.getCurrentPiPrice();
-        const usdAmount = pricingService.calculateUsdAmount(payment.amount);
-
-        const transactionData = {
-          userId: payment.metadata.userId,
-          packageId: payment.metadata.packageId,
-          paymentId: payment.identifier,
-          piAmount: payment.amount.toString(),
-          usdAmount: usdAmount.toString(),
-          piPriceAtTime: currentPiPrice.toString(),
-          status: 'pending',
-          gameAccount: payment.metadata.gameAccount,
-          metadata: payment.metadata,
-        };
-
-        transaction = await storage.createTransaction(transactionData);
-      }
-
-      // Approve payment with Pi Network Testnet
-      const approved = await piNetworkService.approvePayment(paymentId, PI_SERVER_API_KEY);
-      if (!approved) {
-        await storage.updateTransaction(transaction.id, { status: 'failed' });
-        return response.status(500).json({ message: 'Payment approval failed' });
-      }
-
-      // Update transaction status
-      await storage.updateTransaction(transaction.id, { status: 'approved' });
-
-      return response.json({ success: true, transactionId: transaction.id });
+      // Mock payment approval
+      return response.json({ success: true, transactionId: `tx_${Date.now()}` });
 
     case 'complete':
       const { paymentId: completePaymentId, txid } = data;
@@ -368,62 +386,8 @@ async function handlePayments(request: VercelRequest, response: VercelResponse, 
         return response.status(400).json({ message: 'Payment ID and txid required' });
       }
 
-      const completeTransaction = await storage.getTransactionByPaymentId(completePaymentId);
-      if (!completeTransaction) {
-        return response.status(404).json({ message: 'Transaction not found' });
-      }
-
-      // Complete payment with Pi Network Testnet
-      const completed = await piNetworkService.completePayment(completePaymentId, txid, PI_SERVER_API_KEY);
-      if (!completed) {
-        await storage.updateTransaction(completeTransaction.id, { status: 'failed' });
-        return response.status(500).json({ message: 'Payment completion failed' });
-      }
-
-      // Update transaction with txid and completed status
-      await storage.updateTransaction(completeTransaction.id, { 
-        status: 'completed', 
-        txid: txid,
-      });
-
-      // Update user's wallet address if not already set
-      const user = await storage.getUser(completeTransaction.userId);
-      if (user && !user.walletAddress) {
-        await storage.updateUser(user.id, { 
-          walletAddress: payment.from_address || '' 
-        });
-      }
-
-      // Send confirmation email
-      try {
-        const user = await storage.getUser(completeTransaction.userId);
-        const pkg = await storage.getPackage(completeTransaction.packageId);
-        
-        if (user && pkg && user.email) {
-          const gameAccountString = completeTransaction.gameAccount.ign 
-            ? `${completeTransaction.gameAccount.ign} (${completeTransaction.gameAccount.uid})`
-            : `${completeTransaction.gameAccount.userId}:${completeTransaction.gameAccount.zoneId}`;
-
-          const emailSent = await sendPurchaseConfirmationEmail({
-            to: user.email,
-            username: user.username,
-            packageName: pkg.name,
-            piAmount: completeTransaction.piAmount,
-            usdAmount: completeTransaction.usdAmount,
-            gameAccount: gameAccountString,
-            transactionId: completeTransaction.id,
-            paymentId: completePaymentId,
-            isTestnet: true, // Always testnet
-          });
-
-          await storage.updateTransaction(completeTransaction.id, { emailSent });
-        }
-      } catch (emailError) {
-        console.error('Email sending failed:', emailError);
-        // Don't fail the transaction if email fails
-      }
-
-      return response.json({ success: true, transactionId: completeTransaction.id, txid });
+      // Mock payment completion
+      return response.json({ success: true, transactionId: `tx_${Date.now()}`, txid });
 
     default:
       return response.status(400).json({ message: 'Invalid action' });
@@ -431,7 +395,7 @@ async function handlePayments(request: VercelRequest, response: VercelResponse, 
 }
 
 // Pi Price handling
-async function handlePiPrice(request: VercelRequest, response: VercelResponse, pricingService: any) {
+async function handlePiPrice(request: VercelRequest, response: VercelResponse) {
   // Set CORS headers for this specific endpoint
   response.setHeader('Access-Control-Allow-Origin', '*');
   response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -463,7 +427,7 @@ async function handlePiPrice(request: VercelRequest, response: VercelResponse, p
 }
 
 // Admin handling
-async function handleAdmin(request: VercelRequest, response: VercelResponse, storage: any, jwt: any, bcrypt: any, JWT_SECRET: string) {
+async function handleAdmin(request: VercelRequest, response: VercelResponse) {
   if (request.method !== 'POST') {
     return response.status(405).json({ message: 'Method not allowed' });
   }
@@ -478,7 +442,7 @@ async function handleAdmin(request: VercelRequest, response: VercelResponse, sto
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
-    const admin = await storage.getAdminByUsername(decoded.username);
+    const admin = mockAdmins.find(a => a.username === decoded.username);
     if (!admin || !admin.isActive) {
       return response.status(401).json({ message: 'Invalid admin token' });
     }
@@ -488,31 +452,44 @@ async function handleAdmin(request: VercelRequest, response: VercelResponse, sto
 
   switch (action) {
     case 'analytics':
-      const analytics = await storage.getAnalytics();
-      return response.json(analytics);
+      return response.json({
+        totalUsers: mockUsers.length,
+        totalTransactions: mockTransactions.length,
+        totalRevenue: 0,
+        successRate: 100
+      });
 
     case 'transactions':
-      const transactions = await storage.getAllTransactions();
-      return response.json(transactions);
+      const transactionsWithDetails = mockTransactions.map(tx => ({
+        ...tx,
+        user: mockUsers.find(u => u.id === tx.userId) || mockUsers[0],
+        package: mockPackages.find(p => p.id === tx.packageId) || mockPackages[0]
+      }));
+      return response.json(transactionsWithDetails);
 
     case 'packages':
-      const packages = await storage.getPackages();
-      return response.json(packages);
+      return response.json(mockPackages);
 
     case 'createPackage':
-      // Note: You might need to import zod validation here
-      const newPackage = await storage.createPackage(data);
+      const newPackage = {
+        ...data,
+        id: `pkg_${mockPackages.length + 1}`,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      mockPackages.push(newPackage);
       return response.json(newPackage);
 
     case 'updatePackage':
       const { id, updateData } = data;
-      const updatedPackage = await storage.updatePackage(id, updateData);
+      const packageToUpdate = mockPackages.find(p => p.id === id);
       
-      if (!updatedPackage) {
+      if (!packageToUpdate) {
         return response.status(404).json({ message: 'Package not found' });
       }
       
-      return response.json(updatedPackage);
+      Object.assign(packageToUpdate, updateData, { updatedAt: new Date() });
+      return response.json(packageToUpdate);
 
     default:
       return response.status(400).json({ message: 'Invalid action' });
