@@ -17,5 +17,8 @@
       "runtime": "@vercel/node@4.0.0"
     }
   },
-  "cleanUrls": true
+  "cleanUrls": true,
+  "github": {
+    "silent": true
+  }
 }
