@@ -27,5 +27,5 @@ validation-key.txt
 Thumbs.db
 .DS_Store
 
-# Compiled API files
-api/*.js
+# # Compiled API files - we'll commit these to ensure Vercel can find them
+# api/*.js
