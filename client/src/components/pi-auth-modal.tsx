@@ -84,7 +84,7 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
             <div className="bg-amber-500/20 border border-amber-500 rounded-lg p-4">
               <p className="text-xs md:text-sm text-amber-300">
                 <i className="fas fa-info-circle mr-2"></i>
-                Note: Transactions are currently processed on the Pi Testnet. No real Pi coins will be deducted.
+                <strong>Important:</strong> Please use the Pi Browser app for authentication. On mobile, check for notification banners during authentication. If you don't see a prompt, try refreshing the page or restarting the Pi Browser app.
               </p>
             </div>
 
@@ -135,21 +135,26 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
               <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
                 <p className="text-xs text-blue-300">
                   <i className="fas fa-mobile-alt mr-2"></i>
-                  <strong>Mobile Users:</strong> Look for a notification banner in your Pi Browser asking for authentication approval.
+                  <strong>Mobile Users:</strong> Look for a notification banner in your Pi Browser asking for authentication approval. This may take up to 3 minutes on slower connections.
                 </p>
               </div>
               
               <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/30">
                 <p className="text-xs text-amber-300">
                   <i className="fas fa-sync mr-2"></i>
-                  <strong>Not seeing a prompt?</strong> Try refreshing the page or restarting the Pi Browser app.
+                  <strong>Not seeing a prompt?</strong> Try these steps:
+                  <ol className="list-decimal list-inside mt-1 ml-2">
+                    <li>Refresh the page</li>
+                    <li>Restart the Pi Browser app</li>
+                    <li>Check your internet connection</li>
+                  </ol>
                 </p>
               </div>
               
               <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/30">
                 <p className="text-xs text-red-300">
                   <i className="fas fa-exclamation-triangle mr-2"></i>
-                  <strong>Still having issues?</strong> Make sure you're using the official Pi Browser app.
+                  <strong>Still having issues?</strong> Make sure you're using the official Pi Browser app. Authentication may take up to 3 minutes on mobile networks.
                 </p>
               </div>
             </div>

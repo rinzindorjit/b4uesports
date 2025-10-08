@@ -150,22 +150,63 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       };
 
       // Add a timeout for the entire authentication process
-      // Use 90 seconds as recommended for mobile compatibility
+      // Use 180 seconds as recommended for mobile compatibility (increased from 120)
       const authTimeout = setTimeout(() => {
         setIsLoading(false);
         toast({
           title: "Authentication Timeout",
-          description: "The authentication process is taking longer than expected. Please check your Pi Browser for pending requests or try again.",
+          description: "The authentication process is taking longer than expected. Please check your Pi Browser for pending requests. On mobile, look for a notification banner. If you don't see a prompt, try refreshing the page or restarting the Pi Browser app.",
           variant: "destructive",
         });
-      }, 90000);
+      }, 180000);
 
       // Authenticate with Pi Network using required scopes
-      const authResult = await piSDK.authenticate(['payments', 'username'], onIncompletePaymentFound);
+      // Add retry mechanism for better reliability
+      let authResult = null;
+      let attempts = 0;
+      const maxAttempts = 3;
+      
+      while (attempts < maxAttempts && !authResult) {
+        try {
+          attempts++;
+          console.log(`Authentication attempt ${attempts}/${maxAttempts}`);
+          
+          // Show attempt number in toast for better user feedback
+          if (attempts > 1) {
+            toast({
+              title: `Authentication Attempt ${attempts}/${maxAttempts}`,
+              description: "Retrying authentication with Pi Network...",
+            });
+          }
+          
+          authResult = await piSDK.authenticate(['payments', 'username'], onIncompletePaymentFound);
+          
+          if (!authResult && attempts < maxAttempts) {
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          }
+        } catch (error) {
+          console.error(`Authentication attempt ${attempts} failed:`, error);
+          
+          // If it's a timeout error, don't retry
+          if (error instanceof Error && (error.message.includes('timeout') || error.message.includes('User closed'))) {
+            throw error;
+          }
+          
+          // If it's the last attempt, throw the error
+          if (attempts >= maxAttempts) {
+            throw new Error(`Authentication failed after ${maxAttempts} attempts. ${error instanceof Error ? error.message : 'Please try again.'}`);
+          }
+          
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      }
+      
       clearTimeout(authTimeout); // Clear the timeout if authentication completes
       
       if (!authResult) {
-        throw new Error('Authentication failed - No response from Pi Network');
+        throw new Error('Authentication failed - No response from Pi Network after multiple attempts');
       }
 
       // Update toast to show backend verification
@@ -222,11 +263,13 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       if (errorMessage.includes('Pi SDK not available')) {
         errorMessage += " Make sure you're using the Pi Browser app, not a regular web browser.";
       } else if (errorMessage.includes('timeout')) {
-        errorMessage += " Check your Pi Browser for pending authentication requests and approve them. On mobile, look for a notification banner.";
+        errorMessage += " Check your Pi Browser for pending authentication requests and approve them. On mobile, look for a notification banner. If you don't see a prompt, try refreshing the page or restarting the Pi Browser app.";
       } else if (errorMessage.includes('Invalid Pi Network token')) {
         errorMessage += " Please try again and make sure you approve the authentication request in the Pi Browser.";
       } else if (errorMessage.includes('Backend verification failed')) {
         errorMessage += " There might be an issue with our servers. Please try again later.";
+      } else if (errorMessage.includes('cancelled') || errorMessage.includes('User closed')) {
+        errorMessage = "Authentication was cancelled. Please try again and approve the authentication request in the Pi Browser.";
       }
       
       toast({

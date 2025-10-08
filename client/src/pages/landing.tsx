@@ -84,6 +84,11 @@ export default function Landing() {
                   <i className="fas fa-exclamation-triangle mr-2"></i>
                   {authError}
                 </p>
+                {authError.includes('timeout') && (
+                  <p className="text-xs mt-2 text-red-200">
+                    Authentication may take up to 3 minutes on mobile networks. Please check your Pi Browser for pending requests and approve them.
+                  </p>
+                )}
               </div>
             )}
             

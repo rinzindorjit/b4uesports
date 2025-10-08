@@ -81,7 +81,7 @@ export class PiSDK {
   ): Promise<{ accessToken: string; user: { uid: string; username: string } } | null> {
     // Ensure Pi SDK is loaded
     try {
-      await waitForPiSDK(20000); // Increase timeout to 20 seconds for better mobile support
+      await waitForPiSDK(45000); // Increase timeout to 45 seconds for better mobile support
     } catch (error) {
       console.error('Pi SDK failed to load:', error);
       throw new Error('Pi SDK not available. Please make sure you are using the Pi Browser and refresh the page.');
@@ -92,7 +92,7 @@ export class PiSDK {
       // Always use sandbox mode for Testnet
       this.init(true);
       // Wait a bit for initialization
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 5000));
     }
 
     // Additional check to ensure Pi is available
@@ -104,9 +104,9 @@ export class PiSDK {
       console.log('Calling Pi.authenticate with scopes:', scopes);
       // Add a timeout to the authentication call with proper Pi Network timeout values
       const authPromise = window.Pi.authenticate(scopes, onIncompletePaymentFound);
-      // Use 90 seconds timeout as recommended for mobile compatibility
+      // Use 180 seconds timeout as recommended for mobile compatibility (increased from 120)
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser for pending requests')), 90000)
+        setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser for pending requests')), 180000)
       );
       
       const authResult = await Promise.race([authPromise, timeoutPromise]) as { accessToken: string; user: { uid: string; username: string } };
@@ -117,13 +117,15 @@ export class PiSDK {
       
       // More specific error handling
       if (error.message && error.message.includes('timeout')) {
-        throw new Error('Authentication timed out. Please check your Pi Browser for pending authentication requests and approve them. On mobile, look for a notification banner.');
+        throw new Error('Authentication timed out. Please check your Pi Browser for pending authentication requests and approve them. On mobile, look for a notification banner. If you don\'t see a prompt, try refreshing the page or restarting the Pi Browser app.');
       } else if (error.message && error.message.includes('cancelled')) {
         throw new Error('Authentication was cancelled in the Pi Browser.');
       } else if (error.message && error.message.includes('Pi Network is not available')) {
         throw new Error('Pi Network is not available. Please make sure you are using the Pi Browser app.');
+      } else if (error.message && error.message.includes('User closed')) {
+        throw new Error('Authentication was cancelled. Please try again and approve the authentication request in the Pi Browser.');
       } else {
-        throw new Error(`Authentication failed: ${error.message || 'Unknown error'}. Please try again and make sure you are using the Pi Browser.`);
+        throw new Error(`Authentication failed: ${error.message || 'Unknown error'}. Please try again and make sure you are using the Pi Browser. If the issue persists, try refreshing the page or restarting the Pi Browser app.`);
       }
     }
   }
