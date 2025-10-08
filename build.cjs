@@ -58,13 +58,34 @@ try {
     const filePath = join(apiSourceDir, file);
     let content = readFileSync(filePath, 'utf8');
     
-    // Check if the file contains the specific import we're looking for
+    // Check for various import patterns that might need .js extension fixes
+    // Pattern 1: Standard import from "./_utils"
     if (content.includes('from "./_utils"')) {
       content = content.replace('from "./_utils"', 'from "./_utils.js"');
-      // Write the file only if content was changed
-      writeFileSync(filePath, content, 'utf8');
-      console.log(`Fixed import extensions in ${file}`);
+      console.log(`Fixed import extensions in ${file} (Pattern 1)`);
     }
+    
+    // Pattern 2: Import with single quotes
+    if (content.includes("from './_utils'")) {
+      content = content.replace("from './_utils'", "from './_utils.js'");
+      console.log(`Fixed import extensions in ${file} (Pattern 2)`);
+    }
+    
+    // Pattern 3: More general pattern for any relative imports without extensions
+    const importRegex = /(import\s+.*?\s+from\s+["']\.[^"']*?)["']/g;
+    let match;
+    while ((match = importRegex.exec(content)) !== null) {
+      const importPath = match[1];
+      // Check if it's a relative import without extension
+      if (importPath.includes('./') && !importPath.includes('.js')) {
+        const fixedPath = importPath + '.js';
+        content = content.replace(importPath, fixedPath);
+        console.log(`Fixed import extensions in ${file} (Pattern 3)`);
+      }
+    }
+    
+    // Write the file only if content was changed
+    writeFileSync(filePath, content, 'utf8');
   }
   
   console.log('Build completed successfully!');
