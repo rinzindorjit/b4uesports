@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "node build.cjs",
+  "buildCommand": "node build-deploy.cjs",
   "outputDirectory": "dist",
   "rewrites": [
     {
