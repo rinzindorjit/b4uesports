@@ -13,9 +13,9 @@
     }
   ],
   "functions": {
-    "api/**/*.js": {
+    "api/**/*.ts": {
       "runtime": "@vercel/node@4.0.0",
-      "includeFiles": "dist/server/**"
+      "includeFiles": "api/dist_server/**"
     }
   }
 }

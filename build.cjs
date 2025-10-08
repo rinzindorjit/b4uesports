@@ -171,6 +171,26 @@ try {
   console.log('Fixing import extensions in server JavaScript files...');
   fixImportExtensions(serverDestDir);
   
+  // ALSO copy server files to api/dist_server for Vercel compatibility
+  console.log('Copying server files to api/dist_server for Vercel compatibility...');
+  const apiServerDestDir = join(process.cwd(), 'api', 'dist_server');
+  if (existsSync(serverSourceDir)) {
+    copyFolderRecursive(serverSourceDir, apiServerDestDir);
+    console.log('Server files copied to api/dist_server successfully!');
+    
+    // Compile server TypeScript files to JavaScript in the api/dist_server directory
+    console.log('Compiling server TypeScript files in api/dist_server...');
+    compileTsFiles(apiServerDestDir);
+    
+    // Remove TypeScript files after compilation
+    console.log('Removing server TypeScript files from api/dist_server...');
+    removeTsFiles(apiServerDestDir);
+    
+    // Fix import extensions in server JavaScript files
+    console.log('Fixing import extensions in api/dist_server JavaScript files...');
+    fixImportExtensions(apiServerDestDir);
+  }
+  
   // Compile API TypeScript files to JavaScript in the api directory
   console.log('Compiling API files...');
   const apiSourceDir = join(process.cwd(), 'api');
