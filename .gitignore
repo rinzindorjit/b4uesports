@@ -29,3 +29,4 @@ Thumbs.db
 
 # Compiled API files - we'll ignore these as they're generated during build
 api/*.js
+.vercel
