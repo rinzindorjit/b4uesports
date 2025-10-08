@@ -78,6 +78,16 @@ export default function Landing() {
               </Button>
             </div>
             
+            {/* Important Notice for Pi Browser Users */}
+            <div className="mt-6 p-4 bg-amber-500/20 border border-amber-500 rounded-lg max-w-2xl mx-auto">
+              <p className="text-sm text-amber-300">
+                <i className="fas fa-exclamation-circle mr-2"></i>
+                <strong>Important:</strong> Please use the official Pi Browser app for authentication. 
+                On mobile, check for notification banners during authentication. 
+                Authentication may take up to 3 minutes on slower networks.
+              </p>
+            </div>
+            
             {authError && (
               <div className="mt-4 p-3 bg-red-500/20 border border-red-500 rounded-lg max-w-md mx-auto">
                 <p className="text-sm text-red-300">

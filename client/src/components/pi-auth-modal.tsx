@@ -131,7 +131,7 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
             <p className="text-lg font-semibold mb-3">Connecting to Pi Network</p>
             <p className="text-muted-foreground text-sm md:text-base mb-6">Please check your Pi Browser for authentication request...</p>
             
-            <div className="space-y-4 text-left">
+            <div className="space-y-4 text-left mb-6">
               <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
                 <p className="text-xs text-blue-300">
                   <i className="fas fa-mobile-alt mr-2"></i>
@@ -143,33 +143,50 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
                 <p className="text-xs text-amber-300">
                   <i className="fas fa-sync mr-2"></i>
                   <strong>Not seeing a prompt?</strong> Try these steps:
-                  <ol className="list-decimal list-inside mt-1 ml-2">
-                    <li>Refresh the page</li>
-                    <li>Restart the Pi Browser app</li>
-                    <li>Check your internet connection</li>
-                  </ol>
                 </p>
+                <ul className="list-disc list-inside mt-1 ml-2 text-xs text-amber-300 space-y-1">
+                  <li>Refresh the page</li>
+                  <li>Restart the Pi Browser app</li>
+                  <li>Check your internet connection</li>
+                  <li>Make sure you're using the official Pi Browser app</li>
+                </ul>
               </div>
               
               <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/30">
                 <p className="text-xs text-red-300">
                   <i className="fas fa-exclamation-triangle mr-2"></i>
-                  <strong>Still having issues?</strong> Make sure you're using the official Pi Browser app. Authentication may take up to 3 minutes on mobile networks.
+                  <strong>Still having issues?</strong> Authentication may take up to 3 minutes on mobile networks. If problems persist, try again later or contact support.
                 </p>
               </div>
             </div>
             
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setStep('consent');
-                setError('Authentication cancelled by user');
-              }} 
-              className="w-full mt-6"
-              disabled={isLoading}
-            >
-              Cancel Authentication
-            </Button>
+            <div className="flex flex-col gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setStep('consent');
+                  setError('Authentication cancelled by user. Please try again.');
+                }} 
+                className="w-full"
+                disabled={isLoading}
+              >
+                Cancel Authentication
+              </Button>
+              
+              <Button 
+                onClick={handleAuthenticate} 
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i> Retry Authentication
+                  </>
+                ) : (
+                  'Retry Authentication'
+                )}
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>

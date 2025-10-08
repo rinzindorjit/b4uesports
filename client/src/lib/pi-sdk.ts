@@ -1,4 +1,4 @@
-import { waitForPiSDK } from '@/lib/utils';
+import { waitForPiSDK, loadPiSDK } from '@/lib/utils';
 
 declare global {
   interface Window {
@@ -38,11 +38,18 @@ export class PiSDK {
     return PiSDK.instance;
   }
 
-  init(sandbox: boolean = true): void {
+  // Enhanced initialization with dynamic SDK loading
+  async init(sandbox: boolean = true): Promise<void> {
     if (this.initialized) return;
     
-    if (typeof window !== 'undefined' && window.Pi) {
-      try {
+    try {
+      // First, ensure the Pi SDK is loaded
+      await loadPiSDK();
+      
+      // Wait for Pi SDK to be available on window object
+      await waitForPiSDK(30000); // 30 second timeout
+      
+      if (typeof window !== 'undefined' && window.Pi) {
         // Always use version "2.0" as required by Pi Network
         window.Pi.init({ 
           version: "2.0", 
@@ -50,28 +57,12 @@ export class PiSDK {
         });
         this.initialized = true;
         console.log('Pi SDK initialized with version 2.0, sandbox:', sandbox);
-      } catch (error) {
-        console.error('Pi SDK initialization failed:', error);
-        return;
+      } else {
+        throw new Error('Pi SDK not available after loading');
       }
-    } else {
-      console.warn('Pi SDK not loaded yet, will retry');
-      // Retry initialization after a short delay if Pi is not available
-      setTimeout(() => {
-        if (typeof window !== 'undefined' && window.Pi && !this.initialized) {
-          try {
-            // Always use version "2.0" as required by Pi Network
-            window.Pi.init({ 
-              version: "2.0", 
-              sandbox 
-            });
-            this.initialized = true;
-            console.log('Pi SDK initialized with version 2.0, sandbox (retry):', sandbox);
-          } catch (error) {
-            console.error('Pi SDK initialization failed on retry:', error);
-          }
-        }
-      }, 1500);
+    } catch (error) {
+      console.error('Pi SDK initialization failed:', error);
+      throw error;
     }
   }
 
@@ -79,32 +70,22 @@ export class PiSDK {
     scopes: string[] = ['payments', 'username'],
     onIncompletePaymentFound?: (payment: any) => void
   ): Promise<{ accessToken: string; user: { uid: string; username: string } } | null> {
-    // Ensure Pi SDK is loaded
+    // Ensure Pi SDK is loaded and initialized
     try {
-      await waitForPiSDK(45000); // Increase timeout to 45 seconds for better mobile support
-    } catch (error) {
-      console.error('Pi SDK failed to load:', error);
-      throw new Error('Pi SDK not available. Please make sure you are using the Pi Browser and refresh the page.');
-    }
+      if (!this.initialized) {
+        // Always use sandbox mode for Testnet
+        await this.init(true);
+      }
+      
+      // Additional check to ensure Pi is available
+      if (!window.Pi) {
+        throw new Error('Pi SDK not properly loaded. Please refresh the page or try again in the Pi Browser.');
+      }
 
-    // Initialize if not already done
-    if (!this.initialized) {
-      // Always use sandbox mode for Testnet
-      this.init(true);
-      // Wait a bit for initialization
-      await new Promise(resolve => setTimeout(resolve, 5000));
-    }
-
-    // Additional check to ensure Pi is available
-    if (!window.Pi) {
-      throw new Error('Pi SDK not properly loaded. Please refresh the page or try again in the Pi Browser.');
-    }
-
-    try {
       console.log('Calling Pi.authenticate with scopes:', scopes);
       // Add a timeout to the authentication call with proper Pi Network timeout values
       const authPromise = window.Pi.authenticate(scopes, onIncompletePaymentFound);
-      // Use 180 seconds timeout as recommended for mobile compatibility (increased from 120)
+      // Use 180 seconds timeout as recommended for mobile compatibility
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser for pending requests')), 180000)
       );
@@ -124,6 +105,8 @@ export class PiSDK {
         throw new Error('Pi Network is not available. Please make sure you are using the Pi Browser app.');
       } else if (error.message && error.message.includes('User closed')) {
         throw new Error('Authentication was cancelled. Please try again and approve the authentication request in the Pi Browser.');
+      } else if (error.message && error.message.includes('load')) {
+        throw new Error('Failed to load Pi SDK. Please check your internet connection and make sure you are using the Pi Browser app.');
       } else {
         throw new Error(`Authentication failed: ${error.message || 'Unknown error'}. Please try again and make sure you are using the Pi Browser. If the issue persists, try refreshing the page or restarting the Pi Browser app.`);
       }

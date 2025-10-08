@@ -84,16 +84,14 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     if (isLoading) return;
     
     setIsLoading(true);
+    let authTimeout: NodeJS.Timeout | null = null;
+    
     try {
       // Show initial loading message
       toast({
         title: "Connecting to Pi Network",
         description: "Please wait while we connect to Pi Network...",
       });
-
-      // Initialize Pi SDK if not already initialized
-      // Always use sandbox mode for Testnet
-      piSDK.init(true);
 
       // Define the onIncompletePaymentFound callback as required by Pi Network
       const onIncompletePaymentFound = (payment: PaymentDTO) => {
@@ -150,8 +148,8 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       };
 
       // Add a timeout for the entire authentication process
-      // Use 180 seconds as recommended for mobile compatibility (increased from 120)
-      const authTimeout = setTimeout(() => {
+      // Use 180 seconds as recommended for mobile compatibility
+      authTimeout = setTimeout(() => {
         setIsLoading(false);
         toast({
           title: "Authentication Timeout",
@@ -203,7 +201,11 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
         }
       }
       
-      clearTimeout(authTimeout); // Clear the timeout if authentication completes
+      // Clear the timeout if authentication completes
+      if (authTimeout) {
+        clearTimeout(authTimeout);
+        authTimeout = null;
+      }
       
       if (!authResult) {
         throw new Error('Authentication failed - No response from Pi Network after multiple attempts');
@@ -252,6 +254,11 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       setUser(null);
       setToken(null);
       
+      // Clear the timeout if it exists
+      if (authTimeout) {
+        clearTimeout(authTimeout);
+      }
+      
       // Show error toast with more specific information
       let errorMessage = "Failed to connect to Pi Network. Please make sure you're using the Pi Browser and try again.";
       
@@ -270,6 +277,8 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
         errorMessage += " There might be an issue with our servers. Please try again later.";
       } else if (errorMessage.includes('cancelled') || errorMessage.includes('User closed')) {
         errorMessage = "Authentication was cancelled. Please try again and approve the authentication request in the Pi Browser.";
+      } else if (errorMessage.includes('load')) {
+        errorMessage += " Failed to load Pi SDK. Please check your internet connection and make sure you are using the Pi Browser app.";
       }
       
       toast({
