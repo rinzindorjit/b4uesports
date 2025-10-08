@@ -151,7 +151,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md w-full mx-4 sm:mx-auto" data-testid="purchase-modal">
+      <DialogContent className="max-w-md w-full mx-4 sm:mx-auto max-h-[90vh] overflow-y-auto" data-testid="purchase-modal">
         {step === 'confirm' ? (
           <>
             <DialogHeader>
@@ -239,7 +239,6 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                       <p className="font-mono text-green-400 text-lg md:text-xl font-bold" data-testid="total-cost">
                         {pkg.piPrice?.toFixed(1)} π
                       </p>
-                      <p className="text-xs md:text-sm text-muted-foreground">≈ ${pkg.usdtValue}</p>
                     </div>
                   </div>
                 </CardContent>

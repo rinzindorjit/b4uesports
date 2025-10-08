@@ -87,6 +87,8 @@ export default function Dashboard() {
       <ParticleBackground />
       <Navigation 
         isTestnet={import.meta.env.DEV} 
+        onProfileClick={() => setIsProfileModalOpen(true)}
+        onLogout={handleLogout}
       />
       
       {/* Dashboard Header */}
@@ -100,7 +102,7 @@ export default function Dashboard() {
               Your Pi wallet: <span className="font-mono">{formatWalletAddress(user.walletAddress)}</span>
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
               {piPrice && (
                 <div className="bg-primary/10 backdrop-blur-sm rounded-full px-6 py-3 border border-primary/20">
                   <span className="text-primary font-bold">Live Pi Price: </span>
@@ -118,6 +120,25 @@ export default function Dashboard() {
                   <p className="text-2xl font-bold text-primary">{completedTransactions}</p>
                 </div>
               </div>
+            </div>
+            
+            {/* Profile Actions */}
+            <div className="mb-8">
+              <Button 
+                onClick={() => setIsProfileModalOpen(true)} 
+                variant="outline"
+                className="mr-4"
+              >
+                <i className="fas fa-user-edit mr-2"></i>
+                Edit Profile
+              </Button>
+              <Button 
+                onClick={handleLogout} 
+                variant="outline"
+              >
+                <i className="fas fa-sign-out-alt mr-2"></i>
+                Logout
+              </Button>
             </div>
           </div>
 
