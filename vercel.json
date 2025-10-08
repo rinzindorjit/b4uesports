@@ -14,8 +14,7 @@
   ],
   "functions": {
     "api/index.ts": {
-      "runtime": "@vercel/node@4.0.0",
-      "includeFiles": "api/dist_server/**"
+      "runtime": "@vercel/node@4.0.0"
     }
   },
   "cleanUrls": true
