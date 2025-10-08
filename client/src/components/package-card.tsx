@@ -14,14 +14,14 @@ export default function PackageCard({ package: pkg, onPurchase, 'data-testid': t
   return (
     <Card className="game-card hover:transform hover:-translate-y-2 transition-all duration-300 h-full border-2 border-border hover:border-primary" data-testid={testId}>
       <CardContent className="p-4 md:p-6">
-        <div className="flex items-center mb-3 md:mb-4">
+        <div className="flex flex-col items-center mb-3 md:mb-4">
           <img 
             src={pkg.image} 
             alt={gameName} 
-            className="w-12 h-12 md:w-14 md:h-14 mr-3 object-contain rounded-lg bg-white p-1"
+            className="w-16 h-16 object-contain mb-2" // Centered image without background
             data-testid={`${testId}-logo`}
           />
-          <div>
+          <div className="text-center">
             <h3 className="text-lg md:text-xl font-bold" data-testid={`${testId}-name`}>
               {pkg.name}
             </h3>
@@ -31,14 +31,11 @@ export default function PackageCard({ package: pkg, onPurchase, 'data-testid': t
           </div>
         </div>
         
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-right">
+        <div className="flex justify-center items-center mb-4">
+          <div className="text-center">
             <span className="text-lg md:text-xl font-bold text-primary font-mono" data-testid={`${testId}-pi-price`}>
               {pkg.piPrice ? `${pkg.piPrice.toFixed(1)} π` : 'N/A'}
             </span>
-            <p className="text-xs md:text-sm text-muted-foreground" data-testid={`${testId}-usd-price`}>
-              ≈ ${parseFloat(pkg.usdtValue).toFixed(2)} USD
-            </p>
           </div>
         </div>
         

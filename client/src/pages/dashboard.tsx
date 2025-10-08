@@ -146,68 +146,42 @@ export default function Dashboard() {
           <div className="mb-12">
             <h2 className="text-3xl font-bold text-center mb-8">Game Package Shop</h2>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* PUBG Mobile Packages */}
-              <div className="bg-card rounded-2xl p-6 border border-border shadow-lg">
-                <div className="flex items-center justify-center mb-6">
-                  <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-16 h-16 mr-4 rounded-lg" />
-                  <h2 className="text-2xl font-bold">PUBG Mobile UC</h2>
-                </div>
-                
-                {packagesLoading ? (
-                  <div className="space-y-3">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="h-32 bg-muted rounded-lg animate-pulse"></div>
-                    ))}
-                  </div>
-                ) : pubgPackages.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No PUBG Mobile packages available</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {pubgPackages.map(pkg => (
-                      <PackageCard 
-                        key={pkg.id} 
-                        package={pkg} 
-                        onPurchase={() => handlePurchaseClick(pkg)}
-                        data-testid={`pubg-package-${pkg.id}`}
-                      />
-                    ))}
-                  </div>
-                )}
+            {/* Game Titles in Same Row */}
+            <div className="flex flex-col md:flex-row justify-center items-center gap-8 mb-8">
+              <div className="flex items-center">
+                <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-12 h-12 mr-3" />
+                <h3 className="text-xl font-bold">PUBG Mobile UC</h3>
               </div>
-
-              {/* Mobile Legends Packages */}
-              <div className="bg-card rounded-2xl p-6 border border-border shadow-lg">
-                <div className="flex items-center justify-center mb-6">
-                  <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-16 h-16 mr-4 rounded-lg" />
-                  <h2 className="text-2xl font-bold">Mobile Legends Diamonds</h2>
-                </div>
-                
-                {packagesLoading ? (
-                  <div className="space-y-3">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="h-32 bg-muted rounded-lg animate-pulse"></div>
-                    ))}
-                  </div>
-                ) : mlbbPackages.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No Mobile Legends packages available</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {mlbbPackages.map(pkg => (
-                      <PackageCard 
-                        key={pkg.id} 
-                        package={pkg} 
-                        onPurchase={() => handlePurchaseClick(pkg)}
-                        data-testid={`mlbb-package-${pkg.id}`}
-                      />
-                    ))}
-                  </div>
-                )}
+              <div className="flex items-center">
+                <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-12 h-12 mr-3" />
+                <h3 className="text-xl font-bold">Mobile Legends Diamonds</h3>
               </div>
+            </div>
+            
+            {/* Combined Packages Display */}
+            <div className="bg-card rounded-2xl p-6 border border-border shadow-lg">
+              {packagesLoading ? (
+                <div className="space-y-3">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="h-32 bg-muted rounded-lg animate-pulse"></div>
+                  ))}
+                </div>
+              ) : packages && packages.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {packages.map(pkg => (
+                    <PackageCard 
+                      key={pkg.id} 
+                      package={pkg} 
+                      onPurchase={() => handlePurchaseClick(pkg)}
+                      data-testid={`package-${pkg.id}`}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No packages available</p>
+                </div>
+              )}
             </div>
           </div>
 
