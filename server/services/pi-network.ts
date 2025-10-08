@@ -159,4 +159,8 @@ export class PiNetworkService {
   }
 }
 
+// Export the service instance as the default export
 export const piNetworkService = new PiNetworkService();
+
+// Also export the class and interface for flexibility
+export default PiNetworkService;

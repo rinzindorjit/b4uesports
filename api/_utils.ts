@@ -32,10 +32,10 @@ export {
 export async function getStorage() {
   try {
     // Try to import from the server directory (works in Vercel)
-    const storageModule = await import("../dist/server/storage.js") as any;
+    // @ts-ignore
+    const storageModule = await import("../dist/server/storage.js");
     return storageModule.storage;
   } catch (error) {
-    // Final fallback - rethrow original error
     console.error('Failed to import storage module:', error);
     throw error;
   }
@@ -44,10 +44,10 @@ export async function getStorage() {
 export async function getPricingService() {
   try {
     // Try to import from the server directory (works in Vercel)
-    const pricingModule = await import("../dist/server/services/pricing.js") as any;
+    // @ts-ignore
+    const pricingModule = await import("../dist/server/services/pricing.js");
     return pricingModule.pricingService;
   } catch (error) {
-    // Final fallback - rethrow original error
     console.error('Failed to import pricing service:', error);
     throw error;
   }
@@ -56,22 +56,31 @@ export async function getPricingService() {
 export async function getPiNetworkService() {
   try {
     // Try to import from the server directory (works in Vercel)
-    const piNetworkModule = await import("../dist/server/services/pi-network.js") as any;
+    // @ts-ignore
+    const piNetworkModule = await import("../dist/server/services/pi-network.js");
     return piNetworkModule.piNetworkService;
   } catch (error) {
-    // Final fallback - rethrow original error
-    console.error('Failed to import Pi Network service:', error);
-    throw error;
+    console.error('Failed to import Pi Network service from ../dist/server:', error);
+    try {
+      // Try alternative path for Vercel deployments
+      // @ts-ignore
+      const piNetworkModule = await import("./dist/server/services/pi-network.js");
+      return piNetworkModule.piNetworkService;
+    } catch (altError) {
+      console.error('Failed to import Pi Network service from ./dist/server:', altError);
+      // Final fallback - rethrow original error
+      throw error;
+    }
   }
 }
 
 export async function getEmailService() {
   try {
     // Try to import from the server directory (works in Vercel)
-    const emailModule = await import("../dist/server/services/email.js") as any;
+    // @ts-ignore
+    const emailModule = await import("../dist/server/services/email.js");
     return emailModule.sendPurchaseConfirmationEmail;
   } catch (error) {
-    // Final fallback - rethrow original error
     console.error('Failed to import email service:', error);
     throw error;
   }
