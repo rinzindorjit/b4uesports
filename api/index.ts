@@ -295,6 +295,14 @@ async function handlePayments(request: VercelRequest, response: VercelResponse, 
         txid: txid,
       });
 
+      // Update user's wallet address if not set
+      const user = await storage.getUser(completeTransaction.userId);
+      if (user && !user.walletAddress && payment?.from_address) {
+        await storage.updateUser(completeTransaction.userId, { 
+          walletAddress: payment.from_address 
+        });
+      }
+
       // Send confirmation email
       try {
         const user = await storage.getUser(completeTransaction.userId);

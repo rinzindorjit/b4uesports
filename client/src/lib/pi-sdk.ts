@@ -97,7 +97,7 @@ export class PiSDK {
       );
       
       const authResult = await Promise.race([authPromise, timeoutPromise]) as { accessToken: string; user: { uid: string; username: string } };
-      console.log('Pi authentication successful:', authResult);
+      console.log('Pi authentication successful on Testnet:', authResult);
       return authResult;
     } catch (error: any) {
       console.error('Pi authentication failed:', error);
@@ -114,7 +114,7 @@ export class PiSDK {
       } else if (error.message && error.message.includes('load')) {
         throw new Error('Failed to load Pi SDK. Please check your internet connection and make sure you are using the Pi Browser app.');
       } else {
-        throw new Error(`Authentication failed: ${error.message || 'Unknown error'}. Please try again and make sure you are using the Pi Browser. If the issue persists, try refreshing the page or restarting the Pi Browser app.`);
+        throw new Error(`Authentication failed on Testnet: ${error.message || 'Unknown error'}. Please try again and make sure you are using the Pi Browser. If the issue persists, try refreshing the page or restarting the Pi Browser app.`);
       }
     }
   }

@@ -27,7 +27,7 @@ export const piNetworkService = {
   // Keep other methods for payment functionality
   approvePayment: async (paymentId: string, apiKey: string) => {
     try {
-      await axios.post(
+      const response = await axios.post(
         "https://sandbox.minepi.com/v2/payments/" + paymentId + "/approve",
         {},
         {
@@ -37,16 +37,18 @@ export const piNetworkService = {
           },
         }
       );
+      
+      console.log("✅ Payment approved on Testnet:", paymentId);
       return true;
-    } catch (error) {
-      console.error('Payment approval failed:', error);
+    } catch (error: any) {
+      console.error('Payment approval failed:', error.response?.data || error.message);
       return false;
     }
   },
 
   completePayment: async (paymentId: string, txid: string, apiKey: string) => {
     try {
-      await axios.post(
+      const response = await axios.post(
         "https://sandbox.minepi.com/v2/payments/" + paymentId + "/complete",
         { txid },
         {
@@ -56,9 +58,11 @@ export const piNetworkService = {
           },
         }
       );
+      
+      console.log("✅ Payment completed on Testnet:", paymentId, "TXID:", txid);
       return true;
-    } catch (error) {
-      console.error('Payment completion failed:', error);
+    } catch (error: any) {
+      console.error('Payment completion failed:', error.response?.data || error.message);
       return false;
     }
   },
@@ -70,16 +74,18 @@ export const piNetworkService = {
           'Authorization': `Key ${apiKey}`,
         },
       });
+      
+      console.log("Retrieved payment from Testnet:", paymentId);
       return response.data;
-    } catch (error) {
-      console.error('Get payment failed:', error);
+    } catch (error: any) {
+      console.error('Get payment failed:', error.response?.data || error.message);
       return null;
     }
   },
 
   cancelPayment: async (paymentId: string, apiKey: string) => {
     try {
-      await axios.post(
+      const response = await axios.post(
         "https://sandbox.minepi.com/v2/payments/" + paymentId + "/cancel",
         {},
         {
@@ -89,9 +95,11 @@ export const piNetworkService = {
           },
         }
       );
+      
+      console.log("Payment cancelled on Testnet:", paymentId);
       return true;
-    } catch (error) {
-      console.error('Payment cancellation failed:', error);
+    } catch (error: any) {
+      console.error('Payment cancellation failed:', error.response?.data || error.message);
       return false;
     }
   }

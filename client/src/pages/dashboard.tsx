@@ -126,7 +126,7 @@ export default function Dashboard() {
               </div>
             </div>
             
-            {/* Profile Actions */}
+            {/* Profile Actions - Moved to a more accessible location */}
             <div className="mb-8">
               <Button 
                 onClick={() => setIsProfileModalOpen(true)} 
@@ -135,13 +135,6 @@ export default function Dashboard() {
               >
                 <i className="fas fa-user-edit mr-2"></i>
                 Edit Profile
-              </Button>
-              <Button 
-                onClick={handleLogout} 
-                variant="outline"
-              >
-                <i className="fas fa-sign-out-alt mr-2"></i>
-                Logout
               </Button>
             </div>
           </div>

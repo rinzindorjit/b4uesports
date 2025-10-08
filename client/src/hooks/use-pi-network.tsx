@@ -93,7 +93,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       // Show initial loading message
       toast({
         title: "Connecting to Pi Network",
-        description: "Please wait while we connect to Pi Network...",
+        description: "Please wait while we connect to Pi Network Testnet...",
       });
 
       // Define the onIncompletePaymentFound callback as required by Pi Network
@@ -129,8 +129,8 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
           },
           onReadyForServerCompletion: (paymentId: string, txid: string) => {
             toast({
-              title: "Payment Completed",
-              description: `✅ Previous payment confirmed! Transaction ID: ${txid}`,
+              title: "✅ Payment Completed",
+              description: `Previous payment confirmed on Testnet! Transaction ID: ${txid}`,
             });
           },
           onCancel: (paymentId: string) => {
@@ -176,7 +176,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
           if (attempts > 1) {
             toast({
               title: `Authentication Attempt ${attempts}/${maxAttempts}`,
-              description: "Retrying authentication with Pi Network...",
+              description: "Retrying authentication with Pi Network Testnet...",
             });
           }
           
@@ -211,13 +211,13 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       }
       
       if (!authResult) {
-        throw new Error('Authentication failed - No response from Pi Network after multiple attempts');
+        throw new Error('Authentication failed - No response from Pi Network Testnet after multiple attempts');
       }
 
       // Update toast to show backend verification
       toast({
         title: "Verifying with Backend",
-        description: "Please wait while we verify your credentials...",
+        description: "Please wait while we verify your credentials with our Testnet backend...",
       });
 
       // Send access token to backend for verification according to Pi Network guidelines
@@ -247,8 +247,8 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       
       // Show success message
       toast({
-        title: "Authentication Successful",
-        description: `Welcome, ${data.user.username}!`,
+        title: "✅ Authentication Successful",
+        description: `Welcome to Testnet mode, ${data.user.username}!`,
       });
       
     } catch (error: any) {
@@ -263,7 +263,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       }
       
       // Show error toast with more specific information
-      let errorMessage = "Failed to connect to Pi Network. Please make sure you're using the Pi Browser and try again.";
+      let errorMessage = "Failed to connect to Pi Network Testnet. Please make sure you're using the Pi Browser and try again.";
       
       if (error instanceof Error) {
         errorMessage = error.message;
@@ -277,7 +277,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       } else if (errorMessage.includes('Invalid Pi Network token')) {
         errorMessage += " Please try again and make sure you approve the authentication request in the Pi Browser.";
       } else if (errorMessage.includes('Backend verification failed')) {
-        errorMessage += " There might be an issue with our servers. Please try again later.";
+        errorMessage += " There might be an issue with our Testnet servers. Please try again later.";
       } else if (errorMessage.includes('cancelled') || errorMessage.includes('User closed')) {
         errorMessage = "Authentication was cancelled. Please try again and approve the authentication request in the Pi Browser.";
       } else if (errorMessage.includes('load')) {

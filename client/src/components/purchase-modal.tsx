@@ -100,8 +100,8 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
         },
         onReadyForServerCompletion: (paymentId: string, txid: string) => {
           toast({
-            title: "Payment Completed",
-            description: `✅ Payment confirmed! Transaction ID: ${txid}`,
+            title: "✅ Payment Completed",
+            description: `Transaction confirmed on Testnet! Transaction ID: ${txid}`,
           });
           onClose();
           setStep('confirm');
@@ -249,7 +249,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               <div className="bg-amber-500/20 border border-amber-500 rounded-lg p-3 md:p-4 mb-6">
                 <p className="text-xs md:text-sm text-amber-300">
                   <i className="fas fa-info-circle mr-2"></i>
-                  Testnet Mode: No real Pi will be deducted from your mainnet wallet.
+                  🚧 TESTNET MODE: No real Pi will be deducted from your mainnet wallet.
                 </p>
               </div>
             )}
@@ -331,7 +331,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
             <div className="bg-blue-500/20 border border-blue-500 rounded-lg p-3 md:p-4 mb-6">
               <p className="text-xs md:text-sm text-blue-300">
                 <i className="fas fa-info-circle mr-2"></i>
-                You are about to pay {pkg.piPrice?.toFixed(1)} π for {pkg.name}. This transaction will be processed through Pi Network.
+                🚧 TESTNET TRANSACTION: You are about to pay {pkg.piPrice?.toFixed(1)} π for {pkg.name}. No real Pi will be deducted.
               </p>
             </div>
 
