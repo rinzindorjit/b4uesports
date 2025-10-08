@@ -13,7 +13,7 @@
     }
   ],
   "functions": {
-    "dist/api/**/*.js": {
+    "api/**/*.ts": {
       "runtime": "@vercel/node@3.0.0"
     }
   }
