@@ -6,6 +6,27 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Checks if we're running in the Pi Browser
+ * @returns boolean indicating if we're in Pi Browser
+ */
+export function isPiBrowser(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  // Check for Pi Browser user agent
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+  if (userAgent && (userAgent.indexOf('PiBrowser') !== -1 || userAgent.indexOf('Pi Browser') !== -1)) {
+    return true;
+  }
+  
+  // Check for Pi object on window
+  if (window.Pi) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
  * Waits for the Pi SDK to be loaded and available on the window object
  * @param timeoutMs Maximum time to wait for the SDK to load (default: 45000ms for better mobile support)
  * @returns Promise that resolves when Pi SDK is available

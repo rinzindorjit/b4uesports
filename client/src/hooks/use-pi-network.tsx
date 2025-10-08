@@ -83,6 +83,9 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     // Prevent multiple simultaneous authentication attempts
     if (isLoading) return;
     
+    // Reset SDK state to ensure clean initialization
+    piSDK.reset();
+    
     setIsLoading(true);
     let authTimeout: NodeJS.Timeout | null = null;
     

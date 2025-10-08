@@ -1,4 +1,4 @@
-import { waitForPiSDK, loadPiSDK } from '@/lib/utils';
+import { waitForPiSDK, loadPiSDK, isPiBrowser } from '@/lib/utils';
 
 declare global {
   interface Window {
@@ -43,11 +43,16 @@ export class PiSDK {
     if (this.initialized) return;
     
     try {
+      // First, ensure we're in the Pi Browser
+      if (!isPiBrowser()) {
+        throw new Error('Please open this app in the Pi Browser app for authentication to work properly.');
+      }
+      
       // First, ensure the Pi SDK is loaded
       await loadPiSDK();
       
       // Wait for Pi SDK to be available on window object
-      await waitForPiSDK(30000); // 30 second timeout
+      await waitForPiSDK(45000); // 45 second timeout for better mobile support
       
       if (typeof window !== 'undefined' && window.Pi) {
         // Always use version "2.0" as required by Pi Network
@@ -58,10 +63,11 @@ export class PiSDK {
         this.initialized = true;
         console.log('Pi SDK initialized with version 2.0, sandbox:', sandbox);
       } else {
-        throw new Error('Pi SDK not available after loading');
+        throw new Error('Pi SDK not available after loading. Please make sure you are using the Pi Browser app and refresh the page.');
       }
     } catch (error) {
       console.error('Pi SDK initialization failed:', error);
+      this.initialized = false; // Reset initialization state on error
       throw error;
     }
   }
@@ -103,7 +109,7 @@ export class PiSDK {
         throw new Error('Authentication was cancelled in the Pi Browser.');
       } else if (error.message && error.message.includes('Pi Network is not available')) {
         throw new Error('Pi Network is not available. Please make sure you are using the Pi Browser app.');
-      } else if (error.message && error.message.includes('User closed')) {
+      } else if (error.message && (error.message.includes('User closed') || error.message.includes('User cancelled'))) {
         throw new Error('Authentication was cancelled. Please try again and approve the authentication request in the Pi Browser.');
       } else if (error.message && error.message.includes('load')) {
         throw new Error('Failed to load Pi SDK. Please check your internet connection and make sure you are using the Pi Browser app.');
