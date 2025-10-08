@@ -1,5 +1,5 @@
 const { execSync } = require('child_process');
-const { readdirSync, readFileSync, writeFileSync, existsSync } = require('fs');
+const { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync } = require('fs');
 const { join } = require('path');
 
 try {
@@ -9,19 +9,24 @@ try {
     stdio: 'inherit' 
   });
   
-  // Compile API TypeScript files to JavaScript without bundling
+  // Create dist/api directory if it doesn't exist
+  const distApiDir = join(process.cwd(), 'dist', 'api');
+  if (!existsSync(distApiDir)) {
+    mkdirSync(distApiDir, { recursive: true });
+  }
+  
+  // Compile API TypeScript files to JavaScript in dist/api directory
   console.log('Compiling API files...');
   const apiSourceDir = join(process.cwd(), 'api');
-  const apiDestDir = join(process.cwd(), 'api'); // Compile in place
   
   // Get all .ts files in the api directory
   const files = readdirSync(apiSourceDir);
   const tsFiles = files.filter(file => file.endsWith('.ts'));
   
-  // Compile each TypeScript file individually
+  // Compile each TypeScript file individually to dist/api
   for (const file of tsFiles) {
     const sourcePath = join(apiSourceDir, file);
-    const destPath = join(apiDestDir, file.replace('.ts', '.js'));
+    const destPath = join(distApiDir, file.replace('.ts', '.js'));
     
     console.log(`Compiling ${file}...`);
     execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=esm --outfile="${destPath}"`, {
@@ -29,23 +34,12 @@ try {
     });
   }
   
-  // Ensure _utils.js always exists even if _utils.ts wasn't manually compiled earlier
-  const utilsPathTs = join(apiSourceDir, '_utils.ts');
-  const utilsPathJs = join(apiDestDir, '_utils.js');
-  
-  if (!existsSync(utilsPathJs) && existsSync(utilsPathTs)) {
-    console.log('Compiling _utils.ts...');
-    execSync(`npx esbuild "${utilsPathTs}" --platform=node --packages=external --format=esm --outfile="${utilsPathJs}"`, {
-      stdio: 'inherit'
-    });
-  }
-  
   // Post-process compiled files to fix import extensions
-  const compiledFiles = readdirSync(apiDestDir);
+  const compiledFiles = readdirSync(distApiDir);
   const compiledJsFiles = compiledFiles.filter(file => file.endsWith('.js'));
   
   for (const file of compiledJsFiles) {
-    const filePath = join(apiDestDir, file);
+    const filePath = join(distApiDir, file);
     let content = readFileSync(filePath, 'utf8');
     
     // Check if the file contains the specific import we're looking for
