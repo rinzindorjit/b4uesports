@@ -17,17 +17,6 @@ try {
   const files = readdirSync(apiSourceDir);
   const tsFiles = files.filter(file => file.endsWith('.ts'));
   
-  // Remove any existing .js files in the api directory to prevent conflicts
-  const existingJsFiles = files.filter(file => file.endsWith('.js'));
-  if (existingJsFiles.length > 0) {
-    console.log('Removing existing JavaScript files:', existingJsFiles);
-    for (const file of existingJsFiles) {
-      const filePath = join(apiSourceDir, file);
-      unlinkSync(filePath);
-      console.log(`Removed ${filePath}`);
-    }
-  }
-  
   // Compile each TypeScript file individually to the same api directory
   for (const file of tsFiles) {
     const sourcePath = join(apiSourceDir, file);
@@ -84,14 +73,6 @@ try {
     
     // Write the file only if content was changed
     writeFileSync(filePath, content, 'utf8');
-  }
-  
-  // Remove TypeScript files after compilation to avoid conflicts
-  console.log('Removing TypeScript files to avoid conflicts...');
-  for (const file of tsFiles) {
-    const filePath = join(apiSourceDir, file);
-    unlinkSync(filePath);
-    console.log(`Removed ${filePath}`);
   }
   
   console.log('Build completed successfully!');
