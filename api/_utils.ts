@@ -33,7 +33,7 @@ export async function getStorage() {
   try {
     // Try to import from the server directory (works in Vercel)
     // @ts-ignore
-    const storageModule = await import("../dist/server/storage.js");
+    const storageModule = await import("./dist_server/storage.js");
     return storageModule.storage;
   } catch (error) {
     console.error('Failed to import storage module:', error);
@@ -45,7 +45,7 @@ export async function getPricingService() {
   try {
     // Try to import from the server directory (works in Vercel)
     // @ts-ignore
-    const pricingModule = await import("../dist/server/services/pricing.js");
+    const pricingModule = await import("./dist_server/services/pricing.js");
     return pricingModule.pricingService;
   } catch (error) {
     console.error('Failed to import pricing service:', error);
@@ -57,7 +57,7 @@ export async function getPiNetworkService() {
   try {
     // Try to import from the server directory (works in Vercel)
     // @ts-ignore
-    const piNetworkModule = await import("../dist/server/services/pi-network.js");
+    const piNetworkModule = await import("./dist_server/services/pi-network.js");
     return piNetworkModule.piNetworkService;
   } catch (error) {
     console.error('Failed to import Pi Network service:', error);
@@ -69,7 +69,7 @@ export async function getEmailService() {
   try {
     // Try to import from the server directory (works in Vercel)
     // @ts-ignore
-    const emailModule = await import("../dist/server/services/email.js");
+    const emailModule = await import("./dist_server/services/email.js");
     return emailModule.sendPurchaseConfirmationEmail;
   } catch (error) {
     console.error('Failed to import email service:', error);
