@@ -9,18 +9,57 @@ try {
     stdio: 'inherit' 
   });
   
-  // Compile API TypeScript files to JavaScript in the api directory
+  // Copy server files to dist directory
+  console.log('Copying server files...');
+  const serverSourceDir = join(process.cwd(), 'server');
+  const serverDestDir = join(process.cwd(), 'dist', 'server');
+  
+  // Create the server directory
+  if (!existsSync(serverDestDir)) {
+    mkdirSync(serverDestDir, { recursive: true });
+  }
+  
+  // Copy server files recursively
+  function copyFolderRecursive(source, destination) {
+    if (!existsSync(destination)) {
+      mkdirSync(destination, { recursive: true });
+    }
+  
+    const files = readdirSync(source);
+    
+    for (const file of files) {
+      const sourcePath = join(source, file);
+      const destPath = join(destination, file);
+      
+      if (statSync(sourcePath).isDirectory()) {
+        copyFolderRecursive(sourcePath, destPath);
+      } else {
+        copyFileSync(sourcePath, destPath);
+      }
+    }
+  }
+  
+  copyFolderRecursive(serverSourceDir, serverDestDir);
+  console.log('Server files copied successfully!');
+  
+  // Compile API TypeScript files to JavaScript in a separate dist/api directory
   console.log('Compiling API files...');
   const apiSourceDir = join(process.cwd(), 'api');
+  const apiDestDir = join(process.cwd(), 'dist', 'api');
+  
+  // Create the API directory
+  if (!existsSync(apiDestDir)) {
+    mkdirSync(apiDestDir, { recursive: true });
+  }
   
   // Get all .ts files in the api directory
   const files = readdirSync(apiSourceDir);
   const tsFiles = files.filter(file => file.endsWith('.ts'));
   
-  // Compile each TypeScript file individually to the same api directory
+  // Compile each TypeScript file individually to the dist/api directory
   for (const file of tsFiles) {
     const sourcePath = join(apiSourceDir, file);
-    const destPath = join(apiSourceDir, file.replace('.ts', '.js'));
+    const destPath = join(apiDestDir, file.replace('.ts', '.js'));
     
     console.log(`Compiling ${file} to ${destPath}...`);
     execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=esm --outfile="${destPath}"`, {
@@ -36,13 +75,13 @@ try {
   }
   
   // Post-process compiled files to fix import extensions
-  const updatedFiles = readdirSync(apiSourceDir);
+  const updatedFiles = readdirSync(apiDestDir);
   const compiledJsFiles = updatedFiles.filter(file => file.endsWith('.js'));
   
   console.log('Compiled JS files:', compiledJsFiles);
   
   for (const file of compiledJsFiles) {
-    const filePath = join(apiSourceDir, file);
+    const filePath = join(apiDestDir, file);
     let content = readFileSync(filePath, 'utf8');
     
     // Check for various import patterns that might need .js extension fixes
