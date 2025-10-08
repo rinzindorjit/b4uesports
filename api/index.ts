@@ -15,6 +15,15 @@ export default async function handler(request: VercelRequest, response: VercelRe
   response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
+  // Debug logging
+  console.log('API Handler called:', {
+    url: request.url,
+    method: request.method,
+    headers: request.headers,
+    query: request.query,
+    body: request.body
+  });
+  
   // Handle preflight requests
   if (request.method === 'OPTIONS') {
     return response.status(200).end();
@@ -47,7 +56,8 @@ export default async function handler(request: VercelRequest, response: VercelRe
     } else if (request.url?.startsWith('/api/health') || request.url?.startsWith('/health')) {
       return handleHealth(request, response);
     } else {
-      return response.status(404).json({ message: 'Route not found' });
+      console.log('No route matched for URL:', request.url);
+      return response.status(404).json({ message: `Route not found for URL: ${request.url}`, url: request.url, method: request.method });
     }
   } catch (error) {
     console.error('API handler error:', error);
@@ -112,7 +122,9 @@ async function handleUsers(request: VercelRequest, response: VercelResponse, sto
         return response.status(400).json({ message: 'Access token required' });
       }
 
+      console.log('Verifying access token with Pi Network');
       const piUser = await piNetworkService.verifyAccessToken(accessToken);
+      console.log('Pi Network verification result:', piUser);
       if (!piUser) {
         return response.status(401).json({ message: 'Invalid Pi Network token' });
       }
