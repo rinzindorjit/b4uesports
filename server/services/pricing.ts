@@ -15,48 +15,27 @@ export class PricingService {
   }
 
   async getCurrentPiPrice(): Promise<number> {
-    if (this.lastPrice && (Date.now() - this.lastPrice.lastUpdated.getTime()) < 60000) {
-      return this.lastPrice.price;
-    }
+    // Return fixed price as requested: $0.24069
+    const fixedPrice = 0.24069;
+    
+    this.lastPrice = {
+      price: fixedPrice,
+      lastUpdated: new Date(),
+    };
 
-    try {
-      // Use the provided CoinGecko API URL without API key (free tier)
-      const response = await axios.get(
-        'https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd'
-      );
+    // Save to database
+    await storage.savePiPrice(fixedPrice);
 
-      const price = response.data['pi-network']?.usd || 0.958; // fallback price
-      
-      this.lastPrice = {
-        price,
-        lastUpdated: new Date(),
-      };
-
-      // Save to database
-      await storage.savePiPrice(price);
-
-      return price;
-    } catch (error) {
-      console.error('Failed to fetch Pi price from CoinGecko:', error);
-      
-      // Try to get latest price from database
-      const latestPrice = await storage.getLatestPiPrice();
-      if (latestPrice) {
-        return parseFloat(latestPrice.price);
-      }
-
-      // Fallback to default price
-      return 0.958;
-    }
+    return fixedPrice;
   }
 
   calculatePiAmount(usdtValue: number): number {
-    const piPrice = this.lastPrice?.price || 0.958;
+    const piPrice = 0.24069; // Use fixed price
     return parseFloat((usdtValue / piPrice).toFixed(8));
   }
 
   calculateUsdAmount(piAmount: number): number {
-    const piPrice = this.lastPrice?.price || 0.958;
+    const piPrice = 0.24069; // Use fixed price
     return parseFloat((piAmount * piPrice).toFixed(4));
   }
 
@@ -64,7 +43,7 @@ export class PricingService {
     // Initial price fetch
     this.getCurrentPiPrice();
 
-    // Update price every 60 seconds
+    // Update price every 60 seconds (but will still return fixed price)
     this.updateInterval = setInterval(async () => {
       await this.getCurrentPiPrice();
     }, 60000);
