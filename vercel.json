@@ -17,5 +17,6 @@
       "runtime": "@vercel/node@4.0.0",
       "includeFiles": "api/dist_server/**"
     }
-  }
+  },
+  "cleanUrls": true
 }
