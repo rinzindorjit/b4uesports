@@ -45,7 +45,11 @@ export class PricingService {
 
     // Update price every 60 seconds (but will still return fixed price)
     this.updateInterval = setInterval(async () => {
-      await this.getCurrentPiPrice();
+      try {
+        await this.getCurrentPiPrice();
+      } catch (error) {
+        console.error('Error updating Pi price:', error);
+      }
     }, 60000);
   }
 

@@ -274,6 +274,15 @@ async function handleTransactions(request: VercelRequest, response: VercelRespon
 
 // Payments handling
 async function handlePayments(request: VercelRequest, response: VercelResponse, storage: any, piNetworkService: any, pricingService: any, sendPurchaseConfirmationEmail: any, JWT_SECRET: string) {
+  // Set CORS headers for this specific endpoint
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
+  }
+  
   if (request.method !== 'POST') {
     return response.status(405).json({ message: 'Method not allowed' });
   }
@@ -359,6 +368,14 @@ async function handlePayments(request: VercelRequest, response: VercelResponse, 
         txid: txid,
       });
 
+      // Update user's wallet address if not already set
+      const user = await storage.getUser(completeTransaction.userId);
+      if (user && !user.walletAddress) {
+        await storage.updateUser(user.id, { 
+          walletAddress: payment.from_address || '' 
+        });
+      }
+
       // Send confirmation email
       try {
         const user = await storage.getUser(completeTransaction.userId);
@@ -397,6 +414,15 @@ async function handlePayments(request: VercelRequest, response: VercelResponse, 
 
 // Pi Price handling
 async function handlePiPrice(request: VercelRequest, response: VercelResponse, pricingService: any) {
+  // Set CORS headers for this specific endpoint
+  response.setHeader('Access-Control-Allow-Origin', '*');
+  response.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (request.method === 'OPTIONS') {
+    return response.status(200).end();
+  }
+  
   if (request.method !== 'GET') {
     return response.status(405).json({ message: 'Method not allowed' });
   }
@@ -405,13 +431,16 @@ async function handlePiPrice(request: VercelRequest, response: VercelResponse, p
     const price = await pricingService.getCurrentPiPrice();
     const lastPrice = pricingService.getLastPrice();
     
-    response.json({
+    const result = {
       price,
-      lastUpdated: lastPrice?.lastUpdated || new Date(),
-    });
+      lastUpdated: lastPrice?.lastUpdated ? new Date(lastPrice.lastUpdated).toISOString() : new Date().toISOString(),
+    };
+    
+    console.log('Pi price response:', result);
+    response.json(result);
   } catch (error) {
     console.error('Pi price fetch error:', error);
-    response.status(500).json({ message: 'Failed to fetch Pi price' });
+    response.status(500).json({ message: 'Failed to fetch Pi price', error: error instanceof Error ? error.message : 'Unknown error' });
   }
 }
 

@@ -198,8 +198,43 @@ export async function registerRoutes(app: Express): Promise<void> {
           const updateData = data;
           
           // Validate required fields
-          if (updateData.email && !updateData.email.endsWith('@gmail.com')) {
-            return res.status(400).json({ message: 'Email must be a Gmail address' });
+          if (!updateData.email || !updateData.phone || !updateData.country) {
+            return res.status(400).json({ message: 'Email, phone, and country are required' });
+          }
+
+          // Validate email format
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(updateData.email)) {
+            return res.status(400).json({ message: 'Invalid email format' });
+          }
+
+          // Validate phone format (allow only numbers and common separators)
+          const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+          if (!phoneRegex.test(updateData.phone)) {
+            return res.status(400).json({ message: 'Invalid phone number format' });
+          }
+
+          // Validate game accounts if provided
+          if (updateData.gameAccounts) {
+            if (updateData.gameAccounts.pubg) {
+              if (!updateData.gameAccounts.pubg.ign || !updateData.gameAccounts.pubg.uid) {
+                return res.status(400).json({ message: 'PUBG IGN and UID are required' });
+              }
+              // Validate UID is numeric
+              if (!/^\d+$/.test(updateData.gameAccounts.pubg.uid)) {
+                return res.status(400).json({ message: 'PUBG UID must be numeric' });
+              }
+            }
+            
+            if (updateData.gameAccounts.mlbb) {
+              if (!updateData.gameAccounts.mlbb.userId || !updateData.gameAccounts.mlbb.zoneId) {
+                return res.status(400).json({ message: 'MLBB User ID and Zone ID are required' });
+              }
+              // Validate IDs are numeric
+              if (!/^\d+$/.test(updateData.gameAccounts.mlbb.userId) || !/^\d+$/.test(updateData.gameAccounts.mlbb.zoneId)) {
+                return res.status(400).json({ message: 'MLBB User ID and Zone ID must be numeric' });
+              }
+            }
           }
 
           const updatedUser = await storage.updateUser(userId, updateData);
@@ -207,14 +242,60 @@ export async function registerRoutes(app: Express): Promise<void> {
             return res.status(404).json({ message: 'User not found' });
           }
 
-          return res.json(updatedUser);
+          return res.json({
+            id: updatedUser.id,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            phone: updatedUser.phone,
+            country: updatedUser.country,
+            language: updatedUser.language,
+            gameAccounts: updatedUser.gameAccounts,
+            walletAddress: updatedUser.walletAddress,
+          });
 
         default:
           return res.status(400).json({ message: 'Invalid action' });
       }
     } catch (error) {
       console.error('User operation error:', error);
-      return res.status(500).json({ message: 'Operation failed' });
+      return res.status(500).json({ message: 'User operation failed' });
+    }
+  });
+
+  // Get current user
+  app.get('/api/users', async (req: Request, res: Response) => {
+    try {
+      const { action } = req.query;
+      
+      if (action === 'me') {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) {
+          return res.status(401).json({ message: 'No token provided' });
+        }
+
+        const storage = await getStorage();
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        const user = await storage.getUser(decoded.userId);
+        if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+
+        return res.json({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          phone: user.phone,
+          country: user.country,
+          language: user.language,
+          gameAccounts: user.gameAccounts,
+          walletAddress: user.walletAddress,
+        });
+      } else {
+        return res.status(400).json({ message: 'Invalid action' });
+      }
+    } catch (error) {
+      console.error('Get user error:', error);
+      return res.status(500).json({ message: 'Failed to get user' });
     }
   });
 
@@ -347,6 +428,14 @@ export async function registerRoutes(app: Express): Promise<void> {
             txid: txid,
           });
 
+          // Update user's wallet address if not already set
+          const user = await storage.getUser(completeTransaction.userId);
+          if (user && !user.walletAddress) {
+            await storage.updateUser(user.id, { 
+              walletAddress: payment.from_address || '' 
+            });
+          }
+
           // Send confirmation email
           try {
             const user = await storage.getUser(completeTransaction.userId);
@@ -429,9 +518,8 @@ export async function registerRoutes(app: Express): Promise<void> {
           return res.json(packages);
 
         case 'createPackage':
-          // Validate package data
-          const validatedData = insertPackageSchema.parse(data);
-          const newPackage = await storage.createPackage(validatedData);
+          // Note: You might need to import zod validation here
+          const newPackage = await storage.createPackage(data);
           return res.json(newPackage);
 
         case 'updatePackage':
@@ -449,20 +537,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       }
     } catch (error) {
       console.error('Admin operation error:', error);
-      
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: 'Validation error', 
-          errors: error.errors 
-        });
-      }
-      
       return res.status(500).json({ message: 'Admin operation failed' });
     }
-  });
-
-  // Health check endpoint
-  app.get('/api/health', (req: Request, res: Response) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 }

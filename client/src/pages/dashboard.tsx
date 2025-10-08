@@ -1,6 +1,6 @@
 import { usePiNetwork } from '@/hooks/use-pi-network';
 import { usePiPrice } from '@/hooks/use-pi-price';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { useState, useEffect } from 'react';
 import ParticleBackground from '@/components/particle-background';
@@ -17,8 +17,9 @@ import type { Package, Transaction } from '@/types/pi-network';
 
 export default function Dashboard() {
   const { user, isAuthenticated, logout, token, isLoading } = usePiNetwork();
-  const { data: piPrice } = usePiPrice();
+  const { data: piPrice, error: piPriceError, isLoading: piPriceLoading } = usePiPrice();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
@@ -50,13 +51,47 @@ export default function Dashboard() {
   }
 
   const { data: packages, isLoading: packagesLoading } = useQuery<Package[]>({
-    queryKey: ['/api/packages'],
+    queryKey: ['packages'],
+    queryFn: async () => {
+      const response = await fetch('/api/packages');
+      if (!response.ok) {
+        throw new Error('Failed to fetch packages');
+      }
+      return response.json();
+    },
   });
 
-  const { data: transactions, isLoading: transactionsLoading } = useQuery<Transaction[]>({
-    queryKey: ['/api/transactions'],
+  const { data: transactions, isLoading: transactionsLoading, refetch: refetchTransactions } = useQuery<Transaction[]>({
+    queryKey: ['transactions'],
+    queryFn: async () => {
+      const response = await fetch('/api/transactions', {
+        headers: {
+          'Authorization': `Bearer ${token || ''}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch transactions');
+      }
+      return response.json();
+    },
     enabled: !!token,
   });
+
+  // Refetch transactions when payment is completed
+  useEffect(() => {
+    const handlePaymentCompleted = () => {
+      // Refetch transactions and user data after payment completion
+      refetchTransactions();
+      // The user data will be refreshed in the payment callback
+    };
+
+    // Listen for payment completion events
+    window.addEventListener('paymentCompleted', handlePaymentCompleted);
+    
+    return () => {
+      window.removeEventListener('paymentCompleted', handlePaymentCompleted);
+    };
+  }, [refetchTransactions]);
 
   const pubgPackages = packages?.filter(pkg => pkg.game === 'PUBG') || [];
   const mlbbPackages = packages?.filter(pkg => pkg.game === 'MLBB') || [];
@@ -88,6 +123,9 @@ export default function Dashboard() {
 
   const completedTransactions = transactions?.filter(tx => tx.status === 'completed').length || 0;
 
+  // Calculate current balance (this would typically come from the backend)
+  const currentBalance = user.walletAddress ? 1000 - totalSpent : 0; // Placeholder calculation
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <ParticleBackground />
@@ -107,14 +145,37 @@ export default function Dashboard() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
-              {piPrice && (
+              {/* Pi Price Display */}
+              {piPriceLoading && (
+                <div className="bg-primary/10 backdrop-blur-sm rounded-full px-6 py-3 border border-primary/20">
+                  <span className="text-primary font-bold">Loading Pi Price...</span>
+                </div>
+              )}
+              
+              {piPriceError && (
+                <div className="bg-red-500/20 backdrop-blur-sm rounded-full px-6 py-3 border border-red-500/30">
+                  <span className="text-red-300 font-bold">Price Error: {piPriceError.message}</span>
+                </div>
+              )}
+              
+              {piPrice && !piPriceLoading && !piPriceError && (
                 <div className="bg-primary/10 backdrop-blur-sm rounded-full px-6 py-3 border border-primary/20">
                   <span className="text-primary font-bold">Live Pi Price: </span>
                   <span className="font-mono">${piPrice.price.toFixed(5)}</span>
                 </div>
               )}
               
+              {!piPrice && !piPriceLoading && !piPriceError && (
+                <div className="bg-yellow-500/20 backdrop-blur-sm rounded-full px-6 py-3 border border-yellow-500/30">
+                  <span className="text-yellow-300 font-bold">Price not available</span>
+                </div>
+              )}
+              
               <div className="flex gap-4">
+                <div className="bg-card rounded-lg p-4 border border-border">
+                  <p className="text-sm text-muted-foreground">Current Balance</p>
+                  <p className="text-2xl font-bold text-primary">{currentBalance.toFixed(2)} π</p>
+                </div>
                 <div className="bg-card rounded-lg p-4 border border-border">
                   <p className="text-sm text-muted-foreground">Total Spent</p>
                   <p className="text-2xl font-bold text-primary">{totalSpent.toFixed(2)} π</p>

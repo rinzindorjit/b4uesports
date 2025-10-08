@@ -14,7 +14,7 @@ import type { Package } from '@/types/pi-network';
 
 export default function Landing() {
   const { authenticate, isAuthenticated, isLoading: piLoading } = usePiNetwork();
-  const { data: piPrice } = usePiPrice();
+  const { data: piPrice, error: piPriceError, isLoading: piPriceLoading } = usePiPrice();
   const [, setLocation] = useLocation();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -101,12 +101,33 @@ export default function Landing() {
               </div>
             )}
             
-            {piPrice && (
-              <div className="mt-4 sm:mt-6 inline-block bg-primary/10 backdrop-blur-sm rounded-full px-3 sm:px-6 py-1.5 sm:py-3 border border-primary/20">
-                <span className="text-primary font-bold text-sm sm:text-base">Live Pi Price: </span>
-                <span className="font-mono text-sm sm:text-base">${piPrice.price.toFixed(5)}</span>
-              </div>
-            )}
+            {/* Pi Price Display */}
+            <div className="mt-4 sm:mt-6">
+              {piPriceLoading && (
+                <div className="inline-block bg-primary/10 backdrop-blur-sm rounded-full px-3 sm:px-6 py-1.5 sm:py-3 border border-primary/20">
+                  <span className="text-primary font-bold text-sm sm:text-base">Loading Pi Price...</span>
+                </div>
+              )}
+              
+              {piPriceError && (
+                <div className="inline-block bg-red-500/20 backdrop-blur-sm rounded-full px-3 sm:px-6 py-1.5 sm:py-3 border border-red-500/30">
+                  <span className="text-red-300 font-bold text-sm sm:text-base">Price Error: {piPriceError.message}</span>
+                </div>
+              )}
+              
+              {piPrice && !piPriceLoading && !piPriceError && (
+                <div className="inline-block bg-primary/10 backdrop-blur-sm rounded-full px-3 sm:px-6 py-1.5 sm:py-3 border border-primary/20">
+                  <span className="text-primary font-bold text-sm sm:text-base">Live Pi Price: </span>
+                  <span className="font-mono text-sm sm:text-base">${piPrice.price.toFixed(5)}</span>
+                </div>
+              )}
+              
+              {!piPrice && !piPriceLoading && !piPriceError && (
+                <div className="inline-block bg-yellow-500/20 backdrop-blur-sm rounded-full px-3 sm:px-6 py-1.5 sm:py-3 border border-yellow-500/30">
+                  <span className="text-yellow-300 font-bold text-sm sm:text-base">Price not available</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Key Features Section */}

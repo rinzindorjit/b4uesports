@@ -50,7 +50,7 @@ export interface PaymentDTO {
 
 export interface PiPrice {
   price: number;
-  lastUpdated: Date;
+  lastUpdated: Date | string;
 }
 
 export interface Package {

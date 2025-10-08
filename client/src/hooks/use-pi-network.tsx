@@ -1,8 +1,7 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { toast } from '@/hooks/use-toast';
 import { piSDK } from '@/lib/pi-sdk';
-import { apiRequest } from '@/lib/queryClient';
-import type { User, PaymentData, PaymentCallbacks, PaymentDTO } from '@/types/pi-network';
+import type { User, PaymentData, PaymentCallbacks } from '@/types/pi-network';
 
 interface PiNetworkContextType {
   isAuthenticated: boolean;
@@ -16,88 +15,57 @@ interface PiNetworkContextType {
 
 const PiNetworkContext = createContext<PiNetworkContextType | undefined>(undefined);
 
-interface PiNetworkProviderProps {
-  children: ReactNode;
+// Helper function for API requests
+async function apiRequest(method: string, url: string, data?: any) {
+  const token = localStorage.getItem('pi_token');
+  
+  const options: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    },
+  };
+  
+  if (data) {
+    options.body = JSON.stringify(data);
+  }
+  
+  return fetch(url, options);
 }
 
-export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
+export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [authTimeout, setAuthTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  // Validate token with backend
-  const validateToken = async (userToken: string) => {
-    try {
-      const response = await fetch('/api/users?action=me', {
-        headers: {
-          'Authorization': `Bearer ${userToken}`
-        }
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        return userData;
-      }
-    } catch (error) {
-      console.error('Token validation failed:', error);
-    }
-    return null;
-  };
-
+  // Check for existing session on mount
   useEffect(() => {
-    const initializeAuth = async () => {
-      // Check for existing session
-      const savedToken = localStorage.getItem('pi_token');
-      const savedUser = localStorage.getItem('pi_user');
-      
-      if (savedToken && savedUser) {
-        try {
-          // Validate token with backend
-          const userData = await validateToken(savedToken);
-          if (userData) {
-            setToken(savedToken);
-            setUser(userData);
-            setIsAuthenticated(true);
-          } else {
-            // Token is invalid, clear localStorage
-            localStorage.removeItem('pi_token');
-            localStorage.removeItem('pi_user');
-          }
-        } catch (error) {
-          console.error('Session validation failed:', error);
-          // Clear invalid session data
-          localStorage.removeItem('pi_token');
-          localStorage.removeItem('pi_user');
-        }
+    const storedToken = localStorage.getItem('pi_token');
+    const storedUser = localStorage.getItem('pi_user');
+    
+    if (storedToken && storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setToken(storedToken);
+        setIsAuthenticated(true);
+      } catch (error) {
+        // Clear invalid stored data
+        localStorage.removeItem('pi_token');
+        localStorage.removeItem('pi_user');
       }
-      
-      setIsLoading(false);
-    };
-
-    initializeAuth();
+    }
   }, []);
 
   const authenticate = async () => {
-    // Prevent multiple simultaneous authentication attempts
-    if (isLoading) return;
-    
-    // Reset SDK state to ensure clean initialization
-    piSDK.reset();
-    
     setIsLoading(true);
-    let authTimeout: NodeJS.Timeout | null = null;
     
     try {
-      // Show initial loading message
-      toast({
-        title: "Connecting to Pi Network",
-        description: "Please wait while we connect to Pi Network Testnet...",
-      });
-
-      // Define the onIncompletePaymentFound callback as required by Pi Network
-      const onIncompletePaymentFound = (payment: PaymentDTO) => {
+      // Handle incomplete payments as required by Pi Network
+      const onIncompletePaymentFound = (payment: any) => {
         console.log('Incomplete payment found:', payment);
         // Handle incomplete payment according to Pi Network requirements
         toast({
@@ -152,14 +120,14 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
       // Add a timeout for the entire authentication process
       // Use 180 seconds as recommended for mobile compatibility
-      authTimeout = setTimeout(() => {
+      setAuthTimeout(setTimeout(() => {
         setIsLoading(false);
         toast({
           title: "Authentication Timeout",
           description: "The authentication process is taking longer than expected. Please check your Pi Browser for pending requests. On mobile, look for a notification banner. If you don't see a prompt, try refreshing the page or restarting the Pi Browser app.",
           variant: "destructive",
         });
-      }, 180000);
+      }, 180000));
 
       // Authenticate with Pi Network using required scopes
       // Add retry mechanism for better reliability
@@ -207,7 +175,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       // Clear the timeout if authentication completes
       if (authTimeout) {
         clearTimeout(authTimeout);
-        authTimeout = null;
+        setAuthTimeout(null);
       }
       
       if (!authResult) {
@@ -260,6 +228,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       // Clear the timeout if it exists
       if (authTimeout) {
         clearTimeout(authTimeout);
+        setAuthTimeout(null);
       }
       
       // Show error toast with more specific information
@@ -355,6 +324,9 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
             throw new Error(`Server completion failed with status ${response.status}`);
           }
           
+          // Refresh user data to update balance and transaction history
+          refreshUserData();
+          
           callbacks.onReadyForServerCompletion(paymentId, txid);
         } catch (error) {
           console.error('Payment completion failed:', error);
@@ -380,6 +352,22 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
     piSDK.createPayment(enhancedPaymentData, enhancedCallbacks);
   };
+
+  // Function to refresh user data after payment completion
+  const refreshUserData = useCallback(async () => {
+    if (!token) return;
+    
+    try {
+      const response = await apiRequest('GET', '/api/users?action=me');
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        localStorage.setItem('pi_user', JSON.stringify(userData));
+      }
+    } catch (error) {
+      console.error('Failed to refresh user data:', error);
+    }
+  }, [token]);
 
   return (
     <PiNetworkContext.Provider value={{
