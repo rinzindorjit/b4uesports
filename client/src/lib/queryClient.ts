@@ -14,7 +14,8 @@ export async function apiRequest(
 ): Promise<Response> {
   // Ensure the URL is correctly formatted
   const apiUrl = import.meta.env.VITE_API_URL || '';
-  const fullUrl = url.startsWith('/api') ? `${apiUrl}${url}` : `${apiUrl}/api/${url}`;
+  // For relative URLs (when deployed to the same domain as the API), don't prepend apiUrl
+  const fullUrl = url.startsWith('/api') ? (apiUrl ? `${apiUrl}${url}` : url) : (apiUrl ? `${apiUrl}/api/${url}` : `/api/${url}`);
   
   // Get token from localStorage
   const token = localStorage.getItem('pi_token');
@@ -46,7 +47,8 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     const url = queryKey.join("/") as string;
     const apiUrl = import.meta.env.VITE_API_URL || '';
-    const fullUrl = url.startsWith('/api') ? `${apiUrl}${url}` : `${apiUrl}/api/${url}`;
+    // For relative URLs (when deployed to the same domain as the API), don't prepend apiUrl
+    const fullUrl = url.startsWith('/api') ? (apiUrl ? `${apiUrl}${url}` : url) : (apiUrl ? `${apiUrl}/api/${url}` : `/api/${url}`);
     
     // Get token from localStorage
     const token = localStorage.getItem('pi_token');

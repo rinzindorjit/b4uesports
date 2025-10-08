@@ -28,19 +28,23 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const sendPurchaseConfirmationEmail = await getEmailService();
 
     // Route handling
-    if (request.url?.startsWith('/api/users')) {
+    // Log the request URL for debugging
+    console.log('Request URL:', request.url);
+    console.log('Request method:', request.method);
+    
+    if (request.url?.startsWith('/api/users') || request.url?.startsWith('/users')) {
       return handleUsers(request, response, storage, piNetworkService, jwt, bcrypt, JWT_SECRET);
-    } else if (request.url?.startsWith('/api/packages')) {
+    } else if (request.url?.startsWith('/api/packages') || request.url?.startsWith('/packages')) {
       return handlePackages(request, response, storage, pricingService);
-    } else if (request.url?.startsWith('/api/transactions')) {
+    } else if (request.url?.startsWith('/api/transactions') || request.url?.startsWith('/transactions')) {
       return handleTransactions(request, response, storage, jwt, JWT_SECRET);
-    } else if (request.url?.startsWith('/api/payments')) {
+    } else if (request.url?.startsWith('/api/payments') || request.url?.startsWith('/payments')) {
       return handlePayments(request, response, storage, piNetworkService, pricingService, sendPurchaseConfirmationEmail, JWT_SECRET);
-    } else if (request.url?.startsWith('/api/pi-price')) {
+    } else if (request.url?.startsWith('/api/pi-price') || request.url?.startsWith('/pi-price')) {
       return handlePiPrice(request, response, pricingService);
-    } else if (request.url?.startsWith('/api/admin')) {
+    } else if (request.url?.startsWith('/api/admin') || request.url?.startsWith('/admin')) {
       return handleAdmin(request, response, storage, jwt, bcrypt, JWT_SECRET);
-    } else if (request.url?.startsWith('/api/health')) {
+    } else if (request.url?.startsWith('/api/health') || request.url?.startsWith('/health')) {
       return handleHealth(request, response);
     } else {
       return response.status(404).json({ message: 'Route not found' });
@@ -53,6 +57,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
 // User handling
 async function handleUsers(request: VercelRequest, response: VercelResponse, storage: any, piNetworkService: any, jwt: any, bcrypt: any, JWT_SECRET: string) {
+  // Log for debugging
+  console.log('Handling users request:', request.method, request.url, request.query, request.body);
+  
   // Allow both POST and GET requests
   if (request.method !== 'POST' && request.method !== 'GET') {
     return response.status(405).json({ message: 'Method not allowed' });
@@ -99,6 +106,7 @@ async function handleUsers(request: VercelRequest, response: VercelResponse, sto
   
   switch (action) {
     case 'authenticate':
+      console.log('Handling authenticate action with data:', data);
       const { accessToken } = data;
       if (!accessToken) {
         return response.status(400).json({ message: 'Access token required' });
