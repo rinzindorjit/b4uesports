@@ -43,27 +43,45 @@ export default async function handler(request: VercelRequest, response: VercelRe
     console.log('Request query:', request.query);
     
     // Extract the path from the URL for matching
-    const urlPath = request.url || '';
+    // In Vercel, the request.url might be just the path or a full URL
+    let urlPath = request.url || '';
     
-    // Handle both full URLs and path-only URLs
-    if (urlPath.includes('/api/users') || urlPath === '/users' || urlPath === '/api/users') {
+    // If it's a full URL, extract just the path
+    if (urlPath.startsWith('http')) {
+      try {
+        const urlObj = new URL(urlPath);
+        urlPath = urlObj.pathname;
+      } catch (e) {
+        // If URL parsing fails, keep the original
+        console.log('Failed to parse URL, using as-is:', urlPath);
+      }
+    }
+    
+    // Remove trailing slashes for consistent matching
+    urlPath = urlPath.replace(/\/$/, '');
+    
+    console.log('Processed URL path:', urlPath);
+    
+    // Handle routes - match the exact path without /api prefix
+    // In Vercel, the /api prefix is stripped by the rewrites
+    if (urlPath === '/users') {
       return handleUsers(request, response, storage, piNetworkService, jwt, bcrypt, JWT_SECRET);
-    } else if (urlPath.includes('/api/packages') || urlPath === '/packages' || urlPath === '/api/packages') {
+    } else if (urlPath === '/packages') {
       return handlePackages(request, response, storage, pricingService);
-    } else if (urlPath.includes('/api/transactions') || urlPath === '/transactions' || urlPath === '/api/transactions') {
+    } else if (urlPath === '/transactions') {
       return handleTransactions(request, response, storage, jwt, JWT_SECRET);
-    } else if (urlPath.includes('/api/payments') || urlPath === '/payments' || urlPath === '/api/payments') {
+    } else if (urlPath === '/payments') {
       return handlePayments(request, response, storage, piNetworkService, pricingService, sendPurchaseConfirmationEmail, JWT_SECRET);
-    } else if (urlPath.includes('/api/pi-price') || urlPath === '/pi-price' || urlPath === '/api/pi-price' || urlPath === '/api/pi-price/' || urlPath.endsWith('/api/pi-price')) {
+    } else if (urlPath === '/pi-price') {
       return handlePiPrice(request, response, pricingService);
-    } else if (urlPath.includes('/api/admin') || urlPath === '/admin' || urlPath === '/api/admin') {
+    } else if (urlPath === '/admin') {
       return handleAdmin(request, response, storage, jwt, bcrypt, JWT_SECRET);
-    } else if (urlPath.includes('/api/health') || urlPath === '/health' || urlPath === '/api/health') {
+    } else if (urlPath === '/health') {
       return handleHealth(request, response);
     } else {
-      console.log('No route matched for URL:', request.url);
+      console.log('No route matched for URL:', urlPath);
       console.log('Full request object:', { url: request.url, method: request.method, query: request.query, body: request.body });
-      return response.status(404).json({ message: `Route not found for URL: ${request.url}`, url: request.url, method: request.method });
+      return response.status(404).json({ message: `Route not found for URL: ${urlPath}`, url: urlPath, method: request.method });
     }
   } catch (error) {
     console.error('API handler error:', error);
