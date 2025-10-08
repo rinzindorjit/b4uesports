@@ -92,7 +92,20 @@ COINGECKO_API_KEY=your_coingecko_api_key
 
 ## Deployment
 
+### Vercel Deployment (Recommended)
+
 This application is deployed on Vercel with automatic framework detection.
+
+### GitHub Pages Deployment
+
+To deploy to GitHub Pages:
+
+1. Deploy the backend server to a hosting service that supports Node.js (e.g., Render, Heroku, or Vercel)
+2. Set the `VITE_API_URL` environment variable to the URL of your deployed backend
+3. Build the frontend: `npm run build`
+4. Deploy the contents of the `dist` directory to GitHub Pages
+
+Note: GitHub Pages is a static hosting service and cannot run server-side code. The backend must be deployed separately.
 
 ## Recent Updates
 
