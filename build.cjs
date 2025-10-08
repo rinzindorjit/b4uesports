@@ -144,35 +144,10 @@ try {
     stdio: 'inherit' 
   });
   
-  // Copy server files to dist/server
-  console.log('Copying server files...');
-  const serverSourceDir = join(process.cwd(), 'server');
-  const serverDestDir = join(process.cwd(), 'dist', 'server');
-  console.log(`Server source directory: ${serverSourceDir}`);
-  console.log(`Server destination directory: ${serverDestDir}`);
-  console.log(`Server source directory exists: ${existsSync(serverSourceDir)}`);
-  
-  if (existsSync(serverSourceDir)) {
-    copyFolderRecursive(serverSourceDir, serverDestDir);
-    console.log('Server files copied successfully!');
-  } else {
-    console.log('Server source directory does not exist!');
-  }
-  
-  // Compile server TypeScript files to JavaScript
-  console.log('Compiling server TypeScript files...');
-  compileTsFiles(serverDestDir);
-  
-  // Remove TypeScript files after compilation
-  console.log('Removing server TypeScript files...');
-  removeTsFiles(serverDestDir);
-  
-  // Fix import extensions in server JavaScript files
-  console.log('Fixing import extensions in server JavaScript files...');
-  fixImportExtensions(serverDestDir);
-  
-  // ALSO copy server files to api/dist_server for Vercel compatibility
+  // ONLY copy server files to api/dist_server for Vercel compatibility
+  // Skip copying to dist/server to prevent Vercel from treating them as functions
   console.log('Copying server files to api/dist_server for Vercel compatibility...');
+  const serverSourceDir = join(process.cwd(), 'server');
   const apiServerDestDir = join(process.cwd(), 'api', 'dist_server');
   if (existsSync(serverSourceDir)) {
     copyFolderRecursive(serverSourceDir, apiServerDestDir);
