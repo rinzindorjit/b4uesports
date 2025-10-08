@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [selectedGame, setSelectedGame] = useState<string | null>(null);
 
   // Redirect to landing if not authenticated
   useEffect(() => {
@@ -61,6 +62,11 @@ export default function Dashboard() {
   const mlbbPackages = packages?.filter(pkg => pkg.game === 'MLBB') || [];
   const recentTransactions = transactions?.slice(0, 5) || [];
 
+  // Filter packages based on selected game
+  const filteredPackages = selectedGame 
+    ? packages?.filter(pkg => pkg.game === selectedGame) 
+    : packages;
+
   const handlePurchaseClick = (pkg: Package) => {
     setSelectedPackage(pkg);
     setIsPurchaseModalOpen(true);
@@ -87,8 +93,6 @@ export default function Dashboard() {
       <ParticleBackground />
       <Navigation 
         isTestnet={import.meta.env.DEV} 
-        onProfileClick={() => setIsProfileModalOpen(true)}
-        onLogout={handleLogout}
       />
       
       {/* Dashboard Header */}
@@ -147,18 +151,24 @@ export default function Dashboard() {
             <h2 className="text-3xl font-bold text-center mb-8">Game Package Shop</h2>
             
             {/* Game Titles in Same Row */}
-            <div className="flex flex-col md:flex-row justify-center items-center gap-8 mb-8">
-              <div className="flex items-center">
-                <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-12 h-12 mr-3" />
-                <h3 className="text-xl font-bold">PUBG Mobile UC</h3>
-              </div>
-              <div className="flex items-center">
-                <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-12 h-12 mr-3" />
-                <h3 className="text-xl font-bold">Mobile Legends Diamonds</h3>
-              </div>
+            <div className="flex flex-row justify-center items-center gap-4 md:gap-8 mb-8 flex-wrap">
+              <button 
+                className={`flex items-center p-3 rounded-lg transition-all ${selectedGame === 'PUBG' ? 'bg-primary/20 border-2 border-primary' : 'bg-card border border-border hover:bg-muted'}`}
+                onClick={() => setSelectedGame(selectedGame === 'PUBG' ? null : 'PUBG')}
+              >
+                <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-10 h-10 mr-2 md:w-12 md:h-12 md:mr-3" />
+                <h3 className="text-lg font-bold md:text-xl">PUBG Mobile UC</h3>
+              </button>
+              <button 
+                className={`flex items-center p-3 rounded-lg transition-all ${selectedGame === 'MLBB' ? 'bg-primary/20 border-2 border-primary' : 'bg-card border border-border hover:bg-muted'}`}
+                onClick={() => setSelectedGame(selectedGame === 'MLBB' ? null : 'MLBB')}
+              >
+                <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-10 h-10 mr-2 md:w-12 md:h-12 md:mr-3" />
+                <h3 className="text-lg font-bold md:text-xl">Mobile Legends Diamonds</h3>
+              </button>
             </div>
             
-            {/* Combined Packages Display */}
+            {/* Packages Display */}
             <div className="bg-card rounded-2xl p-6 border border-border shadow-lg">
               {packagesLoading ? (
                 <div className="space-y-3">
@@ -166,9 +176,9 @@ export default function Dashboard() {
                     <div key={i} className="h-32 bg-muted rounded-lg animate-pulse"></div>
                   ))}
                 </div>
-              ) : packages && packages.length > 0 ? (
+              ) : filteredPackages && filteredPackages.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {packages.map(pkg => (
+                  {filteredPackages.map(pkg => (
                     <PackageCard 
                       key={pkg.id} 
                       package={pkg} 

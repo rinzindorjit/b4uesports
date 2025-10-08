@@ -29,7 +29,6 @@ function initializeMockPackages() {
   if (mockPackages.length === 0) {
     // PUBG packages
     const pubgPackages = [
-      { amount: 60, usdtValue: 1.5 },
       { amount: 325, usdtValue: 6.5 },
       { amount: 660, usdtValue: 12.0 },
       { amount: 1800, usdtValue: 25.0 },
@@ -43,7 +42,6 @@ function initializeMockPackages() {
     
     // MLBB packages
     const mlbbPackages = [
-      { amount: 56, usdtValue: 3.0 },
       { amount: 278, usdtValue: 6.0 },
       { amount: 571, usdtValue: 11.0 },
       { amount: 1783, usdtValue: 33.0 },

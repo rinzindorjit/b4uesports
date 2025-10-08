@@ -1,6 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import path from "path";
+import { fileURLToPath } from "url";
+import { dirname, resolve } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export default defineConfig({
   plugins: [
@@ -8,14 +12,21 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "client", "src"),
-      "@shared": path.resolve(__dirname, "shared"),
-      "@assets": path.resolve(__dirname, "attached_assets"),
+      "@": resolve(__dirname, "client", "src"),
+      "@shared": resolve(__dirname, "shared"),
+      "@assets": resolve(__dirname, "attached_assets"),
+      "@/components": resolve(__dirname, "client", "src", "components"),
+      "@/pages": resolve(__dirname, "client", "src", "pages"),
+      "@/hooks": resolve(__dirname, "client", "src", "hooks"),
+      "@/lib": resolve(__dirname, "client", "src", "lib"),
+      "@/types": resolve(__dirname, "client", "src", "types"),
+      "@/ui": resolve(__dirname, "client", "src", "components", "ui"),
+      "@/components/ui": resolve(__dirname, "client", "src", "components", "ui"),
     },
   },
-  root: path.resolve(__dirname, "client"),
+  root: resolve(__dirname, "client"),
   build: {
-    outDir: path.resolve(__dirname, "dist"),
+    outDir: resolve(__dirname, "dist"),
     emptyOutDir: true,
   },
   server: {
