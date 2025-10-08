@@ -118,10 +118,22 @@ try {
       console.log(`Fixed import extensions in ${file} (Pattern 1)`);
     }
     
+    // Pattern 1b: Standard import from "./_utils.ts"
+    if (content.includes('from "./_utils.ts"')) {
+      content = content.replace('from "./_utils.ts"', 'from "./_utils.js"');
+      console.log(`Fixed import extensions in ${file} (Pattern 1b)`);
+    }
+    
     // Pattern 2: Import with single quotes
     if (content.includes("from './_utils'")) {
       content = content.replace("from './_utils'", "from './_utils.js'");
       console.log(`Fixed import extensions in ${file} (Pattern 2)`);
+    }
+    
+    // Pattern 2b: Import with single quotes and .ts extension
+    if (content.includes("from './_utils.ts'")) {
+      content = content.replace("from './_utils.ts'", "from './_utils.js'");
+      console.log(`Fixed import extensions in ${file} (Pattern 2b)`);
     }
     
     // Pattern 3: More general pattern for any relative imports without extensions
