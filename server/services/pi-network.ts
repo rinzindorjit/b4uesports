@@ -1,97 +1,38 @@
 import axios from 'axios';
-import dotenv from 'dotenv';
 
-dotenv.config();
-
-// Use Testnet API for all requests as required for testing
-// For Testnet, always use sandbox.minepi.com
-const PI_API_BASE = 'https://sandbox.minepi.com';
-const SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
-
-// Only require PI_SERVER_API_KEY in production mode
-if (process.env.NODE_ENV !== 'development' && !SERVER_API_KEY) {
-  throw new Error("PI_SERVER_API_KEY environment variable must be set");
-}
-
-// Use a mock API key in development mode
-const API_KEY = SERVER_API_KEY || 'mock_pi_server_api_key_for_development';
-
-export interface PiUser {
-  uid: string;
-  username: string;
-  roles: string[];
-}
-
-export interface PaymentData {
-  amount: number;
-  memo: string;
-  metadata: {
-    type: 'backend';
-    userId: string;
-    packageId: string;
-    gameAccount: Record<string, string>;
-    [key: string]: any;
-  };
-}
-
-export interface PaymentDTO {
-  identifier: string;
-  user_uid: string;
-  amount: number;
-  memo: string;
-  metadata: Record<string, any>;
-  from_address: string;
-  to_address: string;
-  direction: 'user_to_app' | 'app_to_user';
-  created_at: string;
-  network: 'Pi Testnet' | 'Pi Network';
-  status: {
-    developer_approved: boolean;
-    transaction_verified: boolean;
-    developer_completed: boolean;
-    cancelled: boolean;
-    user_cancelled: boolean;
-  };
-  transaction: null | {
-    txid: string;
-    verified: boolean;
-    _link: string;
-  };
-}
-
-export class PiNetworkService {
-  private apiKey: string;
-
-  constructor() {
-    this.apiKey = API_KEY;
-  }
-
-  async verifyAccessToken(accessToken: string): Promise<PiUser | null> {
+export const piNetworkService = {
+  verifyAccessToken: async (accessToken: string) => {
     try {
-      console.log('Verifying access token with Pi Network Testnet API');
-      // For Testnet, always use the sandbox API endpoint
-      const response = await axios.get(`${PI_API_BASE}/v2/me`, {
+      const res = await axios.get("https://sandbox.minepi.com/v2/me", {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
         },
       });
-      console.log('Pi Network Testnet API response:', response.data);
-      return response.data;
+
+      if (!res.status.toString().startsWith('2')) {
+        console.error("Pi Testnet /me failed:", res.statusText);
+        return null;
+      }
+
+      const user = res.data;
+      console.log("Pi Testnet verified user:", user);
+      return user;
     } catch (error: any) {
-      console.error('Pi Network token verification failed:', error.response?.data || error.message);
+      console.error("Pi Testnet verification error:", error.response?.data || error.message);
       return null;
     }
-  }
-
-  async approvePayment(paymentId: string): Promise<boolean> {
+  },
+  
+  // Keep other methods for payment functionality
+  approvePayment: async (paymentId: string, apiKey: string) => {
     try {
-      // For Testnet, always use the sandbox API endpoint
       await axios.post(
-        `${PI_API_BASE}/v2/payments/${paymentId}/approve`,
+        "https://sandbox.minepi.com/v2/payments/" + paymentId + "/approve",
         {},
         {
           headers: {
-            'Authorization': `Key ${this.apiKey}`,
+            'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
           },
         }
@@ -101,17 +42,16 @@ export class PiNetworkService {
       console.error('Payment approval failed:', error);
       return false;
     }
-  }
+  },
 
-  async completePayment(paymentId: string, txid: string): Promise<boolean> {
+  completePayment: async (paymentId: string, txid: string, apiKey: string) => {
     try {
-      // For Testnet, always use the sandbox API endpoint
       await axios.post(
-        `${PI_API_BASE}/v2/payments/${paymentId}/complete`,
+        "https://sandbox.minepi.com/v2/payments/" + paymentId + "/complete",
         { txid },
         {
           headers: {
-            'Authorization': `Key ${this.apiKey}`,
+            'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
           },
         }
@@ -121,14 +61,13 @@ export class PiNetworkService {
       console.error('Payment completion failed:', error);
       return false;
     }
-  }
+  },
 
-  async getPayment(paymentId: string): Promise<PaymentDTO | null> {
+  getPayment: async (paymentId: string, apiKey: string) => {
     try {
-      // For Testnet, always use the sandbox API endpoint
-      const response = await axios.get(`${PI_API_BASE}/v2/payments/${paymentId}`, {
+      const response = await axios.get("https://sandbox.minepi.com/v2/payments/" + paymentId, {
         headers: {
-          'Authorization': `Key ${this.apiKey}`,
+          'Authorization': `Key ${apiKey}`,
         },
       });
       return response.data;
@@ -136,17 +75,16 @@ export class PiNetworkService {
       console.error('Get payment failed:', error);
       return null;
     }
-  }
+  },
 
-  async cancelPayment(paymentId: string): Promise<boolean> {
+  cancelPayment: async (paymentId: string, apiKey: string) => {
     try {
-      // For Testnet, always use the sandbox API endpoint
       await axios.post(
-        `${PI_API_BASE}/v2/payments/${paymentId}/cancel`,
+        "https://sandbox.minepi.com/v2/payments/" + paymentId + "/cancel",
         {},
         {
           headers: {
-            'Authorization': `Key ${this.apiKey}`,
+            'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
           },
         }
@@ -157,10 +95,4 @@ export class PiNetworkService {
       return false;
     }
   }
-}
-
-// Export the service instance as the default export
-export const piNetworkService = new PiNetworkService();
-
-// Also export the class and interface for flexibility
-export default PiNetworkService;
+};

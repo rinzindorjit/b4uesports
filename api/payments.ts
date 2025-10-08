@@ -23,7 +23,9 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const storage = await getStorage();
     const pricingService = await getPricingService();
     const piNetworkService = await getPiNetworkService();
-    const sendPurchaseConfirmationEmail = await getEmailService();
+
+    // Get API key from environment
+    const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY || 'mock_pi_server_api_key_for_development';
 
     switch (action) {
       case 'approve':
@@ -33,7 +35,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
         }
 
         // Get payment details from Pi Network Testnet
-        const payment = await piNetworkService.getPayment(paymentId);
+        const payment = await piNetworkService.getPayment(paymentId, PI_SERVER_API_KEY);
         if (!payment) {
           return response.status(404).json({ message: 'Payment not found' });
         }
@@ -66,7 +68,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
         }
 
         // Approve payment with Pi Network Testnet as required by Pi Network
-        const approved = await piNetworkService.approvePayment(paymentId);
+        const approved = await piNetworkService.approvePayment(paymentId, PI_SERVER_API_KEY);
         if (!approved) {
           await storage.updateTransaction(transaction.id, { status: 'failed' });
           return response.status(500).json({ message: 'Payment approval failed' });
@@ -89,7 +91,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
         }
 
         // Complete payment with Pi Network Testnet as required by Pi Network
-        const completed = await piNetworkService.completePayment(completePaymentId, txid);
+        const completed = await piNetworkService.completePayment(completePaymentId, txid, PI_SERVER_API_KEY);
         if (!completed) {
           await storage.updateTransaction(completeTransaction.id, { status: 'failed' });
           return response.status(500).json({ message: 'Payment completion failed' });
@@ -103,6 +105,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
         // Send confirmation email
         try {
+          const sendPurchaseConfirmationEmail = await getEmailService();
           const user = await storage.getUser(completeTransaction.userId);
           const pkg = await storage.getPackage(completeTransaction.packageId);
           

@@ -268,6 +268,9 @@ export async function registerRoutes(app: Express): Promise<void> {
       const piNetworkService = await getPiNetworkService();
       const sendPurchaseConfirmationEmail = await getEmailService();
       
+      // Get API key from environment
+      const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY || 'mock_pi_server_api_key_for_development';
+
       switch (action) {
         case 'approve':
           const { paymentId } = data;
@@ -275,8 +278,8 @@ export async function registerRoutes(app: Express): Promise<void> {
             return res.status(400).json({ message: 'Payment ID required' });
           }
 
-          // Get payment details from Pi Network
-          const payment = await piNetworkService.getPayment(paymentId);
+          // Get payment details from Pi Network Testnet
+          const payment = await piNetworkService.getPayment(paymentId, PI_SERVER_API_KEY);
           if (!payment) {
             return res.status(404).json({ message: 'Payment not found' });
           }
@@ -308,8 +311,8 @@ export async function registerRoutes(app: Express): Promise<void> {
             transaction = await storage.createTransaction(transactionData);
           }
 
-          // Approve payment with Pi Network
-          const approved = await piNetworkService.approvePayment(paymentId);
+          // Approve payment with Pi Network Testnet
+          const approved = await piNetworkService.approvePayment(paymentId, PI_SERVER_API_KEY);
           if (!approved) {
             await storage.updateTransaction(transaction.id, { status: 'failed' });
             return res.status(500).json({ message: 'Payment approval failed' });
@@ -331,8 +334,8 @@ export async function registerRoutes(app: Express): Promise<void> {
             return res.status(404).json({ message: 'Transaction not found' });
           }
 
-          // Complete payment with Pi Network
-          const completed = await piNetworkService.completePayment(completePaymentId, txid);
+          // Complete payment with Pi Network Testnet
+          const completed = await piNetworkService.completePayment(completePaymentId, txid, PI_SERVER_API_KEY);
           if (!completed) {
             await storage.updateTransaction(completeTransaction.id, { status: 'failed' });
             return res.status(500).json({ message: 'Payment completion failed' });
