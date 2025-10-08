@@ -13,7 +13,7 @@
     }
   ],
   "functions": {
-    "api/index.js": {
+    "api/index.ts": {
       "runtime": "@vercel/node@4.0.0"
     }
   },
