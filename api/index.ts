@@ -54,7 +54,7 @@ export default async function handler(request: VercelRequest, response: VercelRe
       return handleTransactions(request, response, storage, jwt, JWT_SECRET);
     } else if (urlPath.includes('/api/payments') || urlPath === '/payments' || urlPath === '/api/payments') {
       return handlePayments(request, response, storage, piNetworkService, pricingService, sendPurchaseConfirmationEmail, JWT_SECRET);
-    } else if (urlPath.includes('/api/pi-price') || urlPath === '/pi-price' || urlPath === '/api/pi-price') {
+    } else if (urlPath.includes('/api/pi-price') || urlPath === '/pi-price' || urlPath === '/api/pi-price' || urlPath === '/api/pi-price/' || urlPath.endsWith('/api/pi-price')) {
       return handlePiPrice(request, response, pricingService);
     } else if (urlPath.includes('/api/admin') || urlPath === '/admin' || urlPath === '/api/admin') {
       return handleAdmin(request, response, storage, jwt, bcrypt, JWT_SECRET);

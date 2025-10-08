@@ -191,19 +191,23 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       // Send access token to backend for verification according to Pi Network guidelines
       // The user information obtained with this method should not be passed to your backend
       // and should only be used for presentation logic
+      console.log('Sending authentication request to /api/users');
       const response = await apiRequest('POST', '/api/users', {
         action: 'authenticate',
         data: {
           accessToken: authResult.accessToken,
         }
       });
+      console.log('Authentication response:', response.status, response.statusText);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('Authentication failed with error data:', errorData);
         throw new Error(errorData.message || `Backend verification failed with status ${response.status}`);
       }
       
       const data = await response.json();
+      console.log('Authentication successful, received data:', data);
       
       setUser(data.user);
       setToken(data.token);
