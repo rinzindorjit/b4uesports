@@ -148,7 +148,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       };
 
       // Add a timeout for the entire authentication process
-      // Use 120 seconds for better mobile experience (shorter than before)
+      // Use 120 seconds for better mobile experience
       authTimeout = setTimeout(() => {
         setIsLoading(false);
         toast({
@@ -160,10 +160,12 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
 
       // Initialize Pi SDK with better error handling
       try {
+        console.log('Initializing Pi SDK...');
         await piSDK.init(true); // Always use sandbox mode for Testnet
+        console.log('Pi SDK initialized successfully');
       } catch (initError) {
         console.error('Pi SDK initialization failed:', initError);
-        throw new Error('Failed to initialize Pi Network connection. Please make sure you are using the Pi Browser app and try again.');
+        throw new Error(`Failed to initialize Pi Network connection: ${initError instanceof Error ? initError.message : 'Unknown error'}. Please make sure you are using the Pi Browser app and try again.`);
       }
 
       // Single authentication attempt with better error handling

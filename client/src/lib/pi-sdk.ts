@@ -43,6 +43,8 @@ export class PiSDK {
     if (this.initialized) return;
     
     try {
+      console.log('Initializing Pi SDK...');
+      
       // First, ensure the Pi SDK is loaded
       await loadPiSDK();
       
@@ -50,6 +52,7 @@ export class PiSDK {
       await waitForPiSDK(30000); // 30 second timeout
       
       if (typeof window !== 'undefined' && window.Pi) {
+        console.log('Pi SDK is available, initializing...');
         // Always use version "2.0" as required by Pi Network
         window.Pi.init({ 
           version: "2.0", 
@@ -58,11 +61,11 @@ export class PiSDK {
         this.initialized = true;
         console.log('Pi SDK initialized with version 2.0, sandbox:', sandbox);
       } else {
-        throw new Error('Pi SDK not available after loading');
+        throw new Error('Pi SDK not available after loading. Please make sure you are using the Pi Browser app.');
       }
     } catch (error) {
       console.error('Pi SDK initialization failed:', error);
-      throw error;
+      throw new Error(`Failed to initialize Pi SDK: ${error instanceof Error ? error.message : 'Unknown error'}. Please make sure you are using the Pi Browser app.`);
     }
   }
 
@@ -72,7 +75,10 @@ export class PiSDK {
   ): Promise<{ accessToken: string; user: { uid: string; username: string } } | null> {
     // Ensure Pi SDK is loaded and initialized
     try {
+      console.log('Starting authentication process...');
+      
       if (!this.initialized) {
+        console.log('Pi SDK not initialized, initializing now...');
         // Always use sandbox mode for Testnet
         await this.init(true);
       }
@@ -83,11 +89,12 @@ export class PiSDK {
       }
 
       console.log('Calling Pi.authenticate with scopes:', scopes);
+      
       // Add a timeout to the authentication call with proper Pi Network timeout values
       const authPromise = window.Pi.authenticate(scopes, onIncompletePaymentFound);
-      // Use 180 seconds timeout as recommended for mobile compatibility
+      // Use 120 seconds timeout for better mobile experience
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser for pending requests')), 180000)
+        setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser for pending requests')), 120000)
       );
       
       const authResult = await Promise.race([authPromise, timeoutPromise]) as { accessToken: string; user: { uid: string; username: string } };
@@ -127,7 +134,7 @@ export class PiSDK {
     }
   ): void {
     if (!this.initialized || !window.Pi) {
-      throw new Error('Pi SDK not initialized');
+      throw new Error('Pi SDK not initialized. Please make sure you are using the Pi Browser app.');
     }
 
     console.log('Creating Pi payment:', paymentData);
