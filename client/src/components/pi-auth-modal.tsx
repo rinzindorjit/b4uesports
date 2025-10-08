@@ -111,10 +111,10 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
               >
                 {isLoading ? (
                   <>
-                    <i className="fas fa-spinner fa-spin mr-1"></i> Connecting...
+                    <i className="fas fa-spinner fa-spin mr-1"></i> Connect
                   </>
                 ) : (
-                  'Approve'
+                  'Connect'
                 )}
               </Button>
             </div>
@@ -154,20 +154,6 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
                 disabled={isLoading}
               >
                 Cancel
-              </Button>
-              
-              <Button 
-                onClick={handleAuthenticate} 
-                className="w-full text-xs h-8"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin mr-1"></i> Retry
-                  </>
-                ) : (
-                  'Retry'
-                )}
               </Button>
             </div>
           </div>

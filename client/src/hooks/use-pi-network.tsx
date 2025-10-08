@@ -84,115 +84,39 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
     if (isLoading) return;
     
     setIsLoading(true);
-    let authTimeout: NodeJS.Timeout | null = null;
     
     try {
       // Show initial loading message
       toast({
         title: "Connecting to Pi Network",
-        description: "Please wait while we connect to Pi Network...",
+        description: "Please check your Pi Browser for authentication request...",
       });
 
-      // Define the onIncompletePaymentFound callback as required by Pi Network
+      // Define the onIncompletePaymentFound callback
       const onIncompletePaymentFound = (payment: PaymentDTO) => {
         console.log('Incomplete payment found:', payment);
-        // Handle incomplete payment according to Pi Network requirements
         toast({
           title: "Incomplete Payment Found",
           description: `Please complete your previous payment of ${payment.amount} π for "${payment.memo}"`,
           variant: "destructive",
         });
-        
-        // According to Pi Network documentation, it's the developer's responsibility
-        // to complete the corresponding payment when this callback is invoked
-        // We'll try to complete it with the existing data
-        const paymentData: PaymentData = {
-          amount: payment.amount,
-          memo: payment.memo,
-          metadata: {
-            type: 'backend',
-            userId: payment.user_uid,
-            packageId: payment.metadata?.packageId || '',
-            gameAccount: payment.metadata?.gameAccount || {}
-          }
-        };
-        
-        createPayment(paymentData, {
-          onReadyForServerApproval: (paymentId: string) => {
-            toast({
-              title: "Payment Approved",
-              description: `Payment ${paymentId} approved by server`,
-            });
-          },
-          onReadyForServerCompletion: (paymentId: string, txid: string) => {
-            toast({
-              title: "Payment Completed",
-              description: `✅ Previous payment confirmed! Transaction ID: ${txid}`,
-            });
-          },
-          onCancel: (paymentId: string) => {
-            toast({
-              title: "Payment Cancelled",
-              description: "❌ Previous payment canceled. No Pi deducted.",
-              variant: "destructive",
-            });
-          },
-          onError: (error: Error) => {
-            toast({
-              title: "Payment Failed",
-              description: `⚠️ Previous payment failed: ${error.message}. Please retry.`,
-              variant: "destructive",
-            });
-          },
-        });
       };
 
-      // Add a timeout for the entire authentication process
-      // Use 120 seconds for better mobile experience
-      authTimeout = setTimeout(() => {
-        setIsLoading(false);
-        toast({
-          title: "Authentication Timeout",
-          description: "Please check your Pi Browser for pending requests. Look for a notification banner. If you don't see a prompt, try refreshing the page.",
-          variant: "destructive",
-        });
-      }, 120000);
-
-      // Initialize Pi SDK with better error handling
-      try {
-        console.log('Initializing Pi SDK...');
-        await piSDK.init(true); // Always use sandbox mode for Testnet
-        console.log('Pi SDK initialized successfully');
-      } catch (initError) {
-        console.error('Pi SDK initialization failed:', initError);
-        throw new Error(`Failed to initialize Pi Network connection: ${initError instanceof Error ? initError.message : 'Unknown error'}. Please make sure you are using the Pi Browser app and try again.`);
-      }
-
-      // Single authentication attempt with better error handling
-      console.log('Starting Pi authentication...');
+      // Simple authentication flow
+      console.log('Starting authentication...');
       const authResult = await piSDK.authenticate(['payments', 'username'], onIncompletePaymentFound);
       
-      // Clear the timeout if authentication completes
-      if (authTimeout) {
-        clearTimeout(authTimeout);
-        authTimeout = null;
-      }
-      
       if (!authResult) {
-        throw new Error('Authentication failed - No response from Pi Network. Please try again.');
+        throw new Error('Authentication failed. Please try again.');
       }
-
-      console.log('Pi authentication successful, verifying with backend...');
 
       // Update toast to show backend verification
       toast({
-        title: "Verifying with Backend",
+        title: "Verifying Account",
         description: "Please wait while we verify your credentials...",
       });
 
-      // Send access token to backend for verification according to Pi Network guidelines
-      // The user information obtained with this method should not be passed to your backend
-      // and should only be used for presentation logic
+      // Send access token to backend for verification
       const response = await apiRequest('POST', '/api/users', {
         action: 'authenticate',
         data: {
@@ -202,7 +126,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Backend verification failed with status ${response.status}`);
+        throw new Error(errorData.message || `Verification failed with status ${response.status}`);
       }
       
       const data = await response.json();
@@ -217,11 +141,11 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       
       // Show success message
       toast({
-        title: "Authentication Successful",
+        title: "Login Successful",
         description: `Welcome, ${data.user.username}!`,
       });
       
-      console.log('Authentication completed successfully');
+      console.log('Authentication completed');
       
     } catch (error: any) {
       console.error('Authentication error:', error);
@@ -229,35 +153,14 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       setUser(null);
       setToken(null);
       
-      // Clear the timeout if it exists
-      if (authTimeout) {
-        clearTimeout(authTimeout);
-      }
-      
-      // Show error toast with more specific information
-      let errorMessage = "Failed to connect to Pi Network. Please make sure you're using the Pi Browser and try again.";
+      let errorMessage = "Failed to connect to Pi Network. Please make sure you're using the Pi Browser app.";
       
       if (error instanceof Error) {
         errorMessage = error.message;
       }
       
-      // Provide more specific guidance based on error type
-      if (errorMessage.includes('Pi SDK not available')) {
-        errorMessage = "Please use the Pi Browser app, not a regular web browser.";
-      } else if (errorMessage.includes('timeout')) {
-        errorMessage = "Check your Pi Browser for pending authentication requests. Look for a notification banner. If you don't see a prompt, try refreshing the page.";
-      } else if (errorMessage.includes('Invalid Pi Network token')) {
-        errorMessage = "Please try again and make sure you approve the authentication request in the Pi Browser.";
-      } else if (errorMessage.includes('Backend verification failed')) {
-        errorMessage = "There might be an issue with our servers. Please try again later.";
-      } else if (errorMessage.includes('cancelled') || errorMessage.includes('User closed')) {
-        errorMessage = "Authentication was cancelled. Please try again and approve the authentication request in the Pi Browser.";
-      } else if (errorMessage.includes('load')) {
-        errorMessage = "Failed to load Pi SDK. Please check your internet connection and make sure you are using the Pi Browser app.";
-      }
-      
       toast({
-        title: "Authentication Failed",
+        title: "Login Failed",
         description: errorMessage,
         variant: "destructive",
       });
@@ -285,7 +188,6 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       throw new Error('User not authenticated');
     }
 
-    // Add user context to metadata as required by Pi Network
     const enhancedPaymentData = {
       ...paymentData,
       metadata: {
@@ -295,11 +197,9 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       },
     };
 
-    // Enhanced callbacks with API calls for server-side approval and completion
     const enhancedCallbacks = {
       onReadyForServerApproval: async (paymentId: string) => {
         try {
-          // Server-Side Approval as required by Pi Network
           const response = await apiRequest('POST', '/api/payments', {
             action: 'approve',
             data: { paymentId }
@@ -317,7 +217,6 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
       },
       onReadyForServerCompletion: async (paymentId: string, txid: string) => {
         try {
-          // Server-Side Completion as required by Pi Network
           const response = await apiRequest('POST', '/api/payments', {
             action: 'complete',
             data: { paymentId, txid }
