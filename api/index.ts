@@ -53,10 +53,48 @@ export default async function handler(request: VercelRequest, response: VercelRe
 
 // User handling
 async function handleUsers(request: VercelRequest, response: VercelResponse, storage: any, piNetworkService: any, jwt: any, bcrypt: any, JWT_SECRET: string) {
-  if (request.method !== 'POST') {
+  // Allow both POST and GET requests
+  if (request.method !== 'POST' && request.method !== 'GET') {
     return response.status(405).json({ message: 'Method not allowed' });
   }
 
+  // For GET requests, we only support the 'me' action
+  if (request.method === 'GET') {
+    const { action } = request.query;
+    
+    if (action === 'me') {
+      // Validate session token and return user data
+      const sessionToken = request.headers.authorization?.replace('Bearer ', '');
+      if (!sessionToken) {
+        return response.status(401).json({ message: 'No token provided' });
+      }
+
+      try {
+        const decoded = jwt.verify(sessionToken, JWT_SECRET) as any;
+        const user = await storage.getUser(decoded.userId);
+        if (!user) {
+          return response.status(404).json({ message: 'User not found' });
+        }
+
+        return response.json({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          phone: user.phone,
+          country: user.country,
+          language: user.language,
+          gameAccounts: user.gameAccounts,
+          walletAddress: user.walletAddress,
+        });
+      } catch (error) {
+        return response.status(401).json({ message: 'Invalid token' });
+      }
+    } else {
+      return response.status(400).json({ message: 'Invalid action for GET request' });
+    }
+  }
+
+  // For POST requests, continue with existing logic
   const { action, data } = request.body;
   
   switch (action) {

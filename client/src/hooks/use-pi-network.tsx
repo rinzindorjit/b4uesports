@@ -30,7 +30,7 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   // Validate token with backend
   const validateToken = async (userToken: string) => {
     try {
-      const response = await fetch('/api/users/me', {
+      const response = await fetch('/api/users?action=me', {
         headers: {
           'Authorization': `Bearer ${userToken}`
         }
