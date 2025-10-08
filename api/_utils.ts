@@ -35,15 +35,9 @@ export async function getStorage() {
     const storageModule = await import("../server/storage");
     return storageModule.storage;
   } catch (error) {
-    try {
-      // Fallback to import from dist/server directory (works in development)
-      const storageModule = await import("../dist/server/storage");
-      return storageModule.storage;
-    } catch (fallbackError) {
-      // Final fallback - rethrow original error
-      console.error('Failed to import storage module:', error);
-      throw error;
-    }
+    // Final fallback - rethrow original error
+    console.error('Failed to import storage module:', error);
+    throw error;
   }
 }
 
@@ -53,15 +47,9 @@ export async function getPricingService() {
     const pricingModule = await import("../server/services/pricing");
     return pricingModule.pricingService;
   } catch (error) {
-    try {
-      // Fallback to import from dist/server directory (works in development)
-      const pricingModule = await import("../dist/server/services/pricing");
-      return pricingModule.pricingService;
-    } catch (fallbackError) {
-      // Final fallback - rethrow original error
-      console.error('Failed to import pricing service:', error);
-      throw error;
-    }
+    // Final fallback - rethrow original error
+    console.error('Failed to import pricing service:', error);
+    throw error;
   }
 }
 
@@ -71,15 +59,9 @@ export async function getPiNetworkService() {
     const piNetworkModule = await import("../server/services/pi-network");
     return piNetworkModule.piNetworkService;
   } catch (error) {
-    try {
-      // Fallback to import from dist/server directory (works in development)
-      const piNetworkModule = await import("../dist/server/services/pi-network");
-      return piNetworkModule.piNetworkService;
-    } catch (fallbackError) {
-      // Final fallback - rethrow original error
-      console.error('Failed to import Pi Network service:', error);
-      throw error;
-    }
+    // Final fallback - rethrow original error
+    console.error('Failed to import Pi Network service:', error);
+    throw error;
   }
 }
 
@@ -89,15 +71,9 @@ export async function getEmailService() {
     const emailModule = await import("../server/services/email");
     return emailModule.sendPurchaseConfirmationEmail;
   } catch (error) {
-    try {
-      // Fallback to import from dist/server directory (works in development)
-      const emailModule = await import("../dist/server/services/email");
-      return emailModule.sendPurchaseConfirmationEmail;
-    } catch (fallbackError) {
-      // Final fallback - rethrow original error
-      console.error('Failed to import email service:', error);
-      throw error;
-    }
+    // Final fallback - rethrow original error
+    console.error('Failed to import email service:', error);
+    throw error;
   }
 }
 

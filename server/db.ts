@@ -44,11 +44,13 @@ if (process.env.NODE_ENV === 'development') {
     update: (table: string) => ({
       set: (data: any) => ({
         where: (condition: any) => ({
+          // @ts-ignore - Suppress TypeScript error for match method
           returning: () => supabaseClient!.from(table).update(data).match(condition),
         }),
       }),
     }),
     delete: (table: string) => ({
+      // @ts-ignore - Suppress TypeScript error for match method
       where: (condition: any) => supabaseClient!.from(table).delete().match(condition),
     }),
   };

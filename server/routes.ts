@@ -16,19 +16,13 @@ async function getStorage() {
     return storageModule.storage;
   } catch (error) {
     try {
-      // Fallback to import from dist/server directory (works in development)
-      const storageModule = await import("../dist/server/storage");
+      // Additional fallback for direct relative import (works in some cases)
+      const storageModule = await import("./storage");
       return storageModule.storage;
     } catch (fallbackError) {
-      try {
-        // Additional fallback for direct relative import (works in some cases)
-        const storageModule = await import("./storage");
-        return storageModule.storage;
-      } catch (finalError) {
-        // Final fallback - rethrow original error
-        console.error('Failed to import storage module:', error);
-        throw error;
-      }
+      // Final fallback - rethrow original error
+      console.error('Failed to import storage module:', error);
+      throw error;
     }
   }
 }
@@ -40,19 +34,13 @@ async function getPiNetworkService() {
     return piNetworkModule.piNetworkService;
   } catch (error) {
     try {
-      // Fallback to import from dist/server directory (works in development)
-      const piNetworkModule = await import("../dist/server/services/pi-network");
+      // Additional fallback for direct relative import (works in some cases)
+      const piNetworkModule = await import("./services/pi-network");
       return piNetworkModule.piNetworkService;
     } catch (fallbackError) {
-      try {
-        // Additional fallback for direct relative import (works in some cases)
-        const piNetworkModule = await import("./services/pi-network");
-        return piNetworkModule.piNetworkService;
-      } catch (finalError) {
-        // Final fallback - rethrow original error
-        console.error('Failed to import Pi Network service:', error);
-        throw error;
-      }
+      // Final fallback - rethrow original error
+      console.error('Failed to import Pi Network service:', error);
+      throw error;
     }
   }
 }
@@ -64,19 +52,13 @@ async function getPricingService() {
     return pricingModule.pricingService;
   } catch (error) {
     try {
-      // Fallback to import from dist/server directory (works in development)
-      const pricingModule = await import("../dist/server/services/pricing");
+      // Additional fallback for direct relative import (works in some cases)
+      const pricingModule = await import("./services/pricing");
       return pricingModule.pricingService;
     } catch (fallbackError) {
-      try {
-        // Additional fallback for direct relative import (works in some cases)
-        const pricingModule = await import("./services/pricing");
-        return pricingModule.pricingService;
-      } catch (finalError) {
-        // Final fallback - rethrow original error
-        console.error('Failed to import pricing service:', error);
-        throw error;
-      }
+      // Final fallback - rethrow original error
+      console.error('Failed to import pricing service:', error);
+      throw error;
     }
   }
 }
@@ -88,19 +70,13 @@ async function getEmailService() {
     return emailModule.sendPurchaseConfirmationEmail;
   } catch (error) {
     try {
-      // Fallback to import from dist/server directory (works in development)
-      const emailModule = await import("../dist/server/services/email");
+      // Additional fallback for direct relative import (works in some cases)
+      const emailModule = await import("./services/email");
       return emailModule.sendPurchaseConfirmationEmail;
     } catch (fallbackError) {
-      try {
-        // Additional fallback for direct relative import (works in some cases)
-        const emailModule = await import("./services/email");
-        return emailModule.sendPurchaseConfirmationEmail;
-      } catch (finalError) {
-        // Final fallback - rethrow original error
-        console.error('Failed to import email service:', error);
-        throw error;
-      }
+      // Final fallback - rethrow original error
+      console.error('Failed to import email service:', error);
+      throw error;
     }
   }
 }
