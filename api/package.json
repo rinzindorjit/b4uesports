@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "exports": {
+    "./_utils": "./_utils.js"
+  }
+}
