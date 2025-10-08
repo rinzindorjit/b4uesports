@@ -84,6 +84,59 @@ function removeTsFiles(dir) {
   }
 }
 
+// Function to fix import extensions in JavaScript files
+function fixImportExtensions(dir) {
+  console.log(`Fixing import extensions in ${dir}...`);
+  
+  const files = readdirSync(dir);
+  
+  for (const file of files) {
+    const filePath = join(dir, file);
+    const stats = statSync(filePath);
+    
+    if (stats.isDirectory()) {
+      fixImportExtensions(filePath);
+    } else if (file.endsWith('.js')) {
+      let content = readFileSync(filePath, 'utf8');
+      let contentChanged = false;
+      
+      // Check for various import patterns that might need .js extension fixes
+      // Pattern 1: Standard import from "../storage"
+      if (content.includes('from "../storage"')) {
+        content = content.replace('from "../storage"', 'from "../storage.js"');
+        console.log(`Fixed import extensions in ${file} (Pattern 1)`);
+        contentChanged = true;
+      }
+      
+      // Pattern 2: Import with single quotes
+      if (content.includes("from '../storage'")) {
+        content = content.replace("from '../storage'", "from '../storage.js'");
+        console.log(`Fixed import extensions in ${file} (Pattern 2)`);
+        contentChanged = true;
+      }
+      
+      // Pattern 3: More general pattern for any relative imports without extensions
+      const importRegex = /(import\s+.*?\s+from\s+["']\.[^"']*?)["']/g;
+      let match;
+      while ((match = importRegex.exec(content)) !== null) {
+        const importPath = match[1];
+        // Check if it's a relative import without extension
+        if (importPath.includes('./') && !importPath.includes('.js')) {
+          const fixedPath = importPath + '.js';
+          content = content.replace(importPath, fixedPath);
+          console.log(`Fixed import extensions in ${file} (Pattern 3)`);
+          contentChanged = true;
+        }
+      }
+      
+      // Write the file only if content was changed
+      if (contentChanged) {
+        writeFileSync(filePath, content, 'utf8');
+      }
+    }
+  }
+}
+
 try {
   // Run the main build command for client
   console.log('Running client build...');
@@ -113,6 +166,10 @@ try {
   // Remove TypeScript files after compilation
   console.log('Removing server TypeScript files...');
   removeTsFiles(serverDestDir);
+  
+  // Fix import extensions in server JavaScript files
+  console.log('Fixing import extensions in server JavaScript files...');
+  fixImportExtensions(serverDestDir);
   
   // Compile API TypeScript files to JavaScript in the api directory
   console.log('Compiling API files...');
