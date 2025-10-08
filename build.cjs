@@ -1,5 +1,5 @@
 const { execSync } = require('child_process');
-const { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync } = require('fs');
+const { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } = require('fs');
 const { join } = require('path');
 
 try {
@@ -9,6 +9,20 @@ try {
     stdio: 'inherit' 
   });
   
+  // Ensure no JavaScript files exist in the api directory before compilation
+  const apiSourceDir = join(process.cwd(), 'api');
+  const apiFiles = readdirSync(apiSourceDir);
+  const jsFiles = apiFiles.filter(file => file.endsWith('.js'));
+  
+  if (jsFiles.length > 0) {
+    console.log('Found existing JavaScript files in api directory, removing them:', jsFiles);
+    for (const file of jsFiles) {
+      const filePath = join(apiSourceDir, file);
+      unlinkSync(filePath);
+      console.log(`Removed ${filePath}`);
+    }
+  }
+  
   // Create dist/api directory if it doesn't exist
   const distApiDir = join(process.cwd(), 'dist', 'api');
   if (!existsSync(distApiDir)) {
@@ -17,26 +31,33 @@ try {
   
   // Compile API TypeScript files to JavaScript in dist/api directory
   console.log('Compiling API files...');
-  const apiSourceDir = join(process.cwd(), 'api');
+  const tsFiles = apiFiles.filter(file => file.endsWith('.ts'));
   
-  // Get all .ts files in the api directory
-  const files = readdirSync(apiSourceDir);
-  const tsFiles = files.filter(file => file.endsWith('.ts'));
+  console.log('Found TypeScript files:', tsFiles);
   
   // Compile each TypeScript file individually to dist/api
   for (const file of tsFiles) {
     const sourcePath = join(apiSourceDir, file);
     const destPath = join(distApiDir, file.replace('.ts', '.js'));
     
-    console.log(`Compiling ${file}...`);
+    console.log(`Compiling ${file} to ${destPath}...`);
     execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=esm --outfile="${destPath}"`, {
       stdio: 'inherit'
     });
+    
+    // Verify the file was created
+    if (existsSync(destPath)) {
+      console.log(`Successfully created ${destPath}`);
+    } else {
+      console.error(`Failed to create ${destPath}`);
+    }
   }
   
   // Post-process compiled files to fix import extensions
   const compiledFiles = readdirSync(distApiDir);
   const compiledJsFiles = compiledFiles.filter(file => file.endsWith('.js'));
+  
+  console.log('Compiled JS files:', compiledJsFiles);
   
   for (const file of compiledJsFiles) {
     const filePath = join(distApiDir, file);
@@ -54,5 +75,6 @@ try {
   console.log('Build completed successfully!');
 } catch (error) {
   console.error('Build failed:', error.message);
+  console.error('Stack trace:', error.stack);
   process.exit(1);
 }
