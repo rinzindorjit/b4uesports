@@ -17,6 +17,38 @@ export default async function handler(request: VercelRequest, response: VercelRe
     const storage = await getStorage();
     const piNetworkService = await getPiNetworkService();
 
+    // Handle GET /me endpoint for token validation
+    if (request.method === 'GET' && request.url?.endsWith('/me')) {
+      const authHeader = request.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return response.status(401).json({ message: 'No token provided' });
+      }
+
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      
+      try {
+        const decoded = jwt.verify(token, JWT_SECRET) as any;
+        const user = await storage.getUser(decoded.userId);
+        
+        if (!user) {
+          return response.status(401).json({ message: 'Invalid token' });
+        }
+
+        return response.status(200).json({
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          phone: user.phone,
+          country: user.country,
+          language: user.language,
+          gameAccounts: user.gameAccounts,
+          walletAddress: user.walletAddress,
+        });
+      } catch (error) {
+        return response.status(401).json({ message: 'Invalid token' });
+      }
+    }
+
     const { action, data } = request.body;
     
     switch (action) {

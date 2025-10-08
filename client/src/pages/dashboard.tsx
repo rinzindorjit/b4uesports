@@ -2,7 +2,7 @@ import { usePiNetwork } from '@/hooks/use-pi-network';
 import { usePiPrice } from '@/hooks/use-pi-price';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ParticleBackground from '@/components/particle-background';
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
@@ -15,12 +15,31 @@ import { GAME_LOGOS } from '@/lib/constants';
 import type { Package, Transaction } from '@/types/pi-network';
 
 export default function Dashboard() {
-  const { user, isAuthenticated, logout, token } = usePiNetwork();
+  const { user, isAuthenticated, logout, token, isLoading } = usePiNetwork();
   const { data: piPrice } = usePiPrice();
   const [, setLocation] = useLocation();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+
+  // Redirect to landing if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      setLocation('/');
+    }
+  }, [isAuthenticated, isLoading, setLocation]);
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <i className="fas fa-spinner fa-spin text-4xl text-primary mb-4"></i>
+          <p className="text-xl">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Redirect to landing if not authenticated
   if (!isAuthenticated || !user) {

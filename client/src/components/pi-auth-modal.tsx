@@ -13,16 +13,24 @@ interface PiAuthModalProps {
 
 export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading }: PiAuthModalProps) {
   const [step, setStep] = useState<'consent' | 'processing'>('consent');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       setStep('consent');
+      setError(null);
     }
   }, [isOpen]);
 
   const handleAuthenticate = async () => {
     setStep('processing');
-    onAuthenticate();
+    setError(null);
+    try {
+      await onAuthenticate();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setStep('consent'); // Return to consent step on error
+    }
   };
 
   return (
@@ -80,6 +88,15 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
               </p>
             </div>
 
+            {error && (
+              <div className="bg-red-500/20 border border-red-500 rounded-lg p-4">
+                <p className="text-xs md:text-sm text-red-300">
+                  <i className="fas fa-exclamation-triangle mr-2"></i>
+                  {error}
+                </p>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row gap-3">
               <Button 
                 variant="outline" 
@@ -96,7 +113,13 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
                 data-testid="auth-approve"
                 disabled={isLoading}
               >
-                Approve
+                {isLoading ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin mr-2"></i> Connecting...
+                  </>
+                ) : (
+                  'Approve'
+                )}
               </Button>
             </div>
           </div>
@@ -130,6 +153,18 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
                 </p>
               </div>
             </div>
+            
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setStep('consent');
+                setError('Authentication cancelled by user');
+              }} 
+              className="w-full mt-6"
+              disabled={isLoading}
+            >
+              Cancel Authentication
+            </Button>
           </div>
         )}
       </DialogContent>

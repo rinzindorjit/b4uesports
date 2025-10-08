@@ -2,7 +2,7 @@ import { usePiNetwork } from '@/hooks/use-pi-network';
 import { usePiPrice } from '@/hooks/use-pi-price';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ParticleBackground from '@/components/particle-background';
 import Navigation from '@/components/navigation';
 import Footer from '@/components/footer';
@@ -17,14 +17,17 @@ export default function Landing() {
   const { data: piPrice } = usePiPrice();
   const [, setLocation] = useLocation();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Redirect to dashboard if already authenticated
-  if (isAuthenticated) {
-    setLocation('/dashboard');
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLocation('/dashboard');
+    }
+  }, [isAuthenticated, setLocation]);
 
   const handlePiLogin = () => {
+    setAuthError(null);
     setIsAuthModalOpen(true);
   };
 
@@ -34,6 +37,7 @@ export default function Landing() {
       // The modal will be closed by the isLoading state change in the hook
     } catch (error) {
       console.error('Login failed:', error);
+      setAuthError(error instanceof Error ? error.message : 'Authentication failed');
       // Keep the modal open to show the error
     }
   };
@@ -73,6 +77,15 @@ export default function Landing() {
                 )}
               </Button>
             </div>
+            
+            {authError && (
+              <div className="mt-4 p-3 bg-red-500/20 border border-red-500 rounded-lg max-w-md mx-auto">
+                <p className="text-sm text-red-300">
+                  <i className="fas fa-exclamation-triangle mr-2"></i>
+                  {authError}
+                </p>
+              </div>
+            )}
             
             {piPrice && (
               <div className="mt-6 sm:mt-8 inline-block bg-primary/10 backdrop-blur-sm rounded-full px-4 sm:px-6 py-2 sm:py-3 border border-primary/20">
@@ -177,7 +190,10 @@ export default function Landing() {
       
       <PiAuthModal 
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthError(null);
+        }}
         onAuthenticate={handleAuthenticate}
         isLoading={piLoading}
       />

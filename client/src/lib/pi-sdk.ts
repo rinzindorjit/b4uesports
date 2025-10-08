@@ -152,6 +152,11 @@ export class PiSDK {
   isInitialized(): boolean {
     return this.initialized;
   }
+  
+  // Method to reset the SDK state (useful for testing or error recovery)
+  reset(): void {
+    this.initialized = false;
+  }
 }
 
 export const piSDK = PiSDK.getInstance();

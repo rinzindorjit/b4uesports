@@ -7,10 +7,10 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Waits for the Pi SDK to be loaded and available on the window object
- * @param timeoutMs Maximum time to wait for the SDK to load (default: 5000ms)
+ * @param timeoutMs Maximum time to wait for the SDK to load (default: 20000ms for better mobile support)
  * @returns Promise that resolves when Pi SDK is available
  */
-export function waitForPiSDK(timeoutMs: number = 5000): Promise<void> {
+export function waitForPiSDK(timeoutMs: number = 20000): Promise<void> {
   return new Promise((resolve, reject) => {
     // If Pi SDK is already loaded, resolve immediately
     if (typeof window !== 'undefined' && window.Pi) {

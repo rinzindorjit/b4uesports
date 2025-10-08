@@ -27,21 +27,62 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
   const [token, setToken] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Check for existing session
-    const savedToken = localStorage.getItem('pi_token');
-    const savedUser = localStorage.getItem('pi_user');
-    
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
+  // Validate token with backend
+  const validateToken = async (userToken: string) => {
+    try {
+      const response = await fetch('/api/users/me', {
+        headers: {
+          'Authorization': `Bearer ${userToken}`
+        }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        return userData;
+      }
+    } catch (error) {
+      console.error('Token validation failed:', error);
     }
-    
-    setIsLoading(false);
+    return null;
+  };
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      // Check for existing session
+      const savedToken = localStorage.getItem('pi_token');
+      const savedUser = localStorage.getItem('pi_user');
+      
+      if (savedToken && savedUser) {
+        try {
+          // Validate token with backend
+          const userData = await validateToken(savedToken);
+          if (userData) {
+            setToken(savedToken);
+            setUser(userData);
+            setIsAuthenticated(true);
+          } else {
+            // Token is invalid, clear localStorage
+            localStorage.removeItem('pi_token');
+            localStorage.removeItem('pi_user');
+          }
+        } catch (error) {
+          console.error('Session validation failed:', error);
+          // Clear invalid session data
+          localStorage.removeItem('pi_token');
+          localStorage.removeItem('pi_user');
+        }
+      }
+      
+      setIsLoading(false);
+    };
+
+    initializeAuth();
   }, []);
 
   const authenticate = async () => {
+    // Prevent multiple simultaneous authentication attempts
+    if (isLoading) return;
+    
     setIsLoading(true);
     try {
       // Show initial loading message
@@ -193,8 +234,10 @@ export function PiNetworkProvider({ children }: PiNetworkProviderProps) {
         description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      // Always ensure loading state is cleared
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const logout = () => {
