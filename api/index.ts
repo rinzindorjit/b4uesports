@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getStorage, getPiNetworkService, getPricingService, getEmailService, jwt, bcrypt } from './_utils';
+import { getStorage, getPiNetworkService, getPricingService, getEmailService, jwt, bcrypt } from './_utils.ts';
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
 
