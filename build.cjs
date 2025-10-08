@@ -1,6 +1,88 @@
 const { execSync } = require('child_process');
-const { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync } = require('fs');
+const { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync, statSync, copyFileSync } = require('fs');
 const { join } = require('path');
+
+// Function to copy folders recursively
+function copyFolderRecursive(source, destination) {
+  console.log(`Copying from ${source} to ${destination}`);
+  
+  if (!existsSync(destination)) {
+    console.log(`Creating directory ${destination}`);
+    mkdirSync(destination, { recursive: true });
+  }
+
+  const files = readdirSync(source);
+  console.log(`Found files in ${source}:`, files);
+  
+  for (const file of files) {
+    const sourcePath = join(source, file);
+    const destPath = join(destination, file);
+    
+    const stats = statSync(sourcePath);
+    if (stats.isDirectory()) {
+      console.log(`Copying directory ${file}`);
+      copyFolderRecursive(sourcePath, destPath);
+    } else {
+      console.log(`Copying file ${file}`);
+      copyFileSync(sourcePath, destPath);
+    }
+  }
+}
+
+// Function to compile TypeScript files in a directory
+function compileTsFiles(sourceDir) {
+  console.log(`Compiling TypeScript files in ${sourceDir}...`);
+  
+  // Get all .ts files in the directory
+  const files = readdirSync(sourceDir);
+  const tsFiles = files.filter(file => file.endsWith('.ts'));
+  
+  // Compile each TypeScript file individually
+  for (const file of tsFiles) {
+    const sourcePath = join(sourceDir, file);
+    const destPath = join(sourceDir, file.replace('.ts', '.js'));
+    
+    console.log(`Compiling ${file} to ${destPath}...`);
+    execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=esm --outfile="${destPath}"`, {
+      stdio: 'inherit'
+    });
+    
+    // Verify the file was created
+    if (existsSync(destPath)) {
+      console.log(`Successfully created ${destPath}`);
+    } else {
+      console.error(`Failed to create ${destPath}`);
+    }
+  }
+  
+  // Recursively compile TypeScript files in subdirectories
+  for (const file of files) {
+    const sourcePath = join(sourceDir, file);
+    const stats = statSync(sourcePath);
+    if (stats.isDirectory()) {
+      compileTsFiles(sourcePath);
+    }
+  }
+}
+
+// Function to remove TypeScript files after compilation
+function removeTsFiles(dir) {
+  console.log(`Removing TypeScript files from ${dir}...`);
+  
+  const files = readdirSync(dir);
+  
+  for (const file of files) {
+    const filePath = join(dir, file);
+    const stats = statSync(filePath);
+    
+    if (stats.isDirectory()) {
+      removeTsFiles(filePath);
+    } else if (file.endsWith('.ts')) {
+      unlinkSync(filePath);
+      console.log(`Removed ${filePath}`);
+    }
+  }
+}
 
 try {
   // Run the main build command for client
@@ -9,6 +91,29 @@ try {
     stdio: 'inherit' 
   });
   
+  // Copy server files to dist/server
+  console.log('Copying server files...');
+  const serverSourceDir = join(process.cwd(), 'server');
+  const serverDestDir = join(process.cwd(), 'dist', 'server');
+  console.log(`Server source directory: ${serverSourceDir}`);
+  console.log(`Server destination directory: ${serverDestDir}`);
+  console.log(`Server source directory exists: ${existsSync(serverSourceDir)}`);
+  
+  if (existsSync(serverSourceDir)) {
+    copyFolderRecursive(serverSourceDir, serverDestDir);
+    console.log('Server files copied successfully!');
+  } else {
+    console.log('Server source directory does not exist!');
+  }
+  
+  // Compile server TypeScript files to JavaScript
+  console.log('Compiling server TypeScript files...');
+  compileTsFiles(serverDestDir);
+  
+  // Remove TypeScript files after compilation
+  console.log('Removing server TypeScript files...');
+  removeTsFiles(serverDestDir);
+  
   // Compile API TypeScript files to JavaScript in the api directory
   console.log('Compiling API files...');
   const apiSourceDir = join(process.cwd(), 'api');
@@ -16,8 +121,6 @@ try {
   // Get all .ts files in the api directory
   const files = readdirSync(apiSourceDir);
   const tsFiles = files.filter(file => file.endsWith('.ts'));
-  
-  console.log('Found TypeScript files:', tsFiles);
   
   // Remove any existing .js files in the api directory to prevent conflicts
   const existingJsFiles = files.filter(file => file.endsWith('.js'));

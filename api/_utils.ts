@@ -32,7 +32,7 @@ export {
 export async function getStorage() {
   try {
     // Try to import from the server directory (works in Vercel)
-    const storageModule = await import("../server/storage");
+    const storageModule = await import("../dist/server/storage.js") as any;
     return storageModule.storage;
   } catch (error) {
     // Final fallback - rethrow original error
@@ -44,7 +44,7 @@ export async function getStorage() {
 export async function getPricingService() {
   try {
     // Try to import from the server directory (works in Vercel)
-    const pricingModule = await import("../server/services/pricing");
+    const pricingModule = await import("../dist/server/services/pricing.js") as any;
     return pricingModule.pricingService;
   } catch (error) {
     // Final fallback - rethrow original error
@@ -56,7 +56,7 @@ export async function getPricingService() {
 export async function getPiNetworkService() {
   try {
     // Try to import from the server directory (works in Vercel)
-    const piNetworkModule = await import("../server/services/pi-network");
+    const piNetworkModule = await import("../dist/server/services/pi-network.js") as any;
     return piNetworkModule.piNetworkService;
   } catch (error) {
     // Final fallback - rethrow original error
@@ -68,7 +68,7 @@ export async function getPiNetworkService() {
 export async function getEmailService() {
   try {
     // Try to import from the server directory (works in Vercel)
-    const emailModule = await import("../server/services/email");
+    const emailModule = await import("../dist/server/services/email.js") as any;
     return emailModule.sendPurchaseConfirmationEmail;
   } catch (error) {
     // Final fallback - rethrow original error
