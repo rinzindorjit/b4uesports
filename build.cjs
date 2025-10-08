@@ -1,5 +1,5 @@
 const { execSync } = require('child_process');
-const { readdirSync, readFileSync, writeFileSync } = require('fs');
+const { readdirSync, readFileSync, writeFileSync, existsSync } = require('fs');
 const { join } = require('path');
 
 try {
@@ -25,6 +25,17 @@ try {
     
     console.log(`Compiling ${file}...`);
     execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=esm --outfile="${destPath}"`, {
+      stdio: 'inherit'
+    });
+  }
+  
+  // Ensure _utils.js always exists even if _utils.ts wasn't manually compiled earlier
+  const utilsPathTs = join(apiSourceDir, '_utils.ts');
+  const utilsPathJs = join(apiDestDir, '_utils.js');
+  
+  if (!existsSync(utilsPathJs) && existsSync(utilsPathTs)) {
+    console.log('Compiling _utils.ts...');
+    execSync(`npx esbuild "${utilsPathTs}" --platform=node --packages=external --format=esm --outfile="${utilsPathJs}"`, {
       stdio: 'inherit'
     });
   }
