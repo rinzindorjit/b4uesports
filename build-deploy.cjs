@@ -9,8 +9,8 @@ try {
     stdio: 'inherit' 
   });
   
-  // Copy server files to dist directory
-  console.log('Copying server files...');
+  // Compile server TypeScript files to JavaScript in dist/server directory
+  console.log('Compiling server files...');
   const serverSourceDir = join(process.cwd(), 'server');
   const serverDestDir = join(process.cwd(), 'dist', 'server');
   
@@ -19,28 +19,42 @@ try {
     mkdirSync(serverDestDir, { recursive: true });
   }
   
-  // Copy server files recursively
-  function copyFolderRecursive(source, destination) {
-    if (!existsSync(destination)) {
-      mkdirSync(destination, { recursive: true });
+  // Function to compile TypeScript files recursively
+  function compileServerFiles(sourceDir, destDir) {
+    if (!existsSync(destDir)) {
+      mkdirSync(destDir, { recursive: true });
     }
   
-    const files = readdirSync(source);
+    const files = readdirSync(sourceDir);
     
     for (const file of files) {
-      const sourcePath = join(source, file);
-      const destPath = join(destination, file);
+      const sourcePath = join(sourceDir, file);
+      const destPath = join(destDir, file);
       
       if (statSync(sourcePath).isDirectory()) {
-        copyFolderRecursive(sourcePath, destPath);
+        compileServerFiles(sourcePath, destPath);
+      } else if (file.endsWith('.ts')) {
+        // Compile TypeScript files to JavaScript
+        const jsDestPath = destPath.replace('.ts', '.js');
+        execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=esm --outfile="${jsDestPath}"`, {
+          stdio: 'inherit'
+        });
+        
+        // Verify the file was created
+        if (existsSync(jsDestPath)) {
+          console.log(`Successfully created ${jsDestPath}`);
+        } else {
+          console.error(`Failed to create ${jsDestPath}`);
+        }
       } else {
+        // Copy other files directly
         copyFileSync(sourcePath, destPath);
       }
     }
   }
   
-  copyFolderRecursive(serverSourceDir, serverDestDir);
-  console.log('Server files copied successfully!');
+  compileServerFiles(serverSourceDir, serverDestDir);
+  console.log('Server files compiled successfully!');
   
   // Compile API TypeScript files to JavaScript in a separate dist/api directory
   console.log('Compiling API files...');
@@ -50,6 +64,19 @@ try {
   // Create the API directory
   if (!existsSync(apiDestDir)) {
     mkdirSync(apiDestDir, { recursive: true });
+  }
+  
+  // Safety check: Remove any existing .js files from the api directory to prevent conflicts
+  console.log('Checking for existing .js files in api directory...');
+  const apiFiles = readdirSync(apiSourceDir);
+  const existingJsFiles = apiFiles.filter(file => file.endsWith('.js'));
+  if (existingJsFiles.length > 0) {
+    console.log('Removing existing JavaScript files:', existingJsFiles);
+    for (const file of existingJsFiles) {
+      const filePath = join(apiSourceDir, file);
+      unlinkSync(filePath);
+      console.log(`Removed ${filePath}`);
+    }
   }
   
   // Get all .ts files in the api directory
