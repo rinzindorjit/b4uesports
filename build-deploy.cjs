@@ -1,6 +1,6 @@
 const { execSync } = require('child_process');
 const { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync, statSync, copyFileSync } = require('fs');
-const { join } = require('path');
+const { join, basename } = require('path');
 
 try {
   // Run the main build command for client
@@ -94,6 +94,41 @@ try {
   // Copy package.json to dist/api for Vercel
   console.log('Copying package.json to dist/api...');
   copyFileSync(join(apiSourceDir, 'package.json'), join(apiDestDir, 'package.json'));
+  
+  // Copy assets from dist/assets to dist root
+  console.log('Copying assets to dist root...');
+  const assetsSourceDir = join(process.cwd(), 'dist', 'assets');
+  const distRootDir = join(process.cwd(), 'dist');
+  
+  if (existsSync(assetsSourceDir)) {
+    const assetFiles = readdirSync(assetsSourceDir);
+    for (const file of assetFiles) {
+      const sourcePath = join(assetsSourceDir, file);
+      const destPath = join(distRootDir, file);
+      copyFileSync(sourcePath, destPath);
+      console.log(`Copied ${file} to dist root`);
+    }
+  }
+  
+  // Copy images from dist/images to dist root
+  console.log('Copying images to dist root...');
+  const imagesSourceDir = join(process.cwd(), 'dist', 'images');
+  const imagesDestDir = join(process.cwd(), 'dist', 'images');
+  
+  // Create images directory in dist root if it doesn't exist
+  if (!existsSync(imagesDestDir)) {
+    mkdirSync(imagesDestDir, { recursive: true });
+  }
+  
+  if (existsSync(imagesSourceDir)) {
+    const imageFiles = readdirSync(imagesSourceDir);
+    for (const file of imageFiles) {
+      const sourcePath = join(imagesSourceDir, file);
+      const destPath = join(imagesDestDir, file);
+      copyFileSync(sourcePath, destPath);
+      console.log(`Copied ${file} to dist/images`);
+    }
+  }
   
   // Post-process compiled files to fix import extensions (only for compiled TS files)
   const updatedFiles = readdirSync(apiDestDir);
