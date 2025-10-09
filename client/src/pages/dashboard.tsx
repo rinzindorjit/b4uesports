@@ -57,7 +57,9 @@ export default function Dashboard() {
       if (!response.ok) {
         throw new Error('Failed to fetch packages');
       }
-      return response.json();
+      const data = await response.json();
+      console.log('Packages fetched:', data); // Debug log
+      return data;
     },
   });
 
@@ -97,10 +99,13 @@ export default function Dashboard() {
   const mlbbPackages = packages?.filter(pkg => pkg.game === 'MLBB') || [];
   const recentTransactions = transactions?.slice(0, 5) || [];
 
-  // Filter packages based on selected game
+  // Filter packages based on selected game - ensure we always have an array
   const filteredPackages = selectedGame 
-    ? packages?.filter(pkg => pkg.game === selectedGame) 
-    : packages;
+    ? (packages || []).filter(pkg => pkg.game === selectedGame) 
+    : packages || [];
+
+  console.log('Selected game:', selectedGame); // Debug log
+  console.log('Filtered packages:', filteredPackages); // Debug log
 
   const handlePurchaseClick = (pkg: Package) => {
     setSelectedPackage(pkg);
@@ -230,7 +235,7 @@ export default function Dashboard() {
                     <div key={i} className="h-32 bg-muted rounded-lg animate-pulse"></div>
                   ))}
                 </div>
-              ) : filteredPackages && filteredPackages.length > 0 ? (
+              ) : packages && packages.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {filteredPackages.map(pkg => (
                     <PackageCard 
@@ -244,6 +249,12 @@ export default function Dashboard() {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <p>No packages available</p>
+                  {/* Debug information */}
+                  <div className="mt-4 text-left text-xs">
+                    <p>Packages loaded: {packages ? packages.length : 'null'}</p>
+                    <p>Filtered packages: {filteredPackages ? filteredPackages.length : 'null'}</p>
+                    <p>Selected game: {selectedGame || 'none'}</p>
+                  </div>
                 </div>
               )}
             </div>
