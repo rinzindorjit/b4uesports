@@ -2,6 +2,9 @@
   "version": 2,
   "buildCommand": "npm run build-deploy",
   "outputDirectory": "dist",
+  "builds": [
+    { "src": "api/**/*.js", "use": "@vercel/node" }
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",
