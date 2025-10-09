@@ -1,13 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "npm run build-deploy",
+  "buildCommand": "npm run build-with-copy",
   "outputDirectory": "dist",
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs20.x",
-      "maxDuration": 10
-    }
-  },
   "routes": [
     {
       "src": "/api/(.*)",

@@ -10,6 +10,7 @@
     "dev": "cross-env NODE_ENV=development tsx server/index.ts",
     "build": "node build.cjs",
     "build-deploy": "node build-deploy.cjs",
+    "build-with-copy": "node build-with-copy.cjs",
     "preview": "vite preview",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc",
