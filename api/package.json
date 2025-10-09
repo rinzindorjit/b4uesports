@@ -2,5 +2,15 @@
   "type": "module",
   "exports": {
     "./_utils": "./_utils.js"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.11",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/bcryptjs": "^2.4.6",
+    "typescript": "^5.6.3"
   }
 }

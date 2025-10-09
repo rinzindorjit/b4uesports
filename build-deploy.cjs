@@ -102,6 +102,10 @@ try {
     console.log(`Successfully copied ${destPath}`);
   }
   
+  // Copy package.json to dist/api for Vercel
+  console.log('Copying package.json to dist/api...');
+  copyFileSync(join(apiSourceDir, 'package.json'), join(apiDestDir, 'package.json'));
+  
   // Post-process compiled files to fix import extensions (only for compiled TS files)
   const updatedFiles = readdirSync(apiDestDir);
   const compiledJsFiles = updatedFiles.filter(file => file.endsWith('.js') && tsFiles.includes(file.replace('.js', '.ts')));
