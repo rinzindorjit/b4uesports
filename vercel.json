@@ -8,6 +8,10 @@
       "dest": "/api/index.js"
     },
     {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
       "src": "/(.*)\\.(js|css|map)",
       "dest": "/$1.$2"
     },

@@ -25,6 +25,7 @@ export default defineConfig({
     },
   },
   root: resolve(__dirname, "client"),
+  base: "./", // Add this to fix asset paths
   build: {
     outDir: resolve(__dirname, "dist"),
     emptyOutDir: true,
