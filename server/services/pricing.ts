@@ -16,12 +16,8 @@ export class PricingService {
 
   async getCurrentPiPrice(): Promise<number> {
     try {
-      // Use CoinGecko API to get the current Pi price
-      const response = await axios.get('https://api.coingecko.com/api/v3/simple/price', {
-        params: {
-          ids: 'pi-network',
-          vs_currencies: 'usd'
-        },
+      // Use CoinGecko API to get the current Pi price with demo key
+      const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4', {
         timeout: 5000 // 5 second timeout
       });
       

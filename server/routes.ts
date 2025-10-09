@@ -4,6 +4,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { insertUserSchema, insertPackageSchema } from "@shared/schema";
 import { z } from "zod";
+// Import the pi-price route
+import piPriceRoute from "./routes/pi-price";
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
 
@@ -82,6 +84,9 @@ async function getEmailService() {
 }
 
 export async function registerRoutes(app: Express): Promise<void> {
+  // Register the pi-price route
+  app.use("/api", piPriceRoute);
+  
   // Consolidated API endpoint for user operations
   app.post('/api/users', async (req: Request, res: Response) => {
     const { action, data } = req.body;
