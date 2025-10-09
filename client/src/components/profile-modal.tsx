@@ -255,15 +255,6 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       data-testid="pi-username"
                     />
                   </div>
-                  <div>
-                    <Label>Pi Wallet Address</Label>
-                    <Input 
-                      value={user?.walletAddress ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}` : 'Not set'} 
-                      readOnly 
-                      className="bg-muted cursor-not-allowed font-mono text-sm"
-                      data-testid="pi-wallet"
-                    />
-                  </div>
                   <div className="md:col-span-2">
                     <Label>Country *</Label>
                     <div className="flex space-x-2">

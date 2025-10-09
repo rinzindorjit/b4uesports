@@ -48,6 +48,7 @@ export const getPiNetworkService = () => ({
       username: 'pi_user',
       pi_id: 'testnet_1234',
       email: 'user@pi.network',
+      wallet_address: 'Gxxx...xxxx' // Mock wallet address
     };
   },
 });

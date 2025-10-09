@@ -148,7 +148,7 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
             });
           }
           
-          authResult = await piSDK.authenticate(['payments', 'username'], onIncompletePaymentFound);
+          authResult = await piSDK.authenticate(['payments', 'username', 'wallet_address'], onIncompletePaymentFound);
           
           if (!authResult && attempts < maxAttempts) {
             // Wait before retrying

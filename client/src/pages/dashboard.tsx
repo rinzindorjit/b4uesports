@@ -141,7 +141,7 @@ export default function Dashboard() {
               Welcome back, <span className="text-primary">{user.username}</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-6">
-              Your Pi wallet: <span className="font-mono">{formatWalletAddress(user.walletAddress)}</span>
+              Welcome to the Pi Network Testnet environment
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">

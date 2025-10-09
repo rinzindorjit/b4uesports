@@ -73,9 +73,9 @@ export class PiSDK {
   }
 
   async authenticate(
-    scopes: string[] = ['payments', 'username'],
+    scopes: string[] = ['payments', 'username', 'wallet_address'],
     onIncompletePaymentFound?: (payment: any) => void
-  ): Promise<{ accessToken: string; user: { uid: string; username: string } } | null> {
+  ): Promise<{ accessToken: string; user: { uid: string; username: string; wallet_address?: string } } | null> {
     // Ensure Pi SDK is loaded and initialized
     try {
       if (!this.initialized) {
