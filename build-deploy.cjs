@@ -56,8 +56,8 @@ try {
   compileServerFiles(serverSourceDir, serverDestDir);
   console.log('Server files compiled successfully!');
   
-  // Compile API TypeScript files to JavaScript in a separate dist/api directory
-  console.log('Compiling API files...');
+  // Handle API files for Vercel - copy JavaScript files directly
+  console.log('Handling API files for Vercel...');
   const apiSourceDir = join(process.cwd(), 'api');
   const apiDestDir = join(process.cwd(), 'dist', 'api');
   
@@ -66,22 +66,12 @@ try {
     mkdirSync(apiDestDir, { recursive: true });
   }
   
-  // Safety check: Remove any existing .js files from the api directory to prevent conflicts
-  console.log('Checking for existing .js files in api directory...');
+  // Get all files in the api directory
   const apiFiles = readdirSync(apiSourceDir);
-  const existingJsFiles = apiFiles.filter(file => file.endsWith('.js'));
-  if (existingJsFiles.length > 0) {
-    console.log('Removing existing JavaScript files:', existingJsFiles);
-    for (const file of existingJsFiles) {
-      const filePath = join(apiSourceDir, file);
-      unlinkSync(filePath);
-      console.log(`Removed ${filePath}`);
-    }
-  }
+  console.log('API files found:', apiFiles);
   
-  // Get all .ts files in the api directory
-  const files = readdirSync(apiSourceDir);
-  const tsFiles = files.filter(file => file.endsWith('.ts'));
+  // Get all .ts files in the api directory to compile
+  const tsFiles = apiFiles.filter(file => file.endsWith('.ts'));
   
   // Compile each TypeScript file individually to the dist/api directory
   for (const file of tsFiles) {
@@ -101,9 +91,20 @@ try {
     }
   }
   
-  // Post-process compiled files to fix import extensions
+  // Copy all .js files directly to dist/api (for Vercel serverless functions)
+  const jsFiles = apiFiles.filter(file => file.endsWith('.js'));
+  for (const file of jsFiles) {
+    const sourcePath = join(apiSourceDir, file);
+    const destPath = join(apiDestDir, file);
+    
+    console.log(`Copying ${file} to ${destPath}...`);
+    copyFileSync(sourcePath, destPath);
+    console.log(`Successfully copied ${destPath}`);
+  }
+  
+  // Post-process compiled files to fix import extensions (only for compiled TS files)
   const updatedFiles = readdirSync(apiDestDir);
-  const compiledJsFiles = updatedFiles.filter(file => file.endsWith('.js'));
+  const compiledJsFiles = updatedFiles.filter(file => file.endsWith('.js') && tsFiles.includes(file.replace('.js', '.ts')));
   
   console.log('Compiled JS files:', compiledJsFiles);
   
