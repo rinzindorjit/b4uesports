@@ -13,22 +13,28 @@
   ],
   "functions": {
     "api/pi-price.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "@vercel/node@4.0.0"
     },
     "api/users.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "@vercel/node@4.0.0"
     },
     "api/packages.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "@vercel/node@4.0.0"
     },
     "api/payments.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "@vercel/node@4.0.0"
     },
     "api/transactions.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "@vercel/node@4.0.0"
     },
     "api/health.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "@vercel/node@4.0.0"
     }
-  }
+  },
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node@4.0.0"
+    }
+  ]
 }
