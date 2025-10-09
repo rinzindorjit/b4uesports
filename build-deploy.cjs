@@ -113,7 +113,7 @@ try {
   console.log('Compiled JS files:', compiledJsFiles);
   
   // Include _utils.js in the list of files to process
-  const filesToProcess = [...compiledJsFiles, '_utils.js'];
+  const filesToProcess = [...compiledJsFiles];
   
   for (const file of filesToProcess) {
     const filePath = join(apiDestDir, file);
@@ -124,56 +124,6 @@ try {
     }
     
     let content = readFileSync(filePath, 'utf8');
-    
-    // Check for various import patterns that might need .js extension fixes
-    // Pattern 1: Standard import from "./_utils"
-    if (content.includes('from "./_utils"')) {
-      content = content.replace('from "./_utils"', 'from "./_utils.js"');
-      console.log(`Fixed import extensions in ${file} (Pattern 1)`);
-    }
-    
-    // Pattern 1b: Standard import from "./_utils.ts"
-    if (content.includes('from "./_utils.ts"')) {
-      content = content.replace('from "./_utils.ts"', 'from "./_utils.js"');
-      console.log(`Fixed import extensions in ${file} (Pattern 1b)`);
-    }
-    
-    // Pattern 2: Import with single quotes
-    if (content.includes("from './_utils'")) {
-      content = content.replace("from './_utils'", "from './_utils.js'");
-      console.log(`Fixed import extensions in ${file} (Pattern 2)`);
-    }
-    
-    // Pattern 2b: Import with single quotes and .ts extension
-    if (content.includes("from './_utils.ts'")) {
-      content = content.replace("from './_utils.ts'", "from './_utils.js'");
-      console.log(`Fixed import extensions in ${file} (Pattern 2b)`);
-    }
-    
-    // Pattern 3: More general pattern for any relative imports without extensions
-    const importRegex = /(import\s+.*?\s+from\s+["']\.[^"']*?)["']/g;
-    let match;
-    while ((match = importRegex.exec(content)) !== null) {
-      const importPath = match[1];
-      // Check if it's a relative import without extension
-      if (importPath.includes('./') && !importPath.includes('.js')) {
-        const fixedPath = importPath + '.js';
-        content = content.replace(importPath, fixedPath);
-        console.log(`Fixed import extensions in ${file} (Pattern 3)`);
-      }
-    }
-    
-    // Also fix require statements
-    if (content.includes("require('./_utils')")) {
-      content = content.replace("require('./_utils')", "require('./_utils.js')");
-      console.log(`Fixed require extensions in ${file}`);
-    }
-    
-    // Fix export statements for CommonJS compatibility
-    if (content.includes('export {') && content.includes('handler as default')) {
-      content = content.replace('export { handler as default };', 'module.exports = handler;');
-      console.log(`Fixed export statement in ${file}`);
-    }
     
     // Write the file only if content was changed
     writeFileSync(filePath, content, 'utf8');

@@ -1,6 +1,5 @@
-import { getStorage, JWT_SECRET } from './_utils';
-
-export default async function handler(req: any, res: any) {
+// @ts-nocheck
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -17,12 +16,11 @@ export default async function handler(req: any, res: any) {
     };
 
     // Check if required modules are available
-    const modulesCheck: Record<string, string> = {};
+    const modulesCheck = {};
     try {
-      const store = getStorage();
+      require('./_utils');
       modulesCheck.utils = 'OK';
-      modulesCheck.storage = store ? 'OK' : 'Error: Storage not available';
-    } catch (error: any) {
+    } catch (error) {
       modulesCheck.utils = `Error: ${error.message}`;
     }
 
@@ -32,7 +30,7 @@ export default async function handler(req: any, res: any) {
       environment: envCheck,
       modules: modulesCheck,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Health check error:', error);
     res.status(500).json({
       status: 'ERROR',

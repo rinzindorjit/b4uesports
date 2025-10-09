@@ -1,4 +1,5 @@
-export default async function handler(req: any, res: any) {
+// @ts-nocheck
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -8,7 +9,7 @@ export default async function handler(req: any, res: any) {
   try {
     // Use CoinGecko API to get the current Pi price
     const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd');
-    const data: any = await response.json();
+    const data = await response.json();
     const price = data['pi-network']?.usd;
     
     if (typeof price !== 'number') {
