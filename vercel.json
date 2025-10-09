@@ -2,51 +2,28 @@
   "version": 2,
   "buildCommand": "npm run build-deploy",
   "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/api/pi-price", "destination": "/api/pi-price.js" },
-    { "source": "/api/users", "destination": "/api/users.js" },
-    { "source": "/api/packages", "destination": "/api/packages.js" },
-    { "source": "/api/payments", "destination": "/api/payments.js" },
-    { "source": "/api/transactions", "destination": "/api/transactions.js" },
-    { "source": "/api/health", "destination": "/api/health.js" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
-  "builds": [
-    {
-      "src": "api/**/*.js",
-      "use": "@vercel/node@4.0.0"
-    },
-    {
-      "src": "dist/*.{js,css,map}",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "dist/images/**/*.{png,jpg,jpeg,gif,svg,webp}",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "dist/index.html",
-      "use": "@vercel/static"
+  "functions": {
+    "api/index.js": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 10
     }
-  ],
-  "headers": [
+  },
+  "routes": [
     {
-      "source": "/(.*)\\.(js|css|map)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
     },
     {
-      "source": "/images/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/images/(.*)",
+      "dest": "/images/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }

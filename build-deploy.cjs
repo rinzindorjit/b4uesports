@@ -91,6 +91,23 @@ try {
     }
   }
   
+  // Copy any existing .js files from api directory to dist/api
+  const jsFiles = apiFiles.filter(file => file.endsWith('.js'));
+  for (const file of jsFiles) {
+    const sourcePath = join(apiSourceDir, file);
+    const destPath = join(apiDestDir, file);
+    
+    console.log(`Copying ${file} to ${destPath}...`);
+    copyFileSync(sourcePath, destPath);
+    
+    // Verify the file was copied
+    if (existsSync(destPath)) {
+      console.log(`Successfully copied ${destPath}`);
+    } else {
+      console.error(`Failed to copy ${destPath}`);
+    }
+  }
+  
   // Copy package.json to dist/api for Vercel
   console.log('Copying package.json to dist/api...');
   copyFileSync(join(apiSourceDir, 'package.json'), join(apiDestDir, 'package.json'));
