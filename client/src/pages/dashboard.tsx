@@ -213,26 +213,26 @@ export default function Dashboard() {
           <div className="mb-12">
             <h2 className="text-3xl font-bold text-center mb-8">Game Package Shop</h2>
             
-            {/* Game Titles in Same Row */}
-            <div className="flex flex-row justify-center items-center gap-4 md:gap-8 mb-8 flex-wrap">
+            {/* Game Titles in Same Row - Fixed for mobile */}
+            <div className="flex flex-row justify-center items-center gap-2 md:gap-4 mb-8 flex-wrap">
               <button 
-                className={`flex items-center p-3 rounded-lg transition-all ${selectedGame === 'PUBG' ? 'bg-primary/20 border-2 border-primary' : 'bg-card border border-border hover:bg-muted'}`}
+                className={`flex items-center p-2 rounded-lg transition-all ${selectedGame === 'PUBG' ? 'bg-primary/20 border-2 border-primary' : 'bg-card border border-border hover:bg-muted'}`}
                 onClick={() => setSelectedGame(selectedGame === 'PUBG' ? null : 'PUBG')}
               >
-                <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-10 h-10 mr-2 md:w-12 md:h-12 md:mr-3" />
-                <h3 className="text-lg font-bold md:text-xl">PUBG Mobile UC</h3>
+                <img src={GAME_LOGOS.PUBG} alt="PUBG Mobile" className="w-8 h-8 mr-2" />
+                <h3 className="text-sm font-bold md:text-base whitespace-nowrap">PUBG UC</h3>
               </button>
               <button 
-                className={`flex items-center p-3 rounded-lg transition-all ${selectedGame === 'MLBB' ? 'bg-primary/20 border-2 border-primary' : 'bg-card border border-border hover:bg-muted'}`}
+                className={`flex items-center p-2 rounded-lg transition-all ${selectedGame === 'MLBB' ? 'bg-primary/20 border-2 border-primary' : 'bg-card border border-border hover:bg-muted'}`}
                 onClick={() => setSelectedGame(selectedGame === 'MLBB' ? null : 'MLBB')}
               >
-                <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-10 h-10 mr-2 md:w-12 md:h-12 md:mr-3" />
-                <h3 className="text-lg font-bold md:text-xl">Mobile Legends Diamonds</h3>
+                <img src={GAME_LOGOS.MLBB} alt="Mobile Legends" className="w-8 h-8 mr-2" />
+                <h3 className="text-sm font-bold md:text-base whitespace-nowrap">MLBB Diamonds</h3>
               </button>
             </div>
             
             {/* Packages Display */}
-            <div className="bg-card rounded-2xl p-6 border border-border shadow-lg">
+            <div className="bg-card rounded-2xl p-4 md:p-6 border border-border shadow-lg">
               {packagesLoading ? (
                 <div className="space-y-3">
                   {[...Array(6)].map((_, i) => (
@@ -250,7 +250,7 @@ export default function Dashboard() {
                   </button>
                 </div>
               ) : packages && packages.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                   {filteredPackages.map(pkg => (
                     <PackageCard 
                       key={pkg.id} 
