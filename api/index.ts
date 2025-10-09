@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { jwtVerify, jwtSign, getStorage, readBody } from "./_utils";
+import { jwtVerify, jwtSign, getStorage, readBody } from "./_utils.js";
 
 // Helper function to calculate Pi amount from USD value
 function calculatePiAmount(usdValue, piPrice) {

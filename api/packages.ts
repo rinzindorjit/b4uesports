@@ -1,5 +1,5 @@
 // @ts-nocheck
-const { getStorage } = require("./_utils");
+const { getStorage } = require("./_utils.js");
 
 function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");

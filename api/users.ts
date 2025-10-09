@@ -1,88 +1,83 @@
 // @ts-nocheck
-const { getStorage, getPiNetworkService, jwtSign, jwtVerify } = require("./_utils");
+const { jwtVerify, jwtSign, getStorage, getPiNetworkService } = require("./_utils.js");
 
 async function readBody(req) {
   return new Promise((resolve, reject) => {
-    let data = "";
-    req.on("data", (chunk) => (data += chunk));
-    req.on("end", () => {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
       try {
-        resolve(JSON.parse(data || "{}"));
-      } catch (err) {
-        reject(new Error("Invalid JSON"));
+        resolve(JSON.parse(body));
+      } catch (error) {
+        reject(error);
       }
     });
+    req.on('error', reject);
   });
 }
 
-function getToken(req) {
-  const auth = req.headers["authorization"];
-  if (!auth) throw new Error("Missing Authorization header");
-  return auth.replace("Bearer ", "");
-}
-
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const { method } = req;
-  const store = getStorage();
-  const piService = getPiNetworkService();
+  
+  if (method === "GET") {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ message: "No token provided" });
 
-  try {
-    if (method === "POST") {
-      const body = await readBody(req);
-
-      if (body.action === "authenticate") {
-        const { accessToken } = body.data;
-        console.log("Attempting to verify access token:", accessToken ? "Token provided" : "No token");
-        
-        if (!accessToken) {
-          return res.status(400).json({ message: "Missing access token" });
-        }
-        
-        const userData = await piService.verifyAccessToken(accessToken);
-        console.log("User data verified:", userData);
-
-        if (!store.users[userData.pi_id]) {
-          store.users[userData.pi_id] = userData;
-        }
-
-        const token = jwtSign({ pi_id: userData.pi_id });
-        console.log("JWT token generated");
-        return res.status(200).json({ message: "User authenticated", user: userData, token });
-      }
-
-      if (body.action === "getProfile") {
-        const token = getToken(req);
-        const decoded = jwtVerify(token);
-        const user = store.users[decoded.pi_id];
-        return res.status(200).json({ user });
-      }
-
-      return res.status(400).json({ message: "Invalid action for /api/users" });
-    }
-    
-    if (method === "GET") {
-      const token = getToken(req);
+    try {
       const decoded = jwtVerify(token);
+      const store = getStorage();
       const user = store.users[decoded.pi_id];
+      if (!user) return res.status(404).json({ message: "User not found" });
+
       return res.status(200).json({ user });
+    } catch (err) {
+      console.error("Token verification failed:", err);
+      return res.status(401).json({ message: "Invalid token" });
     }
-    
-    return res.status(405).json({ message: "Method not allowed" });
-  } catch (err) {
-    console.error("API Error:", err);
-    res.status(500).json({ 
-      message: err.message || "Internal Server Error",
-      error: process.env.NODE_ENV === "development" ? {
-        message: err.message,
-        stack: err.stack,
-        name: err.name
-      } : undefined
-    });
   }
-};
+
+  if (method === "POST") {
+    const body = await readBody(req);
+    const { action, accessToken } = body;
+
+    if (action === "login") {
+      if (!accessToken) return res.status(400).json({ message: "Access token required" });
+
+      try {
+        const piService = getPiNetworkService();
+        const piUser = await piService.verifyAccessToken(accessToken);
+        
+        const store = getStorage();
+        if (!store.users[piUser.pi_id]) {
+          store.users[piUser.pi_id] = {
+            ...piUser,
+            id: piUser.pi_id,
+            createdAt: new Date().toISOString(),
+          };
+        }
+
+        const token = jwtSign(piUser);
+        return res.status(200).json({ token, user: piUser });
+      } catch (err) {
+        console.error("Authentication failed:", err);
+        return res.status(500).json({ 
+          message: `Failed to verify Pi Network access token: ${err.message || 'Unknown error'}` 
+        });
+      }
+    }
+
+    return res.status(400).json({ message: "Invalid action for /api/users" });
+  }
+
+  return res.status(405).json({ message: "Method not allowed" });
+}
+
+module.exports = handler;
