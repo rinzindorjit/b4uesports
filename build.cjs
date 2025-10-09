@@ -34,7 +34,8 @@ try {
     const destPath = join(apiSourceDir, file.replace('.ts', '.js'));
     
     console.log(`Compiling ${file} to ${destPath}...`);
-    execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=esm --outfile="${destPath}"`, {
+    // Use CommonJS format for Vercel compatibility
+    execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=cjs --outfile="${destPath}"`, {
       stdio: 'inherit'
     });
     
