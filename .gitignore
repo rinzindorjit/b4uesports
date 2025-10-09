@@ -10,6 +10,7 @@ vite.config.ts.*
 .env.local
 .env.development
 .env.production
+.env*.local
 
 # Validation key
 validation-key.txt
@@ -29,4 +30,28 @@ Thumbs.db
 
 # Compiled API files - we'll ignore these as they're generated during build
 api/*.js
+
+# Vercel
 .vercel
+.vercel/*
+
+# Replit files
+.replit
+.nvmrc
+
+# Local state files
+.local/
+home
+trigger.txt
+
+# Database files
+*.db
+*.sqlite
+
+# Build artifacts
+build/
+dist/
+
+# Temporary files
+tmp/
+temp/
