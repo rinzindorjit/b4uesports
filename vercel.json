@@ -10,5 +10,25 @@
     { "source": "/api/transactions", "destination": "/api/transactions.js" },
     { "source": "/api/health", "destination": "/api/health.js" },
     { "source": "/(.*)", "destination": "/index.html" }
-  ]
+  ],
+  "functions": {
+    "api/pi-price.js": {
+      "runtime": "nodejs20.x"
+    },
+    "api/users.js": {
+      "runtime": "nodejs20.x"
+    },
+    "api/packages.js": {
+      "runtime": "nodejs20.x"
+    },
+    "api/payments.js": {
+      "runtime": "nodejs20.x"
+    },
+    "api/transactions.js": {
+      "runtime": "nodejs20.x"
+    },
+    "api/health.js": {
+      "runtime": "nodejs20.x"
+    }
+  }
 }

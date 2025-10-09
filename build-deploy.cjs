@@ -91,17 +91,6 @@ try {
     }
   }
   
-  // Copy all .js files directly to dist/api (for Vercel serverless functions)
-  const jsFiles = apiFiles.filter(file => file.endsWith('.js'));
-  for (const file of jsFiles) {
-    const sourcePath = join(apiSourceDir, file);
-    const destPath = join(apiDestDir, file);
-    
-    console.log(`Copying ${file} to ${destPath}...`);
-    copyFileSync(sourcePath, destPath);
-    console.log(`Successfully copied ${destPath}`);
-  }
-  
   // Copy package.json to dist/api for Vercel
   console.log('Copying package.json to dist/api...');
   copyFileSync(join(apiSourceDir, 'package.json'), join(apiDestDir, 'package.json'));
