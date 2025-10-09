@@ -70,8 +70,8 @@ try {
   const apiFiles = readdirSync(apiSourceDir);
   console.log('API files found:', apiFiles);
   
-  // Get all .ts files in the api directory to compile
-  const tsFiles = apiFiles.filter(file => file.endsWith('.ts'));
+  // Get all .ts files in the api directory to compile (excluding .d.ts files)
+  const tsFiles = apiFiles.filter(file => file.endsWith('.ts') && !file.endsWith('.d.ts'));
   
   // Compile each TypeScript file individually to the dist/api directory
   for (const file of tsFiles) {
@@ -91,7 +91,7 @@ try {
     }
   }
   
-  // Copy any existing .js files from api directory to dist/api
+  // Copy any existing .js files from api directory to dist/api (including _utils.js)
   const jsFiles = apiFiles.filter(file => file.endsWith('.js'));
   for (const file of jsFiles) {
     const sourcePath = join(apiSourceDir, file);

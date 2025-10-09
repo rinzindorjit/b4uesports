@@ -1,6 +1,5 @@
 // @ts-nocheck
-import { jwtVerify, jwtSign, getStorage } from "./_utils";
-import { readBody } from "./_utils";
+import { jwtVerify, jwtSign, getStorage, readBody } from "./_utils";
 
 // Helper function to calculate Pi amount from USD value
 function calculatePiAmount(usdValue, piPrice) {
@@ -218,11 +217,18 @@ export default async function handler(req, res) {
     // ========= /api/data =========
     if (url.includes("/data")) {
       const token = req.headers.authorization?.split(" ")[1];
-      jwtVerify(token);
-      return res.status(200).json({ message: "Secure data accessed", timestamp: new Date() });
+      if (!token) return res.status(401).json({ message: "No token provided" });
+
+      try {
+        const decoded = jwtVerify(token);
+        return res.status(200).json({ message: "Secure data accessed", timestamp: new Date() });
+      } catch (err) {
+        console.error("Token verification failed:", err);
+        return res.status(401).json({ message: "Invalid token" });
+      }
     }
 
-    // ========= Default route =========
+    // Default response for root API endpoint
     return res.status(200).json({
       message: "B4U Esports Unified API Online",
       endpoints: [
@@ -232,10 +238,9 @@ export default async function handler(req, res) {
         "/api/payments",
         "/api/transactions",
         "/api/health",
-        "/api/data",
-      ],
+        "/api/data"
+      ]
     });
-
   } catch (err) {
     console.error("API Error:", err);
     res.status(500).json({ message: err.message || "Internal Server Error" });
