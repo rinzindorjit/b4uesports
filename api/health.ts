@@ -18,8 +18,13 @@ async function handler(req, res) {
     // Check if required modules are available
     const modulesCheck = {};
     try {
-      require('./_utils');
-      modulesCheck.utils = 'OK';
+      const utils = require('./_utils');
+      // Test if we can access a function from the utils module
+      if (typeof utils.getStorage === 'function') {
+        modulesCheck.utils = 'OK';
+      } else {
+        modulesCheck.utils = 'Error: _utils module loaded but functions not accessible';
+      }
     } catch (error) {
       modulesCheck.utils = `Error: ${error.message}`;
     }
