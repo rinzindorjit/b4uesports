@@ -36,7 +36,7 @@ try {
       } else if (file.endsWith('.ts')) {
         // Compile TypeScript files to JavaScript
         const jsDestPath = destPath.replace('.ts', '.js');
-        execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=esm --outfile="${jsDestPath}"`, {
+        execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=cjs --outfile="${jsDestPath}"`, {
           stdio: 'inherit'
         });
         
@@ -112,8 +112,17 @@ try {
   
   console.log('Compiled JS files:', compiledJsFiles);
   
-  for (const file of compiledJsFiles) {
+  // Include _utils.js in the list of files to process
+  const filesToProcess = [...compiledJsFiles, '_utils.js'];
+  
+  for (const file of filesToProcess) {
     const filePath = join(apiDestDir, file);
+    // Check if file exists before processing
+    if (!existsSync(filePath)) {
+      console.log(`Skipping ${file} as it doesn't exist`);
+      continue;
+    }
+    
     let content = readFileSync(filePath, 'utf8');
     
     // Check for various import patterns that might need .js extension fixes
