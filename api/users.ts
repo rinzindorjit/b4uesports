@@ -1,5 +1,131 @@
 // @ts-nocheck
-const { jwtVerify, jwtSign, getStorage, getPiNetworkService } = require("./_utils.js");
+
+// Inline the necessary functions directly
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_b4u_key';
+const PI_API_URL = 'https://api.minepi.com/v2';
+const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY || 'test_pi_server_api_key_for_development';
+
+function jwtVerify(token) {
+  return jwt.verify(token, JWT_SECRET);
+}
+
+function jwtSign(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+}
+
+// In-memory store (replace with DB later)
+const store = {
+  users: {},
+  transactions: [],
+  packages: [
+    // PUBG Packages
+    { 
+      id: 'pubg-1', 
+      game: 'PUBG', 
+      name: 'Small UC Pack', 
+      inGameAmount: 100, 
+      usdtValue: '10.00',
+      image: '/images/pubg-small.jpg',
+      isActive: true 
+    },
+    { 
+      id: 'pubg-2', 
+      game: 'PUBG', 
+      name: 'Medium UC Pack', 
+      inGameAmount: 250, 
+      usdtValue: '25.00',
+      image: '/images/pubg-medium.jpg',
+      isActive: true 
+    },
+    { 
+      id: 'pubg-3', 
+      game: 'PUBG', 
+      name: 'Large UC Pack', 
+      inGameAmount: 500, 
+      usdtValue: '50.00',
+      image: '/images/pubg-large.jpg',
+      isActive: true 
+    },
+    // MLBB Packages
+    { 
+      id: 'mlbb-1', 
+      game: 'MLBB', 
+      name: 'Small Diamond Pack', 
+      inGameAmount: 50, 
+      usdtValue: '10.00',
+      image: '/images/mlbb-small.jpg',
+      isActive: true 
+    },
+    { 
+      id: 'mlbb-2', 
+      game: 'MLBB', 
+      name: 'Medium Diamond Pack', 
+      inGameAmount: 125, 
+      usdtValue: '25.00',
+      image: '/images/mlbb-medium.jpg',
+      isActive: true 
+    },
+    { 
+      id: 'mlbb-3', 
+      game: 'MLBB', 
+      name: 'Large Diamond Pack', 
+      inGameAmount: 250, 
+      usdtValue: '50.00',
+      image: '/images/mlbb-large.jpg',
+      isActive: true 
+    },
+  ],
+  payments: [],
+};
+
+function getStorage() {
+  return store;
+}
+
+// Pi Network verification service
+function getPiNetworkService() {
+  return {
+    verifyAccessToken: async (accessToken) => {
+      if (!accessToken) throw new Error('Missing access token');
+      
+      try {
+        const response = await fetch(`${PI_API_URL}/me`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          let errorMessage = 'Unknown error';
+          try {
+            const errorData = await response.json();
+            errorMessage = (errorData && errorData['message']) || errorMessage;
+          } catch (e) {
+            // If we can't parse the error response, use the status text
+            errorMessage = response.statusText || errorMessage;
+          }
+          throw new Error(`Pi Network API error: ${response.status} - ${errorMessage}`);
+        }
+        
+        const userData = await response.json();
+        
+        return {
+          username: userData['username'],
+          pi_id: userData['uid'],
+          email: userData['email'] || '',
+        };
+      } catch (error) {
+        console.error('Pi Network verification failed:', error);
+        throw new Error(`Failed to verify Pi Network access token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    },
+  };
+}
 
 async function readBody(req) {
   return new Promise((resolve, reject) => {
