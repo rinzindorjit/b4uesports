@@ -255,6 +255,16 @@ export async function registerRoutes(app: Express): Promise<void> {
 
   // Consolidated API endpoint for package operations
   app.get('/api/packages', async (req: Request, res: Response) => {
+    // Add CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+    
     try {
       const storage = await getStorage();
       const pricingService = await getPricingService();

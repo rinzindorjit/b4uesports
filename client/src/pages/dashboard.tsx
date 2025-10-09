@@ -50,17 +50,19 @@ export default function Dashboard() {
     return null;
   }
 
-  const { data: packages, isLoading: packagesLoading } = useQuery<Package[]>({
+  const { data: packages, isLoading: packagesLoading, error: packagesError } = useQuery<Package[]>({
     queryKey: ['packages'],
     queryFn: async () => {
       const response = await fetch('/api/packages');
       if (!response.ok) {
-        throw new Error('Failed to fetch packages');
+        throw new Error(`Failed to fetch packages: ${response.status} ${response.statusText}`);
       }
       const data = await response.json();
       console.log('Packages fetched:', data); // Debug log
       return data;
     },
+    retry: 3, // Retry up to 3 times on failure
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const { data: transactions, isLoading: transactionsLoading, refetch: refetchTransactions } = useQuery<Transaction[]>({
@@ -104,6 +106,7 @@ export default function Dashboard() {
     ? (packages || []).filter(pkg => pkg.game === selectedGame) 
     : packages || [];
 
+  console.log('Packages state:', { packages, packagesLoading, packagesError }); // Debug log
   console.log('Selected game:', selectedGame); // Debug log
   console.log('Filtered packages:', filteredPackages); // Debug log
 
@@ -235,6 +238,16 @@ export default function Dashboard() {
                     <div key={i} className="h-32 bg-muted rounded-lg animate-pulse"></div>
                   ))}
                 </div>
+              ) : packagesError ? (
+                <div className="text-center py-8 text-red-500">
+                  <p>Error loading packages: {(packagesError as Error).message}</p>
+                  <button 
+                    onClick={() => window.location.reload()} 
+                    className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90"
+                  >
+                    Retry
+                  </button>
+                </div>
               ) : packages && packages.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {filteredPackages.map(pkg => (
@@ -254,6 +267,7 @@ export default function Dashboard() {
                     <p>Packages loaded: {packages ? packages.length : 'null'}</p>
                     <p>Filtered packages: {filteredPackages ? filteredPackages.length : 'null'}</p>
                     <p>Selected game: {selectedGame || 'none'}</p>
+                    {packagesError && <p className="text-red-500">Error: {(packagesError as Error).message}</p>}
                   </div>
                 </div>
               )}
