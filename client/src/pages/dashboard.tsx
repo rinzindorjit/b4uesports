@@ -99,12 +99,12 @@ export default function Dashboard() {
 
   const pubgPackages = packages?.filter(pkg => pkg.game === 'PUBG') || [];
   const mlbbPackages = packages?.filter(pkg => pkg.game === 'MLBB') || [];
-  const recentTransactions = transactions?.slice(0, 5) || [];
+  const recentTransactions = Array.isArray(transactions) ? transactions.slice(0, 5) : [];
 
   // Filter packages based on selected game - ensure we always have an array
   const filteredPackages = selectedGame 
-    ? (packages || []).filter(pkg => pkg.game === selectedGame) 
-    : packages || [];
+    ? (Array.isArray(packages) ? packages.filter(pkg => pkg.game === selectedGame) : []) 
+    : (Array.isArray(packages) ? packages : []);
 
   console.log('Packages state:', { packages, packagesLoading, packagesError }); // Debug log
   console.log('Selected game:', selectedGame); // Debug log
@@ -121,7 +121,8 @@ export default function Dashboard() {
   };
 
   const formatWalletAddress = (address: string) => {
-    if (!address) return 'Not set';
+    if (!address || typeof address !== 'string') return 'Not set';
+    if (address.length <= 8) return address; // Don't slice if address is too short
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
@@ -132,7 +133,7 @@ export default function Dashboard() {
   const completedTransactions = transactions?.filter(tx => tx.status === 'completed').length || 0;
 
   // Calculate current balance (this would typically come from the backend)
-  const currentBalance = user.walletAddress ? 1000 - totalSpent : 0; // Placeholder calculation
+  const currentBalance = (user?.walletAddress && transactions) ? 1000 - totalSpent : 0; // Placeholder calculation
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -291,8 +292,9 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {recentTransactions.map(tx => {
-                  const pkg = packages?.find(p => p.id === tx.packageId);
+                {Array.isArray(recentTransactions) && recentTransactions.map(tx => {
+                  // Ensure packages is an array before trying to find
+                  const pkg = Array.isArray(packages) ? packages.find(p => p.id === tx.packageId) : null;
                   return (
                     <div key={tx.id} className="flex justify-between items-center p-4 bg-muted rounded-lg border border-border">
                       <div>
@@ -314,6 +316,7 @@ export default function Dashboard() {
                 })}
               </div>
             )}
+
           </div>
         </div>
       </section>
