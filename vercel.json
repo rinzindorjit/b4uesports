@@ -13,19 +13,11 @@
   ],
   "builds": [
     {
-      "src": "api/**/*.js",
+      "src": "dist/api/**/*.js",
       "use": "@vercel/node@4.0.0"
     },
     {
-      "src": "assets/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "images/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "index.html",
+      "src": "dist/**/*.{js,css,html,png,jpg,jpeg,gif,svg,ico,json,txt,map,webp}",
       "use": "@vercel/static"
     }
   ]
