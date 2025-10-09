@@ -3,17 +3,17 @@
   "buildCommand": "npm run build-deploy",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/pi-price", "destination": "/api/pi-price.js" },
-    { "source": "/api/users", "destination": "/api/users.js" },
-    { "source": "/api/packages", "destination": "/api/packages.js" },
-    { "source": "/api/payments", "destination": "/api/payments.js" },
-    { "source": "/api/transactions", "destination": "/api/transactions.js" },
-    { "source": "/api/health", "destination": "/api/health.js" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/api/pi-price", "destination": "/dist/api/pi-price.js" },
+    { "source": "/api/users", "destination": "/dist/api/users.js" },
+    { "source": "/api/packages", "destination": "/dist/api/packages.js" },
+    { "source": "/api/payments", "destination": "/dist/api/payments.js" },
+    { "source": "/api/transactions", "destination": "/dist/api/transactions.js" },
+    { "source": "/api/health", "destination": "/dist/api/health.js" },
+    { "source": "/(.*)", "destination": "/dist/index.html" }
   ],
   "builds": [
     {
-      "src": "api/**/*.js",
+      "src": "dist/api/**/*.js",
       "use": "@vercel/node@4.0.0"
     },
     {
