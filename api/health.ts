@@ -18,7 +18,26 @@ async function handler(req, res) {
     // Check if required modules are available
     const modulesCheck = {};
     try {
-      const utils = require('./_utils.js');
+      // Try different ways to import the utils module
+      let utils;
+      try {
+        utils = require('./_utils.js');
+      } catch (e1) {
+        try {
+          utils = require('./_utils');
+        } catch (e2) {
+          try {
+            utils = require('../api/_utils.js');
+          } catch (e3) {
+            try {
+              utils = require('../api/_utils');
+            } catch (e4) {
+              throw new Error(`Failed to import _utils module: ${e1.message}, ${e2.message}, ${e3.message}, ${e4.message}`);
+            }
+          }
+        }
+      }
+      
       // Test if we can access a function from the utils module
       if (typeof utils.getStorage === 'function') {
         modulesCheck.utils = 'OK';
