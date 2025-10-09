@@ -1,9 +1,6 @@
 {
   "type": "commonjs",
   "main": "index.js",
-  "exports": {
-    "./_utils": "./_utils.js"
-  },
   "dependencies": {
     "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
