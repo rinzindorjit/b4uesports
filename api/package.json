@@ -1,5 +1,5 @@
 {
-  "type": "module",
+  "type": "commonjs",
   "exports": {
     "./_utils": "./_utils.js"
   },

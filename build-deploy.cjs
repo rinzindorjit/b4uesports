@@ -79,7 +79,7 @@ try {
     const destPath = join(apiDestDir, file.replace('.ts', '.js'));
     
     console.log(`Compiling ${file} to ${destPath}...`);
-    execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=esm --outfile="${destPath}"`, {
+    execSync(`npx esbuild "${sourcePath}" --platform=node --packages=external --format=cjs --outfile="${destPath}"`, {
       stdio: 'inherit'
     });
     
@@ -152,6 +152,18 @@ try {
         content = content.replace(importPath, fixedPath);
         console.log(`Fixed import extensions in ${file} (Pattern 3)`);
       }
+    }
+    
+    // Also fix require statements
+    if (content.includes("require('./_utils')")) {
+      content = content.replace("require('./_utils')", "require('./_utils.js')");
+      console.log(`Fixed require extensions in ${file}`);
+    }
+    
+    // Fix export statements for CommonJS compatibility
+    if (content.includes('export {') && content.includes('handler as default')) {
+      content = content.replace('export { handler as default };', 'module.exports = handler;');
+      console.log(`Fixed export statement in ${file}`);
     }
     
     // Write the file only if content was changed
