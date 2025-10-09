@@ -26,7 +26,7 @@ export default async function handler(req: any, res: any) {
     // ========= /api/users =========
     if (url.includes('/users')) {
       if (method === 'POST') {
-        const body = await readBody(req);
+        const body: any = await readBody(req);
 
         if (body.action === 'authenticate') {
           const { accessToken } = body.data;
@@ -42,7 +42,7 @@ export default async function handler(req: any, res: any) {
 
         if (body.action === 'getProfile') {
           const token = getToken(req);
-          const decoded = jwtVerify(token);
+          const decoded: any = jwtVerify(token);
           const user = store.users[decoded.pi_id];
           return res.status(200).json({ user });
         }
@@ -64,8 +64,8 @@ export default async function handler(req: any, res: any) {
     if (url.includes('/payments')) {
       if (method === 'POST') {
         const token = getToken(req);
-        const decoded = jwtVerify(token);
-        const body = await readBody(req);
+        const decoded: any = jwtVerify(token);
+        const body: any = await readBody(req);
 
         const payment = {
           id: `pay_${Date.now()}`,
@@ -80,28 +80,18 @@ export default async function handler(req: any, res: any) {
 
       if (method === 'GET') {
         const token = getToken(req);
-        const decoded = jwtVerify(token);
+        const decoded: any = jwtVerify(token);
         const userPayments = store.payments.filter((p: any) => p.user === decoded.pi_id);
         return res.status(200).json({ payments: userPayments });
       }
-    }
-
-    // ========= /api/admin (NO LOGIN, just info) =========
-    if (url.includes('/admin')) {
-      return res.status(200).json({
-        message: 'Admin panel data',
-        totalUsers: Object.keys(store.users).length,
-        totalPayments: store.payments.length,
-        totalTransactions: store.transactions.length,
-      });
     }
 
     // ========= /api/transactions =========
     if (url.includes('/transactions')) {
       if (method === 'POST') {
         const token = getToken(req);
-        const decoded = jwtVerify(token);
-        const body = await readBody(req);
+        const decoded: any = jwtVerify(token);
+        const body: any = await readBody(req);
 
         const txn = {
           id: `txn_${Date.now()}`,
@@ -115,7 +105,7 @@ export default async function handler(req: any, res: any) {
 
       if (method === 'GET') {
         const token = getToken(req);
-        const decoded = jwtVerify(token);
+        const decoded: any = jwtVerify(token);
         const userTxns = store.transactions.filter((t: any) => t.user === decoded.pi_id);
         return res.status(200).json({ transactions: userTxns });
       }
@@ -136,7 +126,6 @@ export default async function handler(req: any, res: any) {
         '/api/users',
         '/api/packages',
         '/api/payments',
-        '/api/admin',
         '/api/transactions',
         '/api/health',
         '/api/data',

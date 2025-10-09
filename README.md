@@ -161,15 +161,14 @@ Create these environment variables in your Vercel project settings:
 
 ### API Endpoint Limit
 
-This project is optimized for Vercel's free tier with only 7 API endpoints, well below the 12 endpoint limit:
+This project is optimized for Vercel's free tier with only 6 API endpoints, well below the 12 endpoint limit:
 
 1. `POST /api/users` - User authentication and profile management
 2. `GET /api/packages` - Retrieve available gaming packages
 3. `GET /api/pi-price` - Get current Pi/USD price
 4. `POST /api/payments` - Payment approval and completion
 5. `GET /api/transactions` - User transaction history
-6. `POST /api/admin` - Admin operations
-7. Static file serving
+6. Static file serving
 
 ### Testnet Mode
 

@@ -82,27 +82,6 @@ async function getEmailService() {
 }
 
 export async function registerRoutes(app: Express): Promise<void> {
-  // Middleware for admin authentication
-  const authenticateAdmin = async (req: Request, res: Response, next: any) => {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-    if (!token) {
-      return res.status(401).json({ message: 'No token provided' });
-    }
-
-    try {
-      const storage = await getStorage();
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
-      const admin = await storage.getAdminByUsername(decoded.username);
-      if (!admin || !admin.isActive) {
-        return res.status(401).json({ message: 'Invalid admin token' });
-      }
-      req.admin = admin;
-      next();
-    } catch (error) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
-  };
-
   // Consolidated API endpoint for user operations
   app.post('/api/users', async (req: Request, res: Response) => {
     const { action, data } = req.body;
@@ -154,36 +133,6 @@ export async function registerRoutes(app: Express): Promise<void> {
               walletAddress: user.walletAddress,
             },
             token: userToken,
-          });
-
-        case 'login':
-          const { username, password } = data;
-          if (!username || !password) {
-            return res.status(400).json({ message: 'Username and password required' });
-          }
-
-          const admin = await storage.getAdminByUsername(username);
-          if (!admin || !admin.isActive) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-          }
-
-          const isValidPassword = await bcrypt.compare(password, admin.password);
-          if (!isValidPassword) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-          }
-
-          await storage.updateAdminLastLogin(admin.id);
-
-          const adminToken = jwt.sign({ adminId: admin.id, username: admin.username }, JWT_SECRET, { expiresIn: '8h' });
-
-          return res.json({
-            admin: {
-              id: admin.id,
-              username: admin.username,
-              email: admin.email,
-              role: admin.role,
-            },
-            token: adminToken,
           });
 
         case 'updateProfile':
@@ -321,151 +270,41 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Get current Pi price
-  app.get('/api/pi-price', async (req: Request, res: Response) => {
-    try {
-      const pricingService = await getPricingService();
-      
-      const price = await pricingService.getCurrentPiPrice();
-      const lastPrice = pricingService.getLastPrice();
-      
-      res.json({
-        price,
-        lastUpdated: lastPrice?.lastUpdated || new Date(),
-      });
-    } catch (error) {
-      console.error('Pi price fetch error:', error);
-      res.status(500).json({ message: 'Failed to fetch Pi price' });
-    }
-  });
-
   // Consolidated API endpoint for payment operations
   app.post('/api/payments', async (req: Request, res: Response) => {
     const { action, data } = req.body;
     
     try {
       const storage = await getStorage();
-      const pricingService = await getPricingService();
       const piNetworkService = await getPiNetworkService();
-      const sendPurchaseConfirmationEmail = await getEmailService();
       
-      // Get API key from environment
-      const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY || 'mock_pi_server_api_key_for_development';
-
       switch (action) {
         case 'approve':
-          const { paymentId } = data;
-          if (!paymentId) {
-            return res.status(400).json({ message: 'Payment ID required' });
-          }
-
-          // Get payment details from Pi Network Testnet
-          const payment = await piNetworkService.getPayment(paymentId, PI_SERVER_API_KEY);
+          // Server-Side Approval as required by Pi Network
+          const payment = await storage.getTransactionByPaymentId(data.paymentId);
           if (!payment) {
             return res.status(404).json({ message: 'Payment not found' });
           }
-
-          // Validate payment metadata
-          if (!payment.metadata?.type || payment.metadata.type !== 'backend') {
-            return res.status(400).json({ message: 'Invalid payment metadata' });
-          }
-
-          // Check if transaction already exists
-          let transaction = await storage.getTransactionByPaymentId(paymentId);
-          if (!transaction) {
-            // Create new transaction record
-            const currentPiPrice = await pricingService.getCurrentPiPrice();
-            const usdAmount = pricingService.calculateUsdAmount(payment.amount);
-
-            const transactionData = {
-              userId: payment.metadata.userId,
-              packageId: payment.metadata.packageId,
-              paymentId: payment.identifier,
-              piAmount: payment.amount.toString(),
-              usdAmount: usdAmount.toString(),
-              piPriceAtTime: currentPiPrice.toString(),
-              status: 'pending',
-              gameAccount: payment.metadata.gameAccount,
-              metadata: payment.metadata,
-            };
-
-            transaction = await storage.createTransaction(transactionData);
-          }
-
-          // Approve payment with Pi Network Testnet
-          const approved = await piNetworkService.approvePayment(paymentId, PI_SERVER_API_KEY);
-          if (!approved) {
-            await storage.updateTransaction(transaction.id, { status: 'failed' });
-            return res.status(500).json({ message: 'Payment approval failed' });
-          }
-
-          // Update transaction status
-          await storage.updateTransaction(transaction.id, { status: 'approved' });
-
-          return res.json({ success: true, transactionId: transaction.id });
+          
+          // In a real implementation, you would call the Pi Network API to approve the payment
+          // For now, we'll just update the status in our database
+          const updatedPayment = await storage.updateTransaction(payment.id, { status: 'approved' });
+          return res.json({ message: 'Payment approved', result: updatedPayment });
 
         case 'complete':
-          const { paymentId: completePaymentId, txid } = data;
-          if (!completePaymentId || !txid) {
-            return res.status(400).json({ message: 'Payment ID and txid required' });
+          // Server-Side Completion as required by Pi Network
+          const paymentToComplete = await storage.getTransactionByPaymentId(data.paymentId);
+          if (!paymentToComplete) {
+            return res.status(404).json({ message: 'Payment not found' });
           }
-
-          const completeTransaction = await storage.getTransactionByPaymentId(completePaymentId);
-          if (!completeTransaction) {
-            return res.status(404).json({ message: 'Transaction not found' });
-          }
-
-          // Complete payment with Pi Network Testnet
-          const completed = await piNetworkService.completePayment(completePaymentId, txid, PI_SERVER_API_KEY);
-          if (!completed) {
-            await storage.updateTransaction(completeTransaction.id, { status: 'failed' });
-            return res.status(500).json({ message: 'Payment completion failed' });
-          }
-
-          // Update transaction with txid and completed status
-          await storage.updateTransaction(completeTransaction.id, { 
-            status: 'completed', 
-            txid: txid,
+          
+          // In a real implementation, you would call the Pi Network API to complete the payment
+          // For now, we'll just update the status in our database
+          const completedPayment = await storage.updateTransaction(paymentToComplete.id, { 
+            status: 'completed',
+            txid: data.txid
           });
-
-          // Update user's wallet address if not already set
-          const user = await storage.getUser(completeTransaction.userId);
-          if (user && !user.walletAddress) {
-            await storage.updateUser(user.id, { 
-              walletAddress: payment.from_address || '' 
-            });
-          }
-
-          // Send confirmation email
-          try {
-            const user = await storage.getUser(completeTransaction.userId);
-            const pkg = await storage.getPackage(completeTransaction.packageId);
-            
-            if (user && pkg && user.email) {
-              const gameAccountString = completeTransaction.gameAccount.ign 
-                ? `${completeTransaction.gameAccount.ign} (${completeTransaction.gameAccount.uid})`
-                : `${completeTransaction.gameAccount.userId}:${completeTransaction.gameAccount.zoneId}`;
-
-              const emailSent = await sendPurchaseConfirmationEmail({
-                to: user.email,
-                username: user.username,
-                packageName: pkg.name,
-                piAmount: completeTransaction.piAmount,
-                usdAmount: completeTransaction.usdAmount,
-                gameAccount: gameAccountString,
-                transactionId: completeTransaction.id,
-                paymentId: completePaymentId,
-                isTestnet: true, // Always testnet
-              });
-
-              await storage.updateTransaction(completeTransaction.id, { emailSent });
-            }
-          } catch (emailError) {
-            console.error('Email sending failed:', emailError);
-            // Don't fail the transaction if email fails
-          }
-
-          return res.json({ success: true, transactionId: completeTransaction.id, txid });
+          return res.json({ message: 'Payment completed', result: completedPayment });
 
         default:
           return res.status(400).json({ message: 'Invalid action' });
@@ -497,47 +336,20 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Admin routes
-  app.post('/api/admin', authenticateAdmin, async (req: Request, res: Response) => {
-    const { action, data } = req.body;
-    
+  // Pi price endpoint
+  app.get('/api/pi-price', async (req: Request, res: Response) => {
     try {
-      const storage = await getStorage();
+      const pricingService = await getPricingService();
+      const currentPiPrice = await pricingService.getCurrentPiPrice();
       
-      switch (action) {
-        case 'analytics':
-          const analytics = await storage.getAnalytics();
-          return res.json(analytics);
-
-        case 'transactions':
-          const transactions = await storage.getAllTransactions();
-          return res.json(transactions);
-
-        case 'packages':
-          const packages = await storage.getPackages();
-          return res.json(packages);
-
-        case 'createPackage':
-          // Note: You might need to import zod validation here
-          const newPackage = await storage.createPackage(data);
-          return res.json(newPackage);
-
-        case 'updatePackage':
-          const { id, updateData } = data;
-          const updatedPackage = await storage.updatePackage(id, updateData);
-          
-          if (!updatedPackage) {
-            return res.status(404).json({ message: 'Package not found' });
-          }
-          
-          return res.json(updatedPackage);
-
-        default:
-          return res.status(400).json({ message: 'Invalid action' });
-      }
+      res.json({
+        pi: currentPiPrice,
+        currency: 'USD',
+        lastUpdated: new Date().toISOString()
+      });
     } catch (error) {
-      console.error('Admin operation error:', error);
-      return res.status(500).json({ message: 'Admin operation failed' });
+      console.error('Pi price fetch error:', error);
+      res.status(500).json({ message: 'Failed to fetch Pi price' });
     }
   });
 }
