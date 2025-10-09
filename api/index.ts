@@ -2,6 +2,10 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
+// API Handler for Vercel Serverless Functions
+// Version: 2.0.0
+// Last Updated: 2025-10-08
+
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
 
 // Mock storage for development/testing
