@@ -9,21 +9,10 @@ async function handler(req, res) {
   }
 
   try {
-    // Simple test to check if we can import _utils
-    let importResult = 'Not attempted';
-    let importError = null;
-    
-    try {
-      const utils = require('./_utils.js');
-      importResult = 'Success';
-    } catch (error) {
-      importError = error.message;
-      importResult = 'Failed';
-    }
-
+    // Simple test to confirm the API is working
     res.status(200).json({
-      importResult,
-      importError,
+      status: 'OK',
+      message: 'API is working correctly',
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
