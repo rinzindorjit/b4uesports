@@ -1,3 +1,5 @@
+import { getStorage, JWT_SECRET } from './_utils';
+
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
@@ -17,8 +19,9 @@ export default async function handler(req: any, res: any) {
     // Check if required modules are available
     const modulesCheck: Record<string, string> = {};
     try {
-      require('./_utils');
+      const store = getStorage();
       modulesCheck.utils = 'OK';
+      modulesCheck.storage = store ? 'OK' : 'Error: Storage not available';
     } catch (error: any) {
       modulesCheck.utils = `Error: ${error.message}`;
     }

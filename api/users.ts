@@ -1,4 +1,4 @@
-const { getStorage, getPiNetworkService, jwtSign, jwtVerify } = require('./_utils');
+import { getStorage, getPiNetworkService, jwtSign, jwtVerify } from './_utils';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Access-Control-Allow-Origin', '*');
