@@ -3,12 +3,12 @@
   "buildCommand": "npm run build-deploy",
   "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/api/pi-price", "destination": "/api/pi-price.ts" },
-    { "source": "/api/users", "destination": "/api/users.ts" },
-    { "source": "/api/packages", "destination": "/api/packages.ts" },
-    { "source": "/api/payments", "destination": "/api/payments.ts" },
-    { "source": "/api/transactions", "destination": "/api/transactions.ts" },
-    { "source": "/api/health", "destination": "/api/health.ts" },
+    { "source": "/api/pi-price", "destination": "/api/pi-price.js" },
+    { "source": "/api/users", "destination": "/api/users.js" },
+    { "source": "/api/packages", "destination": "/api/packages.js" },
+    { "source": "/api/payments", "destination": "/api/payments.js" },
+    { "source": "/api/transactions", "destination": "/api/transactions.js" },
+    { "source": "/api/health", "destination": "/api/health.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
