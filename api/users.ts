@@ -36,6 +36,14 @@ export default async function handler(req: any, res: any) {
 
       return res.status(400).json({ message: 'Invalid action for /api/users' });
     }
+    
+    if (method === 'GET') {
+      const token = getToken(req);
+      const decoded: any = jwtVerify(token);
+      const user = store.users[decoded.pi_id];
+      return res.status(200).json({ user });
+    }
+    
     return res.status(405).json({ message: 'Method not allowed' });
   } catch (err: any) {
     console.error('API Error:', err);
