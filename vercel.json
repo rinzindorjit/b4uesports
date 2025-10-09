@@ -2,6 +2,10 @@
   "version": 2,
   "buildCommand": "npm run build-deploy",
   "outputDirectory": "dist",
+  "env": {
+    "PI_SERVER_API_KEY": "@pi_server_api_key",
+    "JWT_SECRET": "@jwt_secret"
+  },
   "rewrites": [
     { "source": "/api/pi-price", "destination": "/api/pi-price.ts" },
     { "source": "/api/users", "destination": "/api/users.ts" },
