@@ -210,7 +210,7 @@ export default function Landing() {
                     </div>
                     <p className="text-xs sm:text-sm">
                       Diamonds are the premium currency in Mobile Legends: Bang Bang that unlock heroes, skins, 
-                      and other exclusive content. Get the most out of your MOBA experience with our secure 
+                      and other exclusive content. Get the most out of your MLBB experience with our secure 
                       Pi Network transactions.
                     </p>
                   </div>
