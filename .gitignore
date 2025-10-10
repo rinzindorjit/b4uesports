@@ -52,3 +52,51 @@ dist/
 # Temporary files
 tmp/
 temp/
+
+# Specific test and debug files to exclude
+test-all-endpoints.js
+test-api-endpoints.html
+test-api.js
+test-assets.html
+test-auth-endpoint.js
+test-auth-fix.cjs
+test-auth.js
+test-coingecko.js
+test-deployed-pi-price.js
+test-direct-access.html
+test-final-access.html
+test-final.html
+test-health.js
+test-main-domain.html
+test-new-api-structure.js
+test-packages-response.js
+test-packages.cjs
+test-pi-integration.cjs
+test-pi-price-endpoint.js
+test-pi-price.html
+test-pi-price.js
+test-static-assets.html
+test-static-file.js
+test-static-files.html
+test-static.html
+test-utils.js
+test-vercel-api.cjs
+test-without-auth.html
+debug-auth.js
+direct-test.js
+check-main-page.js
+check-response.js
+pi-payment-example.js
+
+# Specific configuration files to exclude
+postcss.config.js
+replit.md
+server.js
+drizzle.config.ts
+
+# JSON files to exclude
+packages-full.json
+
+# Directories to exclude
+attached_assets/
+shared/
