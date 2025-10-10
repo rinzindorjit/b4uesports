@@ -132,13 +132,6 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
             <p className="text-muted-foreground text-sm md:text-base mb-6">Please check your Pi Browser for authentication request...</p>
             
             <div className="space-y-4 text-left mb-6">
-              <div className="p-3 bg-blue-500/10 rounded-lg border border-blue-500/30">
-                <p className="text-xs text-blue-300">
-                  <i className="fas fa-mobile-alt mr-2"></i>
-                  <strong>Mobile Users:</strong> Look for a notification banner in your Pi Browser asking for authentication approval. This may take up to 3 minutes on slower connections.
-                </p>
-              </div>
-              
               <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/30">
                 <p className="text-xs text-amber-300">
                   <i className="fas fa-sync mr-2"></i>
