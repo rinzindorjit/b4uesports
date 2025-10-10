@@ -10,6 +10,7 @@ interface PiNetworkContextType {
   authenticate: () => Promise<void>;
   logout: () => void;
   createPayment: (paymentData: PaymentData, callbacks: PaymentCallbacks) => void;
+  sendTransaction: (amount: string, memo: string, recipient?: string) => Promise<any>; // ✅ Add new function type
   token: string | null;
 }
 
@@ -377,6 +378,43 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
     piSDK.createPayment(enhancedPaymentData, enhancedCallbacks);
   };
 
+  // ✅ New function for direct wallet transactions
+  const sendTransaction = async (amount: string, memo: string, recipient?: string) => {
+    if (!isAuthenticated || !user) {
+      throw new Error('User not authenticated');
+    }
+
+    try {
+      const result = await piSDK.sendTransaction(amount, memo, recipient);
+      
+      if (result && result.approved) {
+        toast({
+          title: "✅ Payment Successful",
+          description: "Your payment was processed successfully!",
+        });
+        
+        // Refresh user data to update transaction history
+        refreshUserData();
+      } else {
+        toast({
+          title: "Payment Expired",
+          description: "The payment process has timed out. No funds were moved from your wallet.",
+          variant: "destructive",
+        });
+      }
+      
+      return result;
+    } catch (error: any) {
+      console.error('Transaction failed:', error);
+      toast({
+        title: "Payment Failed",
+        description: error.message || "An error occurred during payment processing. Please try again.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   // Function to refresh user data after payment completion
   const refreshUserData = useCallback(async () => {
     if (!token) return;
@@ -401,6 +439,7 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       authenticate,
       logout,
       createPayment,
+      sendTransaction, // ✅ Add the new function to the context
       token,
     }}>
       {children}

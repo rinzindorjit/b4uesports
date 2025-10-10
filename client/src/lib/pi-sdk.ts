@@ -21,6 +21,10 @@ declare global {
           onError: (error: Error, payment?: any) => void;
         }
       ) => void;
+      request: (options: {
+        method: string;
+        params: Record<string, any>;
+      }) => Promise<any>;
       openShareDialog: (title: string, message: string) => void;
       nativeFeaturesList: () => Promise<string[]>;
     };
@@ -145,6 +149,40 @@ export class PiSDK {
 
     console.log('💰 Creating Pi payment:', paymentData);
     window.Pi.createPayment(paymentData, callbacks);
+  }
+
+  // ✅ New method for direct wallet transactions
+  async sendTransaction(
+    amount: string,
+    memo: string,
+    recipient: string = "GA67F4RLREQP6KLEVMTBJDHKDWOGNX5DBKKGDNHR5S6QAALISFL3LEDZ" // Default to your app wallet
+  ): Promise<any> {
+    if (!this.initialized || !window.Pi) {
+      throw new Error('Pi SDK not initialized. Please use Pi Browser and refresh the page.');
+    }
+
+    // ✅ Ensure user has "payments" scope before sending transaction
+    if (!this.hasScope('payments')) {
+      throw new Error('Cannot send transaction without "payments" scope. Please re-authenticate.');
+    }
+
+    try {
+      console.log('💰 Sending Pi transaction:', { amount, recipient, memo });
+      const result = await window.Pi.request({
+        method: "pi_sendTransaction",
+        params: {
+          amount: amount,
+          recipient: recipient,
+          memo: memo
+        }
+      });
+      
+      console.log('✅ Transaction result:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ Transaction failed:', error);
+      throw error;
+    }
   }
 
   isInitialized(): boolean {

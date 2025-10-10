@@ -16,7 +16,7 @@ interface PurchaseModalProps {
 }
 
 export default function PurchaseModal({ isOpen, onClose, package: pkg }: PurchaseModalProps) {
-  const { user, createPayment, isAuthenticated, authenticate } = usePiNetwork();
+  const { user, sendTransaction, isAuthenticated, authenticate } = usePiNetwork(); // ✅ Add sendTransaction to destructuring
   const { toast } = useToast();
   const [step, setStep] = useState<'confirm' | 'passphrase' | 'processing'>('confirm');
   const [passphrase, setPassphrase] = useState('');
@@ -141,80 +141,41 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
         throw new Error('User not authenticated. Please log in again.');
       }
       
-      // Create payment data
-      const paymentData: PaymentData = {
-        amount: pkg.piPrice || 0,
-        memo: `${pkg.name} for ${pkg.game}`,
-        metadata: {
-          type: 'backend',
-          userId: user?.id || '',
-          packageId: pkg.id,
-          gameAccount: { ...gameAccount },
-        },
-      };
+      // ✅ Use direct wallet transaction instead of server-side approval
+      const amount = pkg.piPrice?.toString() || "0";
+      const memo = `${pkg.name} for ${pkg.game}`;
       
-      // Create payment with callbacks
-      createPayment(paymentData, {
-        onReadyForServerApproval: (paymentId: string) => {
-          console.log('Payment approved by server:', paymentId);
-          toast({
-            title: "Payment Approved",
-            description: "Your payment has been approved by our server.",
-          });
-        },
-        onReadyForServerCompletion: (paymentId: string, txid: string) => {
-          console.log('Payment completed:', paymentId, txid);
-          toast({
-            title: "✅ Payment Completed",
-            description: "Your purchase was successful! Transaction ID: " + txid,
-          });
-          
-          // Trigger real-time update
-          window.dispatchEvent(new CustomEvent('paymentCompleted'));
-          
-          // Close modal after a short delay
-          setTimeout(() => {
-            setIsProcessing(false);
-            onClose();
-          }, 2000);
-        },
-        onCancel: (paymentId: string) => {
-          console.log('Payment cancelled:', paymentId);
-          toast({
-            title: "Payment Cancelled",
-            description: "Your payment was cancelled. No Pi was deducted.",
-          });
+      const result = await sendTransaction(amount, memo); // ✅ Use sendTransaction from the hook
+      
+      if (result && result.approved) {
+        console.log('Payment completed:', result);
+        toast({
+          title: "✅ Payment Completed",
+          description: "Your purchase was successful!",
+        });
+        
+        // Trigger real-time update
+        window.dispatchEvent(new CustomEvent('paymentCompleted'));
+        
+        // Close modal after a short delay
+        setTimeout(() => {
           setIsProcessing(false);
-        },
-        onError: (error: Error) => {
-          console.error('Payment error:', error);
-          
-          // Check if the error is related to missing payment scope
-          if (error.message && (error.message.includes('without payment scope') || error.message.includes('payments" scope'))) {
-            toast({
-              title: "Re-authentication Required",
-              description: "Payment permissions are missing. Please re-authenticate to enable payment permissions.",
-              variant: "destructive",
-            });
-            
-            // Trigger re-authentication
-            authenticate();
-          } else {
-            toast({
-              title: "Payment Failed",
-              description: error.message || "An error occurred during payment processing.",
-              variant: "destructive",
-            });
-          }
-          
-          setIsProcessing(false);
-        },
-      });
-    } catch (error) {
-      console.error('Payment creation failed:', error);
+          onClose();
+        }, 2000);
+      } else {
+        console.log('Payment cancelled or expired');
+        toast({
+          title: "Payment Cancelled or Expired",
+          description: "Your payment was cancelled or expired. No Pi was deducted.",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+      }
+    } catch (error: any) {
+      console.error('Payment failed:', error);
       toast({
-        title: "Payment Creation Failed",
-        description: error instanceof Error ? error.message : "Failed to create payment.",
+        title: "Payment Failed",
+        description: error.message || "An error occurred during payment processing.",
         variant: "destructive",
       });
       setIsProcessing(false);
