@@ -44,7 +44,7 @@ export class PiSDK {
   }
 
   // ✅ Enhanced initialization with dynamic SDK loading
-  async init(sandbox: boolean = process.env.PI_SANDBOX === 'true'): Promise<void> {
+  async init(sandbox: boolean = process.env.VITE_PI_SANDBOX === 'true'): Promise<void> {
     if (this.initialized) {
       console.log('Pi SDK already initialized');
       return;
@@ -82,7 +82,7 @@ export class PiSDK {
   ): Promise<{ accessToken: string; user: { uid: string; username: string; wallet_address?: string } } | null> {
     try {
       if (!this.initialized) {
-        const isSandbox = process.env.PI_SANDBOX === 'true';
+        const isSandbox = process.env.VITE_PI_SANDBOX === 'true';
         await this.init(isSandbox);
       }
 

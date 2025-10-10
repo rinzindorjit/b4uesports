@@ -2,6 +2,12 @@
   "version": 2,
   "buildCommand": "npm run build-deploy",
   "outputDirectory": "dist",
+  "env": {
+    "PI_API_KEY": "@pi_api_key",
+    "VITE_PI_API_KEY": "@pi_api_key",
+    "PI_SANDBOX": "true",
+    "VITE_PI_SANDBOX": "true"
+  },
   "rewrites": [
     {
       "source": "/api/payments",

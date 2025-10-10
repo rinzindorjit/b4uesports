@@ -133,7 +133,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
         });
         
         // Initialize Pi SDK with sandbox mode for Testnet
-        const isSandbox = process.env.PI_SANDBOX === 'true';
+        const isSandbox = process.env.VITE_PI_SANDBOX === 'true';
         await piSDK.init(isSandbox);
       }
       
