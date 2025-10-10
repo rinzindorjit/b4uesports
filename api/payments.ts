@@ -55,8 +55,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ message: "Method not allowed. Only POST requests are allowed." });
   }
 
-  // Security: Ensure PI_API_KEY is provided via environment variables
-  const PI_API_KEY = process.env.PI_API_KEY;
+  // Security: Ensure PI_SERVER_API_KEY is provided via environment variables
+  const PI_API_KEY = process.env.PI_SERVER_API_KEY || process.env.PI_API_KEY;
   if (!PI_API_KEY) {
     console.error("❌ Missing PI_API_KEY environment variable");
     return res.status(500).json({ 

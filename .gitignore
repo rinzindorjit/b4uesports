@@ -89,10 +89,13 @@ check-response.js
 pi-payment-example.js
 
 # Specific configuration files to exclude
-postcss.config.js
+# postcss.config.js  <- We need this now, so removing from exclude
 replit.md
 server.js
 drizzle.config.ts
 
 # JSON files to exclude
 packages-full.json
+
+# Build scripts that should not be committed
+process-css.cjs

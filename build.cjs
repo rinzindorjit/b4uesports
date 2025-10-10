@@ -56,10 +56,23 @@ try {
       copyFileSync(indexHtml, indexPath);
       console.log('Copied client index.html');
       
+      // Process CSS with Tailwind CLI first
+      try {
+        // Use Tailwind CLI to process the CSS
+        const { execSync: cssExecSync } = require('child_process');
+        cssExecSync(`npx tailwindcss -i "${join(clientSrcDir, 'index.css')}" -o "${join(rootDistDir, 'main.css')}" --minify`, {
+          stdio: 'inherit'
+        });
+        console.log('Processed CSS with Tailwind successfully');
+      } catch (cssError) {
+        console.warn('CSS processing failed:', cssError.message);
+        // Fallback: copy the original CSS file
+        copyFileSync(join(clientSrcDir, 'index.css'), join(rootDistDir, 'main.css'));
+      }
+      
       // Try to build the client bundle
       try {
-        const bundlePath = join(rootDistDir, 'bundle.js');
-        execSync(`npx esbuild "${mainEntry}" --bundle --outfile="${bundlePath}" --format=esm`, {
+        execSync(`npx esbuild "${mainEntry}" --bundle --outdir="${rootDistDir}" --format=esm --jsx=automatic --alias:@=./client/src --alias:@shared=./shared --loader:.png=dataurl --loader:.jpg=dataurl --loader:.svg=dataurl --loader:.woff=dataurl --loader:.woff2=dataurl --loader:.ttf=dataurl --loader:.eot=dataurl`, {
           stdio: 'inherit'
         });
         console.log('Client bundle created successfully');
@@ -67,16 +80,16 @@ try {
         // Update index.html to include the bundle and remove the original script tag
         let indexContent = readFileSync(indexPath, 'utf8');
         // Add CSS link if it doesn't exist
-        if (!indexContent.includes('bundle.css')) {
+        if (!indexContent.includes('main.css')) {
           indexContent = indexContent.replace(
             '</head>',
-            '  <link rel="stylesheet" href="./bundle.css">\n  </head>'
+            '  <link rel="stylesheet" href="./main.css">\n  </head>'
           );
         }
         // Remove the original script tag and add the bundle script
         indexContent = indexContent.replace(
           '<script type="module" src="/src/main.tsx"></script>',
-          '<script type="module" src="./bundle.js"></script>'
+          '<script type="module" src="./main.js"></script>'
         );
         writeFileSync(indexPath, indexContent, 'utf8');
       } catch (buildError) {
@@ -212,6 +225,35 @@ try {
   if (existsSync(packageJsonSource)) {
     copyFileSync(packageJsonSource, packageJsonDest);
     console.log(`Copied package.json to ${packageJsonDest}`);
+  }
+  
+  // Copy server files to dist/server for Vercel
+  const serverSourceDir = join(process.cwd(), 'server');
+  const distServerDir = join(rootDistDir, 'server');
+  if (existsSync(serverSourceDir)) {
+    // Function to copy files recursively
+    function copyRecursiveSync(src, dest) {
+      const stats = statSync(src);
+      if (stats.isDirectory()) {
+        // Create directory if it doesn't exist
+        if (!existsSync(dest)) {
+          mkdirSync(dest, { recursive: true });
+        }
+        // Copy all contents
+        const files = readdirSync(src);
+        for (const file of files) {
+          const srcPath = join(src, file);
+          const destPath = join(dest, file);
+          copyRecursiveSync(srcPath, destPath);
+        }
+      } else if (stats.isFile()) {
+        copyFileSync(src, dest);
+        console.log(`Copied server file: ${src.replace(serverSourceDir, '')}`);
+      }
+    }
+    
+    // Copy all server files recursively
+    copyRecursiveSync(serverSourceDir, distServerDir);
   }
   
   console.log('Build completed successfully!');
