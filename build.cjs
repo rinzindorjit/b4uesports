@@ -3,25 +3,32 @@ const { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, unlinkS
 const { join } = require('path');
 
 try {
-  // Compile API TypeScript files to JavaScript in the api/dist directory
+  // Create the root dist directory for Vercel
+  const rootDistDir = join(process.cwd(), 'dist');
+  if (!existsSync(rootDistDir)) {
+    mkdirSync(rootDistDir, { recursive: true });
+    console.log(`Created root dist directory: ${rootDistDir}`);
+  }
+  
+  // Create the API directory within dist for Vercel
+  const distApiDir = join(rootDistDir, 'api');
+  if (!existsSync(distApiDir)) {
+    mkdirSync(distApiDir, { recursive: true });
+    console.log(`Created dist/api directory: ${distApiDir}`);
+  }
+  
+  // Compile API TypeScript files to JavaScript in the dist/api directory
   console.log('Compiling API files...');
   const apiSourceDir = join(process.cwd(), 'api');
-  const apiOutputDir = join(apiSourceDir, 'dist');
-  
-  // Create output directory if it doesn't exist
-  if (!existsSync(apiOutputDir)) {
-    mkdirSync(apiOutputDir, { recursive: true });
-    console.log(`Created output directory: ${apiOutputDir}`);
-  }
   
   // Get all .ts files in the api directory
   const files = readdirSync(apiSourceDir);
   const tsFiles = files.filter(file => file.endsWith('.ts'));
   
-  // Compile each TypeScript file individually to the output directory as CommonJS
+  // Compile each TypeScript file individually to the dist/api directory as CommonJS
   for (const file of tsFiles) {
     const sourcePath = join(apiSourceDir, file);
-    const destPath = join(apiOutputDir, file.replace('.ts', '.js'));
+    const destPath = join(distApiDir, file.replace('.ts', '.js'));
     
     console.log(`Compiling ${file} to ${destPath}...`);
     // Use CommonJS format for Vercel compatibility
@@ -37,11 +44,11 @@ try {
     }
   }
   
-  // Copy all non-TypeScript files to the output directory
+  // Copy all non-TypeScript files to the dist/api directory
   const nonTsFiles = files.filter(file => !file.endsWith('.ts') && !file.endsWith('.json') && !file.endsWith('.md'));
   for (const file of nonTsFiles) {
     const sourcePath = join(apiSourceDir, file);
-    const destPath = join(apiOutputDir, file);
+    const destPath = join(distApiDir, file);
     
     // Check if source file exists and is a file (not a directory)
     if (existsSync(sourcePath)) {
@@ -53,14 +60,28 @@ try {
     }
   }
   
+  // Copy package.json to dist/api for Vercel
+  const packageJsonSource = join(apiSourceDir, 'package.json');
+  const packageJsonDest = join(distApiDir, 'package.json');
+  if (existsSync(packageJsonSource)) {
+    copyFileSync(packageJsonSource, packageJsonDest);
+    console.log(`Copied package.json to ${packageJsonDest}`);
+  }
+  
   // Post-process compiled files to fix import extensions and convert to CommonJS
-  const updatedFiles = readdirSync(apiOutputDir);
+  const updatedFiles = readdirSync(distApiDir);
   const compiledJsFiles = updatedFiles.filter(file => file.endsWith('.js'));
   
   console.log('Compiled JS files:', compiledJsFiles);
   
   for (const file of compiledJsFiles) {
-    const filePath = join(apiOutputDir, file);
+    const filePath = join(distApiDir, file);
+    // Check if file exists before processing
+    if (!existsSync(filePath)) {
+      console.log(`Skipping ${file} as it doesn't exist`);
+      continue;
+    }
+    
     let content = readFileSync(filePath, 'utf8');
     
     // Convert ES module exports to CommonJS exports
