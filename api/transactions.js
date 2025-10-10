@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     const decoded = jwtVerify(token);
     const userId = decoded.userId;
     if (req.method === "GET") {
-      return res.status(200).json({ transactions: store.transactions.filter(txn => txn.user === userId) });
+      return res.status(200).json(store.transactions.filter(txn => txn.user === userId));
     }
     if (req.method === "POST") {
       const body = await readBody(req);

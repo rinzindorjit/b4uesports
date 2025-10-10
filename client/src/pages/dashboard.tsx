@@ -126,14 +126,18 @@ export default function Dashboard() {
     return `${address.slice(0, 4)}...${address.slice(-4)}`;
   };
 
-  const totalSpent = transactions?.reduce((sum, tx) => 
-    tx.status === 'completed' ? sum + parseFloat(tx.piAmount) : sum, 0
-  ) || 0;
+  const totalSpent = Array.isArray(transactions) 
+    ? transactions.reduce((sum, tx) => 
+        tx.status === 'completed' ? sum + parseFloat(tx.piAmount) : sum, 0
+      ) || 0
+    : 0;
 
-  const completedTransactions = transactions?.filter(tx => tx.status === 'completed').length || 0;
+  const completedTransactions = Array.isArray(transactions) 
+    ? transactions.filter(tx => tx.status === 'completed').length || 0
+    : 0;
 
   // Calculate current balance (this would typically come from the backend)
-  const currentBalance = (user?.walletAddress && transactions) ? 1000 - totalSpent : 0; // Placeholder calculation
+  const currentBalance = (user?.walletAddress && Array.isArray(transactions)) ? 1000 - totalSpent : 0; // Placeholder calculation
 
   return (
     <div className="min-h-screen bg-background text-foreground">
