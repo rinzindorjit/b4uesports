@@ -28,10 +28,6 @@
       "destination": "/api/dist/health.js"
     },
     {
-      "source": "/api/test",
-      "destination": "/api/dist/test.js"
-    },
-    {
       "source": "/api/(.*)",
       "destination": "/api/dist/index.js"
     },
