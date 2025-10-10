@@ -239,32 +239,6 @@ export default function Landing() {
                   </div>
                 </div>
                 
-                <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-primary/10 rounded-lg border border-primary/20">
-                  <h4 className="font-semibold text-primary mb-2 flex items-center">
-                    <i className="fas fa-shield-alt mr-2"></i>
-                    Secure Pi Network Transactions
-                  </h4>
-                  <p className="text-xs sm:text-sm">
-                    All transactions are processed securely through the Pi Network Testnet environment. 
-                    Your payments are protected with end-to-end encryption, and all purchases are delivered 
-                    instantly to your game account. Enjoy peace of mind with our 24/7 customer support 
-                    and secure payment processing.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mt-3">
-                    <div className="flex items-center text-xs sm:text-sm">
-                      <i className="fas fa-bolt text-primary mr-2"></i>
-                      Instant Delivery
-                    </div>
-                    <div className="flex items-center text-xs sm:text-sm">
-                      <i className="fas fa-lock text-primary mr-2"></i>
-                      Secure Payments
-                    </div>
-                    <div className="flex items-center text-xs sm:text-sm">
-                      <i className="fas fa-sync-alt text-primary mr-2"></i>
-                      24/7 Support
-                    </div>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </div>
