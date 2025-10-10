@@ -54,8 +54,10 @@ export default function Landing() {
             <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold mb-3 sm:mb-6 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent" data-testid="hero-title">
               Gaming Currency
             </h1>
-            <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-4 sm:mb-8 bg-yellow-400/20 border border-yellow-400 rounded-lg p-2 sm:p-4 font-bold text-yellow-300">
-              Welcome to B4U Esports Marketplace, your premier destination to seamlessly purchase PUBG UC and Mobile Legends Diamonds using Pi Coins. Experience fast, secure, and transparent transactions tailored for gamers worldwide.
+            <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-4 sm:mb-8">
+              <span className="font-bold text-yellow-300">
+                Welcome to B4U Esports Marketplace, your premier destination to seamlessly purchase PUBG UC and Mobile Legends Diamonds using Pi Coins. Experience fast, secure, and transparent transactions tailored for gamers worldwide.
+              </span>
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
               <Button 
