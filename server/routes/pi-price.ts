@@ -19,15 +19,14 @@ router.get("/pi-price", async (_req, res) => {
       throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`);
     }
 
-    const text = await response.text();
-    console.log('CoinGecko response text:', text);
-
-    // Parse JSON safely
+    // Use safer approach to parse JSON - let the fetch API handle it first
     let data;
     try {
-      data = JSON.parse(text);
+      data = await response.json();
     } catch (parseError: any) {
-      throw new Error(`Failed to parse CoinGecko response: ${parseError.message}. Response text: ${text.substring(0, 100)}...`);
+      const text = await response.text();
+      console.error("CoinGecko returned non-JSON:", text);
+      throw new Error(`Invalid JSON from CoinGecko: ${parseError.message}`);
     }
 
     const price = data["pi-network"]?.usd;
