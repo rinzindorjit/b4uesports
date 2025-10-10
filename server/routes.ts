@@ -87,6 +87,20 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Register the pi-price route
   app.use("/api", piPriceRoute);
   
+  // Health check endpoint
+  app.get('/api/health', async (req: Request, res: Response) => {
+    try {
+      res.json({ 
+        status: "ok", 
+        timestamp: new Date().toISOString(),
+        message: "B4U Esports API is running"
+      });
+    } catch (error) {
+      console.error('Health check error:', error);
+      res.status(500).json({ message: 'Health check failed' });
+    }
+  });
+  
   // Consolidated API endpoint for user operations
   app.post('/api/users', async (req: Request, res: Response) => {
     const { action, data } = req.body;
@@ -288,23 +302,38 @@ export async function registerRoutes(app: Express): Promise<void> {
   // Consolidated API endpoint for payment operations
   app.post('/api/payments', async (req: Request, res: Response) => {
     const { action, data } = req.body;
+    const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
+    
+    // Check if PI_SERVER_API_KEY is configured
+    if (!PI_SERVER_API_KEY) {
+      console.error('PI_SERVER_API_KEY is not configured in environment variables');
+      return res.status(500).json({ 
+        message: 'Payment service not properly configured. Please contact administrator.' 
+      });
+    }
     
     try {
       const storage = await getStorage();
       const piNetworkService = await getPiNetworkService();
+      const emailService = await getEmailService();
       
       switch (action) {
         case 'approve':
           // Server-Side Approval as required by Pi Network
-          const payment = await storage.getTransactionByPaymentId(data.paymentId);
-          if (!payment) {
+          const paymentToApprove = await storage.getTransactionByPaymentId(data.paymentId);
+          if (!paymentToApprove) {
             return res.status(404).json({ message: 'Payment not found' });
           }
           
-          // In a real implementation, you would call the Pi Network API to approve the payment
-          // For now, we'll just update the status in our database
-          const updatedPayment = await storage.updateTransaction(payment.id, { status: 'approved' });
-          return res.json({ message: 'Payment approved', result: updatedPayment });
+          // Approve payment with Pi Network
+          const approved = await piNetworkService.approvePayment(data.paymentId, PI_SERVER_API_KEY);
+          if (!approved) {
+            return res.status(500).json({ message: 'Failed to approve payment with Pi Network' });
+          }
+          
+          // Update payment status in our database
+          const approvedPayment = await storage.updateTransaction(paymentToApprove.id, { status: 'approved' });
+          return res.json({ message: 'Payment approved', result: approvedPayment });
 
         case 'complete':
           // Server-Side Completion as required by Pi Network
@@ -313,12 +342,50 @@ export async function registerRoutes(app: Express): Promise<void> {
             return res.status(404).json({ message: 'Payment not found' });
           }
           
-          // In a real implementation, you would call the Pi Network API to complete the payment
-          // For now, we'll just update the status in our database
+          // Complete payment with Pi Network
+          const completed = await piNetworkService.completePayment(data.paymentId, data.txid, PI_SERVER_API_KEY);
+          if (!completed) {
+            return res.status(500).json({ message: 'Failed to complete payment with Pi Network' });
+          }
+          
+          // Update payment status in our database
           const completedPayment = await storage.updateTransaction(paymentToComplete.id, { 
             status: 'completed',
             txid: data.txid
           });
+          
+          // Send confirmation email if user has provided email
+          try {
+            const user = await storage.getUser(paymentToComplete.userId);
+            const packageDetails = await storage.getPackage(paymentToComplete.packageId);
+            
+            // Format game account info for email
+            let gameAccountInfo = '';
+            if (paymentToComplete.gameAccount) {
+              if (paymentToComplete.gameAccount.ign && paymentToComplete.gameAccount.uid) {
+                gameAccountInfo = `IGN: ${paymentToComplete.gameAccount.ign}, UID: ${paymentToComplete.gameAccount.uid}`;
+              } else if (paymentToComplete.gameAccount.userId && paymentToComplete.gameAccount.zoneId) {
+                gameAccountInfo = `User ID: ${paymentToComplete.gameAccount.userId}, Zone ID: ${paymentToComplete.gameAccount.zoneId}`;
+              }
+            }
+            
+            if (user && user.email && packageDetails) {
+              await emailService({
+                to: user.email,
+                username: user.username,
+                packageName: packageDetails.name,
+                piAmount: paymentToComplete.piAmount,
+                usdAmount: paymentToComplete.usdAmount,
+                gameAccount: gameAccountInfo,
+                transactionId: data.txid,
+                paymentId: data.paymentId,
+                isTestnet: piNetworkService.isSandbox
+              });
+            }
+          } catch (emailError) {
+            console.error('Failed to send purchase confirmation email:', emailError);
+          }
+          
           return res.json({ message: 'Payment completed', result: completedPayment });
 
         default:

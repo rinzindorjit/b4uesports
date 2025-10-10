@@ -5,7 +5,9 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_b4u_key';
-const PI_API_URL = 'https://api.minepi.com/v2';
+const PI_API_URL = process.env.PI_SANDBOX === 'true' 
+  ? 'https://sandbox.minepi.com/v2' 
+  : 'https://api.minepi.com/v2';
 const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY || 'test_pi_server_api_key_for_development';
 
 // Add the readBody function here

@@ -71,6 +71,7 @@ if (isDevelopment && !isVercel) {
     await updatePackageImages();
   }
   
+  // Register API routes BEFORE setting up Vite in development
   await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
