@@ -31,7 +31,34 @@ const store = {
   users: {},
   transactions: [],
   packages: [
-    // PUBG Packages - removed specified packages
+    // PUBG Packages
+    { 
+      id: 'pubg-1', 
+      game: 'PUBG', 
+      name: '60 UC Pack', 
+      inGameAmount: 60, 
+      usdtValue: '1.5000',
+      image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
+      isActive: true 
+    },
+    { 
+      id: 'pubg-2', 
+      game: 'PUBG', 
+      name: '325 UC Pack', 
+      inGameAmount: 325, 
+      usdtValue: '6.5000',
+      image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
+      isActive: true 
+    },
+    { 
+      id: 'pubg-3', 
+      game: 'PUBG', 
+      name: '660 UC Pack', 
+      inGameAmount: 660, 
+      usdtValue: '12.0000',
+      image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
+      isActive: true 
+    },
     { 
       id: 'pubg-4', 
       game: 'PUBG', 
@@ -77,7 +104,43 @@ const store = {
       image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
       isActive: true 
     },
-    // MLBB Packages - removed specified packages
+    { 
+      id: 'pubg-9', 
+      game: 'PUBG', 
+      name: '32400 UC Pack', 
+      inGameAmount: 32400, 
+      usdtValue: '369.0000',
+      image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
+      isActive: true 
+    },
+    { 
+      id: 'pubg-10', 
+      game: 'PUBG', 
+      name: '40500 UC Pack', 
+      inGameAmount: 40500, 
+      usdtValue: '459.0000',
+      image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
+      isActive: true 
+    },
+    // MLBB Packages
+    { 
+      id: 'mlbb-1', 
+      game: 'MLBB', 
+      name: '56 Diamonds Pack', 
+      inGameAmount: 56, 
+      usdtValue: '3.0000',
+      image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png',
+      isActive: true 
+    },
+    { 
+      id: 'mlbb-2', 
+      game: 'MLBB', 
+      name: '278 Diamonds Pack', 
+      inGameAmount: 278, 
+      usdtValue: '6.0000',
+      image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png',
+      isActive: true 
+    },
     { 
       id: 'mlbb-3', 
       game: 'MLBB', 
