@@ -4,6 +4,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/api/payments",
+      "destination": "/api/payments.js"
+    },
+    {
       "source": "/api/transactions",
       "destination": "/api/transactions.js"
     },
