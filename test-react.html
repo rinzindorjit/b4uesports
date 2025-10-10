@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>React Test</title>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        // Add a simple test to see if the bundle loads
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+            document.body.innerHTML += '<p style="color: red;">Global error: ' + e.error.message + '</p>';
+        });
+    </script>
+    <script type="module">
+        // Try to load the bundle and catch any errors
+        import('http://localhost:3000/bundle.js')
+            .then(() => {
+                console.log('Bundle loaded successfully');
+                document.body.innerHTML += '<p style="color: green;">Bundle loaded successfully</p>';
+            })
+            .catch(error => {
+                console.error('Bundle load error:', error);
+                document.body.innerHTML += '<p style="color: red;">Bundle load error: ' + error.message + '</p>';
+            });
+    </script>
+</body>
+</html>

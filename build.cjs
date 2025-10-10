@@ -173,7 +173,7 @@ try {
     console.log(`Created dist/api directory: ${distApiDir}`);
   }
   
-  // Compile API TypeScript files to JavaScript in the dist/api directory
+  // Compile API TypeScript files to JavaScript in the api directory (not dist/api)
   console.log('Compiling API files...');
   const apiSourceDir = join(process.cwd(), 'api');
   
@@ -181,10 +181,10 @@ try {
   const files = readdirSync(apiSourceDir);
   const tsFiles = files.filter(file => file.endsWith('.ts'));
   
-  // Compile each TypeScript file individually to the dist/api directory as CommonJS
+  // Compile each TypeScript file individually to the api directory as CommonJS
   for (const file of tsFiles) {
     const sourcePath = join(apiSourceDir, file);
-    const destPath = join(distApiDir, file.replace('.ts', '.js'));
+    const destPath = join(apiSourceDir, file.replace('.ts', '.js'));
     
     console.log(`Compiling ${file} to ${destPath}...`);
     // Use CommonJS format for Vercel compatibility
@@ -200,11 +200,11 @@ try {
     }
   }
   
-  // Copy all non-TypeScript files to the dist/api directory
+  // Copy all non-TypeScript files to the api directory
   const nonTsFiles = files.filter(file => !file.endsWith('.ts') && !file.endsWith('.json') && !file.endsWith('.md'));
   for (const file of nonTsFiles) {
     const sourcePath = join(apiSourceDir, file);
-    const destPath = join(distApiDir, file);
+    const destPath = join(apiSourceDir, file);
     
     // Check if source file exists and is a file (not a directory)
     if (existsSync(sourcePath)) {
@@ -216,22 +216,48 @@ try {
     }
   }
   
-  // Copy package.json to dist/api for Vercel
+  // Copy package.json to api directory for Vercel
   const packageJsonSource = join(apiSourceDir, 'package.json');
-  const packageJsonDest = join(distApiDir, 'package.json');
+  const packageJsonDest = join(apiSourceDir, 'package.json');
   if (existsSync(packageJsonSource)) {
     copyFileSync(packageJsonSource, packageJsonDest);
     console.log(`Copied package.json to ${packageJsonDest}`);
   }
   
-  // Post-process compiled files to fix import extensions and convert to CommonJS
-  const updatedFiles = readdirSync(distApiDir);
-  const compiledJsFiles = updatedFiles.filter(file => file.endsWith('.js'));
+  // Also copy compiled files to dist/api for local development
+  const distApiDirPath = join(rootDistDir, 'api');
+  if (!existsSync(distApiDirPath)) {
+    mkdirSync(distApiDirPath, { recursive: true });
+    console.log(`Created dist/api directory: ${distApiDirPath}`);
+  }
   
-  console.log('Compiled JS files:', compiledJsFiles);
-  
+  // Copy all compiled JS files from api directory to dist/api
+  const compiledJsFiles = tsFiles.map(file => file.replace('.ts', '.js'));
   for (const file of compiledJsFiles) {
-    const filePath = join(distApiDir, file);
+    const sourcePath = join(apiSourceDir, file);
+    const destPath = join(distApiDirPath, file);
+    
+    if (existsSync(sourcePath)) {
+      copyFileSync(sourcePath, destPath);
+      console.log(`Copied ${file} to ${destPath}`);
+    }
+  }
+  
+  // Copy package.json to dist/api for local development
+  if (existsSync(packageJsonSource)) {
+    const distPackageJsonDest = join(distApiDirPath, 'package.json');
+    copyFileSync(packageJsonSource, distPackageJsonDest);
+    console.log(`Copied package.json to ${distPackageJsonDest}`);
+  }
+  
+  // Post-process compiled files in both api and dist/api directories
+  const updatedFiles = readdirSync(apiSourceDir);
+  const compiledJsFilesInApi = updatedFiles.filter(file => file.endsWith('.js'));
+  
+  console.log('Compiled JS files:', compiledJsFilesInApi);
+  
+  for (const file of compiledJsFilesInApi) {
+    const filePath = join(apiSourceDir, file);
     // Check if file exists before processing
     if (!existsSync(filePath)) {
       console.log(`Skipping ${file} as it doesn't exist`);
@@ -284,6 +310,12 @@ try {
     
     // Write the file only if content was changed
     writeFileSync(filePath, content, 'utf8');
+    
+    // Also update the file in dist/api
+    const distFilePath = join(distApiDirPath, file);
+    if (existsSync(distFilePath)) {
+      writeFileSync(distFilePath, content, 'utf8');
+    }
   }
   
   console.log('Build completed successfully!');

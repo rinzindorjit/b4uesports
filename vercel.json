@@ -38,7 +38,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "functions": {
-    "dist/api/**/*.js": {
+    "api/**/*.js": {
       "runtime": "@vercel/node@4.0.0"
     }
   }
