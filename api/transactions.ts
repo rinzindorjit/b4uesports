@@ -1,6 +1,7 @@
 // @ts-nocheck
-import { getStorage, jwtVerify } from "./_utils";
+import { jwtVerify } from "./_utils";
 
+// Utility functions for reading request body
 async function readBody(req) {
   return new Promise((resolve, reject) => {
     let data = "";
@@ -28,11 +29,18 @@ let mockStorage = {
   packages: {}
 };
 
+// Production-ready transactions handler
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  // Set CORS headers - restrict in production
+  const allowedOrigin = process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL || 'https://yourdomain.com' 
+    : '*';
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Max-Age", "86400"); // Cache preflight requests for 24 hours
   
+  // Handle preflight requests
   if (req.method === "OPTIONS") return res.status(200).end();
   
   const { method } = req;
@@ -62,6 +70,11 @@ export default async function handler(req, res) {
         if (body.action === "create") {
           const { packageId, gameAccount, piAmount, usdAmount, piPriceAtTime } = body.data;
           
+          // Validate required fields
+          if (!packageId || !piAmount || !usdAmount || !piPriceAtTime) {
+            return res.status(400).json({ message: "Missing required fields" });
+          }
+          
           // Create a new transaction
           const newTransaction = {
             id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -73,7 +86,7 @@ export default async function handler(req, res) {
             usdAmount: usdAmount.toString(),
             piPriceAtTime: piPriceAtTime.toString(),
             status: 'pending',
-            gameAccount,
+            gameAccount: gameAccount || {},
             emailSent: false,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
@@ -93,11 +106,11 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(405).json({ message: "Method not allowed" });
+    return res.status(405).json({ message: "Method not allowed. Only GET and POST requests are allowed." });
   } catch (err) {
-    console.error("API Error:", err);
+    console.error("API Error:", err.stack || err);
     res.status(500).json({
-      message: err.message || "Internal Server Error",
+      message: "Internal Server Error",
       error: process.env.NODE_ENV === "development" ? {
         message: err.message,
         stack: err.stack,

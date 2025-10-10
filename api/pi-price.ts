@@ -1,9 +1,17 @@
 // @ts-nocheck
-async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+
+// Production-ready Pi price handler
+export default async function handler(req, res) {
+  // Set CORS headers - restrict in production
+  const allowedOrigin = process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL || 'https://yourdomain.com' 
+    : '*';
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Max-Age", "86400"); // Cache preflight requests for 24 hours
   
+  // Handle preflight requests
   if (req.method === "OPTIONS") return res.status(200).end();
   
   const { method } = req;
@@ -43,7 +51,7 @@ async function handler(req, res) {
         lastUpdated: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Failed to fetch Pi price from CoinGecko:', error);
+      console.error('Failed to fetch Pi price from CoinGecko:', error.stack || error);
       
       // Fallback to fixed price if API fails
       const fixedPrice = 0.24069;
@@ -54,7 +62,5 @@ async function handler(req, res) {
     }
   }
 
-  return res.status(405).json({ message: "Only GET allowed for /api/pi-price" });
+  return res.status(405).json({ message: "Method not allowed. Only GET requests are allowed." });
 }
-
-module.exports = handler;

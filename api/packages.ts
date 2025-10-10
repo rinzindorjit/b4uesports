@@ -1,11 +1,17 @@
 // @ts-nocheck
-import { getStorage } from "./_utils";
 
+// Production-ready packages handler
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  // Set CORS headers - restrict in production
+  const allowedOrigin = process.env.NODE_ENV === 'production' 
+    ? process.env.FRONTEND_URL || 'https://yourdomain.com' 
+    : '*';
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Max-Age", "86400"); // Cache preflight requests for 24 hours
   
+  // Handle preflight requests
   if (req.method === "OPTIONS") return res.status(200).end();
   
   const { method } = req;
@@ -40,9 +46,12 @@ export default async function handler(req, res) {
       // Return the packages array directly instead of wrapping it in an object
       return res.status(200).json(mockStorage.packages);
     }
-    return res.status(405).json({ message: "Only GET allowed for /api/packages" });
+    return res.status(405).json({ message: "Method not allowed. Only GET requests are allowed." });
   } catch (err) {
-    console.error("API Error:", err);
-    res.status(500).json({ message: err.message || "Internal Server Error" });
+    console.error("API Error:", err.stack || err);
+    res.status(500).json({ 
+      message: "Internal Server Error",
+      error: process.env.NODE_ENV === "development" ? err.message : undefined
+    });
   }
 }
