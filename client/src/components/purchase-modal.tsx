@@ -16,7 +16,7 @@ interface PurchaseModalProps {
 }
 
 export default function PurchaseModal({ isOpen, onClose, package: pkg }: PurchaseModalProps) {
-  const { user, createPayment, isAuthenticated } = usePiNetwork();
+  const { user, createPayment, isAuthenticated, authenticate } = usePiNetwork();
   const { toast } = useToast();
   const [step, setStep] = useState<'confirm' | 'passphrase' | 'processing'>('confirm');
   const [passphrase, setPassphrase] = useState('');
@@ -178,11 +178,25 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
         },
         onError: (error: Error) => {
           console.error('Payment error:', error);
-          toast({
-            title: "Payment Failed",
-            description: error.message || "An error occurred during payment processing.",
-            variant: "destructive",
-          });
+          
+          // Check if the error is related to missing payment scope
+          if (error.message && error.message.includes('without payment scope')) {
+            toast({
+              title: "Re-authentication Required",
+              description: "Please re-authenticate to enable payment permissions.",
+              variant: "destructive",
+            });
+            
+            // Trigger re-authentication
+            authenticate();
+          } else {
+            toast({
+              title: "Payment Failed",
+              description: error.message || "An error occurred during payment processing.",
+              variant: "destructive",
+            });
+          }
+          
           setIsProcessing(false);
         },
       });

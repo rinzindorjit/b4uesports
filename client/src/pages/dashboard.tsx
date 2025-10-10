@@ -197,14 +197,20 @@ export default function Dashboard() {
             </div>
             
             {/* Profile Actions - Moved to a more accessible location */}
-            <div className="mb-8">
+            <div className="mb-8 flex justify-center gap-4">
               <Button 
                 onClick={() => setIsProfileModalOpen(true)} 
                 variant="outline"
-                className="mr-4"
               >
                 <i className="fas fa-user-edit mr-2"></i>
                 Edit Profile
+              </Button>
+              <Button 
+                onClick={handleLogout} 
+                variant="outline"
+              >
+                <i className="fas fa-sign-out-alt mr-2"></i>
+                Logout
               </Button>
             </div>
           </div>
