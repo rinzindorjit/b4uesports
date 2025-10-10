@@ -3,12 +3,6 @@ const { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, unlinkS
 const { join, basename } = require('path');
 
 try {
-  // Run the main build command for client
-  console.log('Running client build...');
-  execSync('npx vite build', { 
-    stdio: 'inherit' 
-  });
-  
   // Compile server TypeScript files to JavaScript in dist/server directory
   console.log('Compiling server files...');
   const serverSourceDir = join(process.cwd(), 'server');
@@ -70,8 +64,8 @@ try {
   const apiFiles = readdirSync(apiSourceDir);
   console.log('API files found:', apiFiles);
   
-  // Get all .ts files in the api directory to compile
-  const tsFiles = apiFiles.filter(file => file.endsWith('.ts'));
+  // Get all .ts files in the api directory to compile (excluding .d.ts files)
+  const tsFiles = apiFiles.filter(file => file.endsWith('.ts') && !file.endsWith('.d.ts'));
   
   // Compile each TypeScript file individually to the dist/api directory
   for (const file of tsFiles) {
@@ -91,7 +85,7 @@ try {
     }
   }
   
-  // Copy any existing .js files from api directory to dist/api
+  // Copy any existing .js files from api directory to dist/api (including _utils.js)
   const jsFiles = apiFiles.filter(file => file.endsWith('.js'));
   for (const file of jsFiles) {
     const sourcePath = join(apiSourceDir, file);
@@ -111,41 +105,6 @@ try {
   // Copy package.json to dist/api for Vercel
   console.log('Copying package.json to dist/api...');
   copyFileSync(join(apiSourceDir, 'package.json'), join(apiDestDir, 'package.json'));
-  
-  // Copy assets from dist/assets to dist root
-  console.log('Copying assets to dist root...');
-  const assetsSourceDir = join(process.cwd(), 'dist', 'assets');
-  const distRootDir = join(process.cwd(), 'dist');
-  
-  if (existsSync(assetsSourceDir)) {
-    const assetFiles = readdirSync(assetsSourceDir);
-    for (const file of assetFiles) {
-      const sourcePath = join(assetsSourceDir, file);
-      const destPath = join(distRootDir, file);
-      copyFileSync(sourcePath, destPath);
-      console.log(`Copied ${file} to dist root`);
-    }
-  }
-  
-  // Copy images from dist/images to dist root
-  console.log('Copying images to dist root...');
-  const imagesSourceDir = join(process.cwd(), 'dist', 'images');
-  const imagesDestDir = join(process.cwd(), 'dist', 'images');
-  
-  // Create images directory in dist root if it doesn't exist
-  if (!existsSync(imagesDestDir)) {
-    mkdirSync(imagesDestDir, { recursive: true });
-  }
-  
-  if (existsSync(imagesSourceDir)) {
-    const imageFiles = readdirSync(imagesSourceDir);
-    for (const file of imageFiles) {
-      const sourcePath = join(imagesSourceDir, file);
-      const destPath = join(imagesDestDir, file);
-      copyFileSync(sourcePath, destPath);
-      console.log(`Copied ${file} to dist/images`);
-    }
-  }
   
   // Post-process compiled files to fix import extensions (only for compiled TS files)
   const updatedFiles = readdirSync(apiDestDir);
