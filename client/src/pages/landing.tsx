@@ -55,7 +55,7 @@ export default function Landing() {
               Gaming Currency
             </h1>
             <p className="text-base sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-4 sm:mb-8">
-              <span className="font-bold text-yellow-300">
+              <span className="font-bold text-primary">
                 Welcome to B4U Esports Marketplace, your premier destination to seamlessly purchase PUBG UC and Mobile Legends Diamonds using Pi Coins. Experience fast, secure, and transparent transactions tailored for gamers worldwide.
               </span>
             </p>
