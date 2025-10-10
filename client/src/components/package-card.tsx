@@ -42,7 +42,7 @@ export default function PackageCard({ package: pkg, onPurchase, 'data-testid': t
         <div className="flex justify-center items-center mb-3">
           <div className="text-center">
             <span className="text-sm font-bold text-primary font-mono" data-testid={`${testId}-pi-price`}>
-              {pkg.piPrice ? `${pkg.piPrice.toFixed(1)} π` : 'N/A'}
+              {pkg.piPrice ? `${pkg.piPrice} π` : 'N/A'}
             </span>
           </div>
         </div>

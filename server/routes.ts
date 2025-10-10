@@ -284,7 +284,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       const packagesWithPiPricing = packages.map((pkg: any) => ({
         ...pkg,
         piPrice: pricingService.calculatePiAmount(parseFloat(pkg.usdtValue)),
-        currentPiPrice,
+        currentPiPrice: currentPiPrice,
       }));
 
       res.json(packagesWithPiPricing);
