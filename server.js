@@ -8,7 +8,8 @@ const app = express();
 app.use(express.json());
 
 const PI_API_KEY = process.env.PI_API_KEY; // Your Pi API Key
-const PI_SERVER_URL = "https://api.minepi.com/v2";
+const PI_SANDBOX = process.env.PI_SANDBOX === 'true';
+const PI_SERVER_URL = PI_SANDBOX ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
 
 app.post("/approve-payment", async (req, res) => {
   try {

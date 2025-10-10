@@ -171,8 +171,8 @@ The application uses the following environment variables for Pi Network integrat
 
 ```env
 # Pi Network Server API Key (required for payment processing)
-VITE_PI_API_KEY=your_pi_api_key
-PI_API_KEY=your_pi_api_key
+VITE_PI_API_KEY=cszew9tw3qa1re4visdjd72jt38qy475fugolvqxikfr6xdclngdshajvmunurc9
+PI_API_KEY=cszew9tw3qa1re4visdjd72jt38qy475fugolvqxikfr6xdclngdshajvmunurc9
 
 # Pi Network Sandbox Mode
 # true = Testnet (development)
@@ -218,8 +218,8 @@ Create a `.env` file in the root directory with the following variables:
 
 ```env
 # Pi Network
-VITE_PI_API_KEY=your_pi_server_api_key
-PI_SERVER_API_KEY=your_pi_server_api_key
+VITE_PI_API_KEY=cszew9tw3qa1re4visdjd72jt38qy475fugolvqxikfr6xdclngdshajvmunurc9
+PI_SERVER_API_KEY=cszew9tw3qa1re4visdjd72jt38qy475fugolvqxikfr6xdclngdshajvmunurc9
 
 # Pi Network Sandbox Mode
 VITE_PI_SANDBOX=true

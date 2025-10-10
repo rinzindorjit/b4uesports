@@ -19,7 +19,8 @@ export default async function handler(req, res) {
   const store = mockStorage;
   
   const PI_API_KEY = process.env.PI_API_KEY || 'mock-api-key';
-  const PI_SERVER_URL = process.env.PI_SERVER_URL || 'https://api.minepi.com/v2';
+  const PI_SANDBOX = process.env.PI_SANDBOX === 'true';
+  const PI_SERVER_URL = process.env.PI_SERVER_URL || (PI_SANDBOX ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2');
 
   try {
     if (req.method === "POST") {
