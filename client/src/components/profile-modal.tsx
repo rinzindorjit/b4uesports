@@ -298,11 +298,14 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     }
 
     try {
-      console.log('Sending profile update request to /api/users with PUT method');
-      // Change from POST to PUT as required by the older API implementation
-      const response = await apiRequest('PUT', '/api/users', {
-        ...formData,
-        gameAccounts
+      console.log('Sending profile update request to /api/users with POST method and updateProfile action');
+      // Change from PUT to POST with action parameter as required by the API implementation
+      const response = await apiRequest('POST', '/api/users', {
+        action: 'updateProfile',
+        data: {
+          ...formData,
+          gameAccounts
+        }
       });
       
       console.log('Profile update response:', response.status, response.statusText);

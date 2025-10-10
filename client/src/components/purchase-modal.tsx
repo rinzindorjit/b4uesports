@@ -56,7 +56,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
 
   const handleConfirmPurchase = () => {
     // Validate game account info
-    if (pkg.game === 'PUBG') {
+    if (pkg && pkg.game === 'PUBG') {
       if (!gameAccount.ign || !gameAccount.uid) {
         toast({
           title: "Missing Information",
@@ -75,7 +75,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
         });
         return;
       }
-    } else if (pkg.game === 'MLBB') {
+    } else if (pkg && pkg.game === 'MLBB') {
       if (!gameAccount.userId || !gameAccount.zoneId) {
         toast({
           title: "Missing Information",
@@ -228,6 +228,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
     });
   };
 
+  // Always render the dialog, but show appropriate content based on state
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -239,185 +240,188 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
           </DialogTitle>
         </DialogHeader>
         
-        {step === 'confirm' && pkg && (
-          <>
-            <div className="text-center mb-6">
-              <div className="flex items-center justify-center mb-4">
-                <img 
-                  src={pkg.game === 'PUBG' ? GAME_LOGOS.PUBG : GAME_LOGOS.MLBB} 
-                  alt={pkg.game} 
-                  className="w-16 h-16 mr-4 rounded-lg"
-                />
-                <div className="text-left">
-                  <h3 className="text-xl font-bold">{pkg.name}</h3>
-                  <p className="text-muted-foreground">{pkg.game}</p>
-                </div>
-              </div>
-              
-              <div className="bg-primary/10 rounded-lg p-4 mb-4">
-                <p className="text-2xl font-bold text-primary">
-                  {pkg.piPrice?.toFixed(2)} π
-                </p>
-              </div>
-              
-              <div className="bg-blue-500/20 border border-blue-500 rounded-lg p-3 mb-4">
-                <p className="text-xs text-blue-300">
-                  <i className="fas fa-info-circle mr-2"></i>
-                  🚧 TESTNET TRANSACTION: You are about to pay {pkg.piPrice?.toFixed(1)} π for {pkg.name}. No real Pi will be deducted.
-                </p>
-              </div>
-            </div>
-            
-            {/* Game Account Information */}
-            <div className="mb-6">
-              <h4 className="font-semibold mb-3">Game Account Information</h4>
-              
-              {pkg.game === 'PUBG' ? (
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="ign">PUBG IGN</Label>
-                    <Input
-                      id="ign"
-                      value={gameAccount.ign}
-                      onChange={(e) => handleGameAccountChange('ign', e.target.value)}
-                      placeholder="Your in-game name"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="uid">PUBG UID</Label>
-                    <Input
-                      id="uid"
-                      value={gameAccount.uid}
-                      onChange={(e) => handleGameAccountChange('uid', e.target.value)}
-                      placeholder="Your UID (numbers only)"
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="userId">MLBB User ID</Label>
-                    <Input
-                      id="userId"
-                      value={gameAccount.userId}
-                      onChange={(e) => handleGameAccountChange('userId', e.target.value)}
-                      placeholder="Your User ID (numbers only)"
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="zoneId">MLBB Zone ID</Label>
-                    <Input
-                      id="zoneId"
-                      value={gameAccount.zoneId}
-                      onChange={(e) => handleGameAccountChange('zoneId', e.target.value)}
-                      placeholder="Your Zone ID (numbers only)"
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={onClose} 
-                className="flex-1"
-                data-testid="cancel-purchase"
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleConfirmPurchase} 
-                className="flex-1"
-                data-testid="confirm-purchase"
-              >
-                Confirm
-              </Button>
-            </div>
-          </>
-        )}
-        
-        {step === 'passphrase' && pkg && (
-          <>
-            <div className="text-center mb-6">
-              <div className="bg-primary/10 rounded-lg p-4 mb-4">
-                <p className="text-2xl font-bold text-primary">
-                  {pkg.piPrice?.toFixed(2)} π
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {pkg.name} for {pkg.game}
-                </p>
-              </div>
-              
-              <p className="text-muted-foreground mb-4">
-                Enter your passphrase to confirm this purchase
-              </p>
-              
-              <div className="bg-amber-500/20 border border-amber-500 rounded-lg p-3 mb-4">
-                <p className="text-xs text-amber-300">
-                  <i className="fas fa-exclamation-triangle mr-2"></i>
-                  This is a TESTNET transaction. No real Pi coins will be deducted.
-                </p>
-              </div>
-            </div>
-            
-            <div className="mb-6">
-              <Label htmlFor="passphrase">Passphrase</Label>
-              <Input
-                id="passphrase"
-                type="password"
-                value={passphrase}
-                onChange={(e) => setPassphrase(e.target.value)}
-                placeholder="Enter your passphrase"
-                disabled={isProcessing}
-              />
-            </div>
-            
-            <div className="flex space-x-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setStep('confirm')} 
-                className="flex-1"
-                disabled={isProcessing}
-                data-testid="back-to-confirm"
-              >
-                Back
-              </Button>
-              <Button 
-                onClick={handleProcessPayment} 
-                className="flex-1"
-                disabled={isProcessing || !passphrase}
-                data-testid="process-payment"
-              >
-                {isProcessing ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin mr-2"></i>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-credit-card mr-2"></i>
-                    Pay Now
-                  </>
-                )}
-              </Button>
-            </div>
-          </>
-        )}
-        
-        {!pkg && step !== 'processing' && (
+        {/* Show loading state when package is not available */}
+        {!pkg ? (
           <div className="text-center py-8">
             <p>Loading package information...</p>
           </div>
+        ) : (
+          <>
+            {step === 'confirm' && (
+              <>
+                <div className="text-center mb-6">
+                  <div className="flex items-center justify-center mb-4">
+                    <img 
+                      src={pkg.game === 'PUBG' ? GAME_LOGOS.PUBG : GAME_LOGOS.MLBB} 
+                      alt={pkg.game} 
+                      className="w-16 h-16 mr-4 rounded-lg"
+                    />
+                    <div className="text-left">
+                      <h3 className="text-xl font-bold">{pkg.name}</h3>
+                      <p className="text-muted-foreground">{pkg.game}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-primary/10 rounded-lg p-4 mb-4">
+                    <p className="text-2xl font-bold text-primary">
+                      {pkg.piPrice?.toFixed(2)} π
+                    </p>
+                  </div>
+                  
+                  <div className="bg-blue-500/20 border border-blue-500 rounded-lg p-3 mb-4">
+                    <p className="text-xs text-blue-300">
+                      <i className="fas fa-info-circle mr-2"></i>
+                      🚧 TESTNET TRANSACTION: You are about to pay {pkg.piPrice?.toFixed(1)} π for {pkg.name}. No real Pi will be deducted.
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Game Account Information */}
+                <div className="mb-6">
+                  <h4 className="font-semibold mb-3">Game Account Information</h4>
+                  
+                  {pkg.game === 'PUBG' ? (
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="ign">PUBG IGN</Label>
+                        <Input
+                          id="ign"
+                          value={gameAccount.ign}
+                          onChange={(e) => handleGameAccountChange('ign', e.target.value)}
+                          placeholder="Your in-game name"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="uid">PUBG UID</Label>
+                        <Input
+                          id="uid"
+                          value={gameAccount.uid}
+                          onChange={(e) => handleGameAccountChange('uid', e.target.value)}
+                          placeholder="Your UID (numbers only)"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="userId">MLBB User ID</Label>
+                        <Input
+                          id="userId"
+                          value={gameAccount.userId}
+                          onChange={(e) => handleGameAccountChange('userId', e.target.value)}
+                          placeholder="Your User ID (numbers only)"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="zoneId">MLBB Zone ID</Label>
+                        <Input
+                          id="zoneId"
+                          value={gameAccount.zoneId}
+                          onChange={(e) => handleGameAccountChange('zoneId', e.target.value)}
+                          placeholder="Your Zone ID (numbers only)"
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex space-x-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={onClose} 
+                    className="flex-1"
+                    data-testid="cancel-purchase"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleConfirmPurchase} 
+                    className="flex-1"
+                    data-testid="confirm-purchase"
+                  >
+                    Confirm
+                  </Button>
+                </div>
+              </>
+            )}
+            
+            {step === 'passphrase' && (
+              <>
+                <div className="text-center mb-6">
+                  <div className="bg-primary/10 rounded-lg p-4 mb-4">
+                    <p className="text-2xl font-bold text-primary">
+                      {pkg.piPrice?.toFixed(2)} π
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {pkg.name} for {pkg.game}
+                    </p>
+                  </div>
+                  
+                  <p className="text-muted-foreground mb-4">
+                    Enter your passphrase to confirm this purchase
+                  </p>
+                  
+                  <div className="bg-amber-500/20 border border-amber-500 rounded-lg p-3 mb-4">
+                    <p className="text-xs text-amber-300">
+                      <i className="fas fa-exclamation-triangle mr-2"></i>
+                      This is a TESTNET transaction. No real Pi coins will be deducted.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mb-6">
+                  <Label htmlFor="passphrase">Passphrase</Label>
+                  <Input
+                    id="passphrase"
+                    type="password"
+                    value={passphrase}
+                    onChange={(e) => setPassphrase(e.target.value)}
+                    placeholder="Enter your passphrase"
+                    disabled={isProcessing}
+                  />
+                </div>
+                
+                <div className="flex space-x-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setStep('confirm')} 
+                    className="flex-1"
+                    disabled={isProcessing}
+                    data-testid="back-to-confirm"
+                  >
+                    Back
+                  </Button>
+                  <Button 
+                    onClick={handleProcessPayment} 
+                    className="flex-1"
+                    disabled={isProcessing || !passphrase}
+                    data-testid="process-payment"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin mr-2"></i>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-credit-card mr-2"></i>
+                        Pay Now
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
+          </>
         )}
       </DialogContent>
     </Dialog>
