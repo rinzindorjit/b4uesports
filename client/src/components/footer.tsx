@@ -1,7 +1,27 @@
 import { Link } from 'wouter';
 import { BRAND_LOGOS, SOCIAL_LINKS, CONTACT_INFO } from '@/lib/constants';
+import { useState } from 'react';
 
 export default function Footer() {
+  const [isQuickLinksOpen, setIsQuickLinksOpen] = useState(true);
+  const [isLegalOpen, setIsLegalOpen] = useState(true);
+
+  const toggleQuickLinks = () => {
+    setIsQuickLinksOpen(!isQuickLinksOpen);
+    // Scroll to top when minimized
+    if (!isQuickLinksOpen) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const toggleLegal = () => {
+    setIsLegalOpen(!isLegalOpen);
+    // Scroll to top when minimized
+    if (!isLegalOpen) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <footer className="relative z-10 bg-card border-t border-border mt-20" data-testid="footer">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -39,8 +59,17 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div className="text-center md:text-left" data-testid="footer-quick-links">
-            <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2">
+            <h4 className="text-lg font-semibold mb-4 flex justify-between items-center">
+              Quick Links
+              <button 
+                onClick={toggleQuickLinks}
+                className="md:hidden text-muted-foreground hover:text-primary"
+                aria-label={isQuickLinksOpen ? "Minimize Quick Links" : "Expand Quick Links"}
+              >
+                <i className={`fas ${isQuickLinksOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+              </button>
+            </h4>
+            <ul className={`space-y-2 ${isQuickLinksOpen ? 'block' : 'hidden md:block'}`}>
               <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-home">Home</Link></li>
               <li><Link href="/dashboard" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-dashboard">Dashboard</Link></li>
               <li><Link href="/about-us" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-about">About Us</Link></li>
@@ -50,8 +79,17 @@ export default function Footer() {
 
           {/* Legal */}
           <div className="text-center md:text-left" data-testid="footer-legal">
-            <h4 className="text-lg font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2">
+            <h4 className="text-lg font-semibold mb-4 flex justify-between items-center">
+              Legal
+              <button 
+                onClick={toggleLegal}
+                className="md:hidden text-muted-foreground hover:text-primary"
+                aria-label={isLegalOpen ? "Minimize Legal" : "Expand Legal"}
+              >
+                <i className={`fas ${isLegalOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
+              </button>
+            </h4>
+            <ul className={`space-y-2 ${isLegalOpen ? 'block' : 'hidden md:block'}`}>
               <li><Link href="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-privacy">Privacy Policy</Link></li>
               <li><Link href="/terms-of-service" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-terms">Terms of Service</Link></li>
               <li><Link href="/refund-policy" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-refund">Refund Policy</Link></li>
