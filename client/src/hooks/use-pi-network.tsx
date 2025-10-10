@@ -129,6 +129,11 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
         });
       }, 180000));
 
+      // Ensure Pi SDK is initialized before authentication
+      if (!piSDK.isInitialized()) {
+        await piSDK.init(true); // Initialize with sandbox mode for Testnet
+      }
+
       // Authenticate with Pi Network using required scopes
       // Add retry mechanism for better reliability
       let authResult = null;
@@ -274,6 +279,9 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     localStorage.removeItem('pi_token');
     localStorage.removeItem('pi_user');
+    
+    // Reset Pi SDK state
+    piSDK.reset();
     
     toast({
       title: "Logged Out",

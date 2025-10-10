@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { GAME_LOGOS } from '@/lib/constants';
+import { piSDK } from '@/lib/pi-sdk';
 import type { Package, PaymentData } from '@/types/pi-network';
 
 interface PurchaseModalProps {
@@ -15,7 +16,7 @@ interface PurchaseModalProps {
 }
 
 export default function PurchaseModal({ isOpen, onClose, package: pkg }: PurchaseModalProps) {
-  const { user, createPayment } = usePiNetwork();
+  const { user, createPayment, isAuthenticated } = usePiNetwork();
   const { toast } = useToast();
   const [step, setStep] = useState<'confirm' | 'passphrase' | 'processing'>('confirm');
   const [passphrase, setPassphrase] = useState('');
@@ -114,6 +115,22 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
     setIsProcessing(true);
     
     try {
+      // Ensure Pi SDK is initialized before creating payment
+      if (!piSDK.isInitialized()) {
+        toast({
+          title: "Initializing Pi SDK",
+          description: "Please wait while we initialize the Pi Network SDK...",
+        });
+        
+        // Initialize Pi SDK with sandbox mode for Testnet
+        await piSDK.init(true);
+      }
+      
+      // Verify user is authenticated
+      if (!isAuthenticated || !user) {
+        throw new Error('User not authenticated. Please log in again.');
+      }
+      
       // Create payment data
       const paymentData: PaymentData = {
         amount: pkg.piPrice || 0,

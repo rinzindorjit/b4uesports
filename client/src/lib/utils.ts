@@ -93,7 +93,14 @@ export async function loadPiSDK(): Promise<void> {
     const existingScript = document.querySelector('script[src="https://sdk.minepi.com/pi-sdk.js"]');
     if (existingScript) {
       // Script is already in the DOM, wait for it to load
+      if (existingScript.hasAttribute('data-loaded')) {
+        console.log('Pi SDK script already loaded from existing element');
+        resolve();
+        return;
+      }
+      
       existingScript.addEventListener('load', () => {
+        existingScript.setAttribute('data-loaded', 'true');
         console.log('Pi SDK script loaded from existing element');
         resolve();
       });
@@ -109,6 +116,7 @@ export async function loadPiSDK(): Promise<void> {
     script.src = 'https://sdk.minepi.com/pi-sdk.js';
     script.async = true;
     script.onload = () => {
+      script.setAttribute('data-loaded', 'true');
       console.log('Pi SDK script loaded successfully');
       resolve();
     };

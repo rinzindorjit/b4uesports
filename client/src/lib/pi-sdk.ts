@@ -40,7 +40,10 @@ export class PiSDK {
 
   // Enhanced initialization with dynamic SDK loading
   async init(sandbox: boolean = true): Promise<void> {
-    if (this.initialized) return;
+    if (this.initialized) {
+      console.log('Pi SDK already initialized');
+      return;
+    }
     
     try {
       // First, ensure we're in the Pi Browser
@@ -133,7 +136,10 @@ export class PiSDK {
     }
   ): void {
     if (!this.initialized || !window.Pi) {
-      throw new Error('Pi SDK not initialized');
+      const errorMessage = 'Pi SDK not initialized. Please make sure you are using the Pi Browser app and refresh the page.';
+      console.error(errorMessage);
+      callbacks.onError(new Error(errorMessage));
+      return;
     }
 
     console.log('Creating Pi payment:', paymentData);
