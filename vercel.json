@@ -6,7 +6,8 @@
     "PI_API_KEY": "cszew9tw3qa1re4visdjd72jt38qy475fugolvqxikfr6xdclngdshajvmunurc9",
     "VITE_PI_API_KEY": "cszew9tw3qa1re4visdjd72jt38qy475fugolvqxikfr6xdclngdshajvmunurc9",
     "PI_SANDBOX": "true",
-    "VITE_PI_SANDBOX": "true"
+    "VITE_PI_SANDBOX": "true",
+    "COINGECKO_API_KEY": "your_coingecko_api_key_here"
   },
   "rewrites": [
     {

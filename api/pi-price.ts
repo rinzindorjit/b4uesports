@@ -18,17 +18,40 @@ export default async function handler(req, res) {
 
   if (method === "GET") {
     try {
-      // Use CoinGecko API to get the current Pi price with demo key
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4');
+      console.log("Fetching Pi price from CoinGecko...");
+      
+      // Use environment variable for CoinGecko API key if available, otherwise use demo key
+      const coingeckoApiKey = process.env.COINGECKO_API_KEY || 'CG-z4MZkBd78fn7PgPhPYcKq1r4';
+      const url = `https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=${coingeckoApiKey}`;
+      
+      console.log("Using API key:", coingeckoApiKey.substring(0, 5) + '...');
+      console.log("Request URL:", url.replace(coingeckoApiKey, coingeckoApiKey.substring(0, 5) + '...'));
+      
+      // Use CoinGecko API to get the current Pi price
+      const response = await fetch(url, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'B4U-Esports-Pi-App/1.0'
+        }
+      });
+      
+      console.log("CoinGecko response status:", response.status);
+      console.log("CoinGecko response headers:", [...response.headers.entries()]);
       
       // Check if response is OK before parsing JSON
       if (!response.ok) {
-        throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error("CoinGecko API error response:", errorText);
+        throw new Error(`CoinGecko API error: ${response.status} ${response.statusText} - ${errorText}`);
       }
       
       // Validate Content-Type header from CoinGecko
       const contentType = response.headers.get('content-type');
+      console.log("Response content-type:", contentType);
+      
       if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await response.text();
+        console.error("Non-JSON response:", textResponse);
         throw new Error(`CoinGecko returned invalid content type: ${contentType}`);
       }
       
@@ -36,16 +59,21 @@ export default async function handler(req, res) {
       let data;
       try {
         data = await response.json();
+        console.log("CoinGecko response data:", JSON.stringify(data, null, 2));
       } catch (parseError: any) {
+        const textResponse = await response.text();
+        console.error("Failed to parse JSON response:", textResponse);
         throw new Error(`Invalid JSON from CoinGecko: ${parseError.message}`);
       }
       
       const price = data['pi-network']?.usd;
 
       if (typeof price !== 'number') {
-        throw new Error('Invalid price data received from CoinGecko');
+        throw new Error('Invalid price data received from CoinGecko: ' + JSON.stringify(data));
       }
 
+      console.log("Successfully fetched Pi price:", price);
+      
       return res.status(200).json({
         price: price,
         lastUpdated: new Date().toISOString()
@@ -55,9 +83,13 @@ export default async function handler(req, res) {
       
       // Fallback to fixed price if API fails
       const fixedPrice = 0.24069;
+      console.log("Using fallback price:", fixedPrice);
+      
       return res.status(200).json({
         price: fixedPrice,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        source: 'fallback',
+        message: 'Using fallback price due to API error'
       });
     }
   }
