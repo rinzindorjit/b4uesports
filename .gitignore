@@ -28,9 +28,6 @@ validation-key.txt
 Thumbs.db
 .DS_Store
 
-# Compiled API files - we'll ignore these as they're generated during build
-api/*.js
-
 # Vercel
 .vercel
 .vercel/*
@@ -55,4 +52,3 @@ dist/
 # Temporary files
 tmp/
 temp/
-.vercel
