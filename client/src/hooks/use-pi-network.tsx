@@ -353,11 +353,23 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
         callbacks.onCancel(paymentId);
       },
       onError: (error: Error, payment?: any) => {
-        toast({
-          title: "Payment Error",
-          description: error.message || "An error occurred during payment processing.",
-          variant: "destructive",
-        });
+        // Check if the error is related to missing payment scope
+        if (error.message && (error.message.includes('without payment scope') || error.message.includes('payments" scope'))) {
+          toast({
+            title: "Re-authentication Required",
+            description: "Payment permissions are missing. Please re-authenticate to enable payment permissions.",
+            variant: "destructive",
+          });
+          
+          // Trigger re-authentication
+          authenticate();
+        } else {
+          toast({
+            title: "Payment Error",
+            description: error.message || "An error occurred during payment processing.",
+            variant: "destructive",
+          });
+        }
         callbacks.onError(error, payment);
       },
     };

@@ -180,10 +180,10 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
           console.error('Payment error:', error);
           
           // Check if the error is related to missing payment scope
-          if (error.message && error.message.includes('without payment scope')) {
+          if (error.message && (error.message.includes('without payment scope') || error.message.includes('payments" scope'))) {
             toast({
               title: "Re-authentication Required",
-              description: "Please re-authenticate to enable payment permissions.",
+              description: "Payment permissions are missing. Please re-authenticate to enable payment permissions.",
               variant: "destructive",
             });
             
