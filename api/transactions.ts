@@ -1,8 +1,9 @@
 // @ts-nocheck
 import { jwt } from "./_utils";
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Utility functions for reading request body
-async function readBody(req) {
+async function readBody(req: VercelRequest) {
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (chunk) => (data += chunk));
@@ -16,7 +17,7 @@ async function readBody(req) {
   });
 }
 
-function getToken(req) {
+function getToken(req: VercelRequest) {
   const auth = req.headers["authorization"];
   if (!auth) throw new Error("Missing Authorization header");
   return auth.replace("Bearer ", "");
@@ -30,7 +31,7 @@ let mockStorage = {
 };
 
 // Production-ready transactions handler
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers - restrict in production
   const allowedOrigin = process.env.NODE_ENV === 'production' 
     ? process.env.FRONTEND_URL || 'https://yourdomain.com' 

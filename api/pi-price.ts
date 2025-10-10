@@ -1,7 +1,8 @@
 // @ts-nocheck
 import { createClient } from '@supabase/supabase-js';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // Set CORS headers
     const allowedOrigin =
@@ -36,7 +37,7 @@ export default async function handler(req, res) {
   }
 }
 
-async function fetchPriceFromCoinGecko(res) {
+async function fetchPriceFromCoinGecko(res: VercelResponse) {
   try {
     const coingeckoApiKey =
       process.env.COINGECKO_API_KEY || "CG-z4MZkBd78fn7PgPhPYcKq1r4";

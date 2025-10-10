@@ -1,5 +1,6 @@
 // @ts-nocheck
 import fetch from 'node-fetch';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Debug logging for sandbox detection
 console.log("🔍 DEBUG: process.env.PI_SANDBOX raw value:", process.env.PI_SANDBOX);
@@ -14,7 +15,7 @@ const PI_SERVER_URL = PI_SANDBOX
 console.log("🔍 DEBUG: PI_SERVER_URL:", PI_SERVER_URL);
 
 // Utility functions for reading request body
-async function readBody(req) {
+async function readBody(req: VercelRequest) {
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (chunk) => (data += chunk));
@@ -29,12 +30,12 @@ async function readBody(req) {
 }
 
 // Validate payment ID format (Pi payment IDs are typically alphanumeric with dashes)
-function isValidPaymentId(paymentId) {
+function isValidPaymentId(paymentId: string) {
   return typeof paymentId === 'string' && /^[a-zA-Z0-9-]+$/.test(paymentId);
 }
 
 // Production-ready Pi Network payments handler
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers - restrict in production
   const allowedOrigin = process.env.NODE_ENV === 'production' 
     ? process.env.FRONTEND_URL || 'https://yourdomain.com' 
@@ -73,7 +74,7 @@ export default async function handler(req, res) {
   try {
     // Parse request body
     const body = await readBody(req);
-    const { action, data } = body;
+    const { action, data } = body as { action: string; data: any };
     
     // Validate action parameter
     if (!action) {

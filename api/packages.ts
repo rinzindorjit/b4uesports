@@ -1,7 +1,8 @@
 // @ts-nocheck
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Production-ready packages handler
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers - restrict in production
   const allowedOrigin = process.env.NODE_ENV === 'production' 
     ? process.env.FRONTEND_URL || 'https://yourdomain.com' 
