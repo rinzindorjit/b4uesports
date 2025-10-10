@@ -176,9 +176,9 @@ export default function Landing() {
           <div className="max-w-4xl mx-auto mb-8 sm:mb-12">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg sm:text-2xl text-center bg-yellow-400/20 border border-yellow-400 rounded-lg p-2 sm:p-4 font-bold text-yellow-300">
+                <CardTitle className="text-lg sm:text-2xl text-center">
                   <i className="fas fa-coins text-primary mr-2"></i>
-                  Welcome to B4U Esports Marketplace, your premier destination to seamlessly purchase PUBG UC and Mobile Legends Diamonds using Pi Coins. Experience fast, secure, and transparent transactions tailored for gamers worldwide.
+                  Purchase PUBG UC and Mobile Legends Diamonds using Pi coins
                 </CardTitle>
               </CardHeader>
               <CardContent className="prose prose-invert max-w-none">
