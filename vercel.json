@@ -12,6 +12,10 @@
       "destination": "/api/transactions.js"
     },
     {
+      "source": "/api/packages",
+      "destination": "/api/packages.js"
+    },
+    {
       "source": "/api/pi-price",
       "destination": "/api/pi-price.js"
     },
