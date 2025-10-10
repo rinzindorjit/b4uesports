@@ -234,6 +234,54 @@ export default async function handler(req, res) {
       return res.status(405).json({ message: "Method not allowed for /api/users" });
     }
 
+    // ========= /api/transactions =========
+    if (url.includes("/transactions")) {
+      if (method === "GET") {
+        const token = req.headers.authorization?.split(" ")[1];
+        if (!token) return res.status(401).json({ message: "No token provided" });
+
+        try {
+          const decoded = jwtVerify(token);
+          const store = getStorage();
+          // Filter transactions by user ID
+          const userTransactions = store.transactions.filter(txn => txn.user === decoded.pi_id);
+          return res.status(200).json({ transactions: userTransactions });
+        } catch (err) {
+          console.error("Transaction retrieval error:", err);
+          return res.status(500).json({ 
+            message: `Failed to retrieve transactions: ${err.message || 'Unknown error'}` 
+          });
+        }
+      }
+      
+      if (method === "POST") {
+        const token = req.headers.authorization?.split(" ")[1];
+        if (!token) return res.status(401).json({ message: "No token provided" });
+
+        try {
+          const decoded = jwtVerify(token);
+          const body = await readBody(req);
+
+          const txn = {
+            id: `txn_${Date.now()}`,
+            user: decoded.pi_id,
+            amount: body.amount,
+            date: new Date(),
+          };
+          const store = getStorage();
+          store.transactions.push(txn);
+          return res.status(200).json({ message: "Transaction added", txn });
+        } catch (err) {
+          console.error("Transaction error:", err);
+          return res.status(500).json({ 
+            message: `Transaction failed: ${err.message || 'Unknown error'}` 
+          });
+        }
+      }
+
+      return res.status(405).json({ message: "Method not allowed for /api/transactions" });
+    }
+
     // ========= /api/pi-price =========
     if (url.includes("/pi-price")) {
       if (method === "GET") {
@@ -277,6 +325,7 @@ export default async function handler(req, res) {
       message: "B4U Esports Unified API Online",
       endpoints: [
         "/api/users",
+        "/api/transactions",
         "/api/pi-price",
         "/api/health"
       ]
