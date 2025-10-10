@@ -62,7 +62,7 @@ export default function RefundPolicy() {
               <p>Our no-refund policy exists for several important reasons:</p>
               <ul>
                 <li><strong>Digital Nature:</strong> Gaming currencies are digital goods that cannot be "returned" once delivered</li>
-                <li><strong>Instant Delivery:</strong> Currency is delivered immediately to your game account</li>
+                <li>Currency is delivered immediately to your game account</li>
                 <li><strong>Fraud Prevention:</strong> Protects against fraudulent refund claims and chargebacks</li>
                 <li><strong>Publisher Requirements:</strong> Game publishers do not allow reversal of currency transactions</li>
                 <li><strong>Pi Network Integration:</strong> Cryptocurrency transactions are designed to be irreversible</li>

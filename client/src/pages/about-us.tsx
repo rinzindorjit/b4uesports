@@ -202,13 +202,7 @@ export default function AboutUs() {
                   <p className="text-sm">Protected by Pi Network's advanced cryptographic security and our robust infrastructure.</p>
                 </div>
                 
-                <div className="text-center p-4" data-testid="feature-support">
-                  <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <i className="fas fa-headset text-2xl text-white"></i>
-                  </div>
-                  <h4 className="font-semibold mb-2">24/7 Support</h4>
-                  <p className="text-sm">Round-the-clock customer support to assist with any questions or issues.</p>
-                </div>
+
               </div>
             </CardContent>
           </Card>

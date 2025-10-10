@@ -96,7 +96,3 @@ drizzle.config.ts
 
 # JSON files to exclude
 packages-full.json
-
-# Directories to exclude
-attached_assets/
-shared/
