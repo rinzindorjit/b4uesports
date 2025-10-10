@@ -139,9 +139,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       });
       onClose();
     } catch (error: any) {
+      console.error('Profile update error:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update profile",
+        description: error.message || "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     }
