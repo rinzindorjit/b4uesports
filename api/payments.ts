@@ -42,12 +42,6 @@ export default async function handler(req, res) {
   const PI_API_KEY = process.env.PI_API_KEY || 'cszew9tw3qa1re4visdjd72jt38qy475fugolvqxikfr6xdclngdshajvmunurc9';
   const PI_SANDBOX = process.env.PI_SANDBOX === 'true';
   const PI_SERVER_URL = PI_SANDBOX ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
-  
-  // Debug logging
-  console.log('🔍 PI_SANDBOX env var:', process.env.PI_SANDBOX);
-  console.log('🔍 PI_SANDBOX === "true":', process.env.PI_SANDBOX === 'true');
-  console.log('🔍 Using PI_SANDBOX:', PI_SANDBOX);
-  console.log('🔍 Using PI_SERVER_URL:', PI_SERVER_URL);
 
   try {
     if (req.method === "POST") {
