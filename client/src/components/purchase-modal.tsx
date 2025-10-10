@@ -4,7 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { GAME_LOGOS } from '@/lib/constants';
 import { piSDK } from '@/lib/pi-sdk';
 import type { Package, PaymentData } from '@/types/pi-network';
@@ -238,6 +238,9 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
             {step === 'passphrase' && 'Enter Passphrase'}
             {step === 'processing' && 'Processing Payment'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Purchase game currency using Pi coins. Confirm your purchase details and enter your passphrase to complete the transaction.
+          </DialogDescription>
         </DialogHeader>
         
         {/* Show loading state when package is not available */}

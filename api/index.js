@@ -192,6 +192,80 @@ async function handler(req, res) {
             });
           }
         }
+        
+        // Handle updateProfile action
+        if (action === "updateProfile") {
+          const token = req.headers.authorization?.split(" ")[1];
+          if (!token) return res.status(401).json({ message: "No token provided" });
+
+          try {
+            const decoded = jwtVerify(token);
+            const userId = decoded.userId || decoded.pi_id;
+            
+            const updateData = data;
+            
+            // Validate required fields
+            if (!updateData.email || !updateData.phone || !updateData.country) {
+              return res.status(400).json({ message: 'Email, phone, and country are required' });
+            }
+
+            // Validate email format
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(updateData.email)) {
+              return res.status(400).json({ message: 'Invalid email format' });
+            }
+
+            // Validate phone format (allow only numbers and common separators)
+            const phoneRegex = /^[\d\s\-\+\(\)]+$/;
+            if (!phoneRegex.test(updateData.phone)) {
+              return res.status(400).json({ message: 'Invalid phone number format' });
+            }
+
+            // Validate game accounts if provided
+            if (updateData.gameAccounts) {
+              if (updateData.gameAccounts.pubg) {
+                if (!updateData.gameAccounts.pubg.ign || !updateData.gameAccounts.pubg.uid) {
+                  return res.status(400).json({ message: 'PUBG IGN and UID are required' });
+                }
+                // Validate UID is numeric
+                if (!/^\d+$/.test(updateData.gameAccounts.pubg.uid)) {
+                  return res.status(400).json({ message: 'PUBG UID must be numeric' });
+                }
+              }
+              
+              if (updateData.gameAccounts.mlbb) {
+                if (!updateData.gameAccounts.mlbb.userId || !updateData.gameAccounts.mlbb.zoneId) {
+                  return res.status(400).json({ message: 'MLBB User ID and Zone ID are required' });
+                }
+                // Validate IDs are numeric
+                if (!/^\d+$/.test(updateData.gameAccounts.mlbb.userId) || !/^\d+$/.test(updateData.gameAccounts.mlbb.zoneId)) {
+                  return res.status(400).json({ message: 'MLBB User ID and Zone ID must be numeric' });
+                }
+              }
+            }
+            
+            // Find user and update data
+            const user = store2.users[userId];
+            if (!user) return res.status(404).json({ message: "User not found" });
+            
+            // Update user data
+            store2.users[userId] = { 
+              ...user, 
+              ...updateData,
+              email: updateData.email,
+              phone: updateData.phone,
+              country: updateData.country,
+              language: updateData.language || user.language,
+              gameAccounts: updateData.gameAccounts || user.gameAccounts
+            };
+            
+            return res.status(200).json(store2.users[userId]);
+          } catch (err) {
+            console.error("Profile update error:", err);
+            return res.status(401).json({ message: "Invalid token" });
+          }
+        }
+        
         return res.status(400).json({ message: "Invalid action for /api/users" });
       }
       if (method === "GET") {

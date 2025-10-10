@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -30,6 +30,9 @@ export default function CountrySelector({ isOpen, onClose, onSelect, selectedCou
       <DialogContent className="max-w-md w-full mx-4 sm:mx-auto" data-testid="country-selector">
         <DialogHeader>
           <DialogTitle className="text-xl">Select Country</DialogTitle>
+          <DialogDescription className="sr-only">
+            Search and select your country from the list of available countries.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">

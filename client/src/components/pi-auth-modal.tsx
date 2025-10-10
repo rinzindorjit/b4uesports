@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { BRAND_LOGOS } from '@/lib/constants';
@@ -44,6 +44,9 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
           <DialogTitle className="text-xl md:text-2xl text-center">
             {step === 'consent' ? 'Connect with Pi Network' : 'Connecting...'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            Connect your Pi Network account to access B4U Esports services and make purchases.
+          </DialogDescription>
         </DialogHeader>
 
         {step === 'consent' ? (
