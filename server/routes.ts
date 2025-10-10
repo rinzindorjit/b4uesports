@@ -4,8 +4,6 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { insertUserSchema, insertPackageSchema } from "@shared/schema";
 import { z } from "zod";
-// Import the pi-price route
-import piPriceRoute from "./routes/pi-price";
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
 
@@ -84,9 +82,6 @@ async function getEmailService() {
 }
 
 export async function registerRoutes(app: Express): Promise<void> {
-  // Register the pi-price route
-  app.use("/api", piPriceRoute);
-  
   // Health check endpoint
   app.get('/api/health', async (req: Request, res: Response) => {
     try {
@@ -418,20 +413,4 @@ export async function registerRoutes(app: Express): Promise<void> {
     }
   });
 
-  // Pi price endpoint
-  app.get('/api/pi-price', async (req: Request, res: Response) => {
-    try {
-      const pricingService = await getPricingService();
-      const currentPiPrice = await pricingService.getCurrentPiPrice();
-      
-      res.json({
-        pi: currentPiPrice,
-        currency: 'USD',
-        lastUpdated: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error('Pi price fetch error:', error);
-      res.status(500).json({ message: 'Failed to fetch Pi price' });
-    }
-  });
 }

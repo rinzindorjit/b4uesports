@@ -182,9 +182,9 @@ export default async function handler(req, res) {
               };
             }
 
-            // Generate JWT token for session
-            const token = jwtSign(piUser);
-            
+            // Generate JWT token for session - match the structure used in server routes
+            const token = jwtSign({ userId: piUser.pi_id, piUID: piUser.pi_id });
+
             return res.status(200).json({ 
               user: {
                 id: piUser.pi_id,
@@ -212,9 +212,12 @@ export default async function handler(req, res) {
           if (!token) return res.status(401).json({ message: "No token provided" });
 
           try {
+            // Match the token structure used in server routes
             const decoded = jwtVerify(token);
             const store = getStorage();
-            const user = store.users[decoded.pi_id];
+            // Use userId field to match server routes structure
+            const userId = decoded.userId || decoded.pi_id;
+            const user = store.users[userId];
             if (!user) return res.status(404).json({ message: "User not found" });
 
             return res.status(200).json({
@@ -241,10 +244,13 @@ export default async function handler(req, res) {
         if (!token) return res.status(401).json({ message: "No token provided" });
 
         try {
+          // Match the token structure used in server routes
           const decoded = jwtVerify(token);
           const store = getStorage();
+          // Use userId field to match server routes structure
+          const userId = decoded.userId || decoded.pi_id;
           // Filter transactions by user ID
-          const userTransactions = store.transactions.filter(txn => txn.user === decoded.pi_id);
+          const userTransactions = store.transactions.filter(txn => txn.user === userId);
           return res.status(200).json({ transactions: userTransactions });
         } catch (err) {
           console.error("Transaction retrieval error:", err);
@@ -259,12 +265,16 @@ export default async function handler(req, res) {
         if (!token) return res.status(401).json({ message: "No token provided" });
 
         try {
+          // Match the token structure used in server routes
           const decoded = jwtVerify(token);
           const body = await readBody(req);
+          
+          // Use userId field to match server routes structure
+          const userId = decoded.userId || decoded.pi_id;
 
           const txn = {
             id: `txn_${Date.now()}`,
-            user: decoded.pi_id,
+            user: userId,
             amount: body.amount,
             date: new Date(),
           };
@@ -288,7 +298,23 @@ export default async function handler(req, res) {
         try {
           // Use CoinGecko API to get the current Pi price with demo key
           const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4');
-          const data = await response.json();
+          
+          // Check if response is OK before parsing JSON
+          if (!response.ok) {
+            throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`);
+          }
+          
+          const text = await response.text();
+          console.log('CoinGecko response text:', text);
+          
+          // Parse JSON safely
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch (parseError) {
+            throw new Error(`Failed to parse CoinGecko response: ${parseError.message}. Response text: ${text.substring(0, 100)}...`);
+          }
+          
           const price = data['pi-network']?.usd;
           
           if (typeof price !== 'number') {
