@@ -3,8 +3,8 @@
   "buildCommand": "npm run build-deploy",
   "outputDirectory": "dist",
   "env": {
-    "PI_API_KEY": "@pi_api_key",
-    "VITE_PI_API_KEY": "@pi_api_key",
+    "PI_API_KEY": "cszew9tw3qa1re4visdjd72jt38qy475fugolvqxikfr6xdclngdshajvmunurc9",
+    "VITE_PI_API_KEY": "cszew9tw3qa1re4visdjd72jt38qy475fugolvqxikfr6xdclngdshajvmunurc9",
     "PI_SANDBOX": "true",
     "VITE_PI_SANDBOX": "true"
   },
