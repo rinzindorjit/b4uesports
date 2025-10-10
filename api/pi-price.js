@@ -21,6 +21,7 @@ __export(pi_price_exports, {
   default: () => handler
 });
 module.exports = __toCommonJS(pi_price_exports);
+var import_supabase_js = require("@supabase/supabase-js");
 async function handler(req, res) {
   const allowedOrigin = process.env.NODE_ENV === "production" ? process.env.FRONTEND_URL || "https://yourdomain.com" : "*";
   res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
@@ -54,8 +55,31 @@ async function handler(req, res) {
 }
 async function fetchPriceFromSupabase(req, res) {
   try {
-    console.log("Supabase integration would go here");
-    throw new Error("Supabase integration not yet implemented");
+    const supabase = (0, import_supabase_js.createClient)(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    const { data, error } = await supabase.from("pi_prices").select("price, created_at").order("created_at", { ascending: false }).limit(1).single();
+    if (error) {
+      console.error("Supabase query error:", error.message);
+      throw new Error(`Supabase error: ${error.message}`);
+    }
+    if (!data) {
+      console.log("No price data found in Supabase, falling back to CoinGecko");
+      throw new Error("No price data in Supabase");
+    }
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1e3);
+    const priceDate = new Date(data.created_at);
+    if (priceDate < oneHourAgo) {
+      console.log("Supabase price is outdated, falling back to CoinGecko");
+      throw new Error("Outdated price in Supabase");
+    }
+    console.log("Successfully fetched Pi price from Supabase:", data.price);
+    return res.status(200).json({
+      price: data.price,
+      lastUpdated: data.created_at,
+      source: "supabase"
+    });
   } catch (error) {
     console.error("Supabase fetch failed:", error.message);
     throw error;
@@ -100,6 +124,21 @@ async function fetchPriceFromCoinGecko(req, res) {
       throw new Error("Invalid price data received from CoinGecko: " + JSON.stringify(data));
     }
     console.log("Successfully fetched Pi price from CoinGecko:", price);
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const supabase = (0, import_supabase_js.createClient)(
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+        await supabase.from("pi_prices").insert({
+          price,
+          created_at: (/* @__PURE__ */ new Date()).toISOString()
+        });
+        console.log("Saved Pi price to Supabase for future use");
+      } catch (saveError) {
+        console.error("Failed to save price to Supabase:", saveError.message);
+      }
+    }
     return res.status(200).json({
       price,
       lastUpdated: (/* @__PURE__ */ new Date()).toISOString(),
