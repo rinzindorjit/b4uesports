@@ -120,6 +120,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     }
 
     try {
+      console.log('Sending profile update request to /api/users with action updateProfile');
       const response = await apiRequest('POST', '/api/users', {
         action: 'updateProfile',
         data: {
@@ -128,9 +129,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         }
       });
       
+      console.log('Profile update response:', response.status, response.statusText);
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Profile update failed');
+        const errorText = await response.text();
+        console.error('Profile update error response:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText || 'Profile update failed'}`);
       }
       
       toast({

@@ -98,6 +98,10 @@ export async function registerRoutes(app: Express): Promise<void> {
   
   // Consolidated API endpoint for user operations
   app.post('/api/users', async (req: Request, res: Response) => {
+    console.log('Received POST request to /api/users with action:', req.body?.action);
+    console.log('Request headers:', req.headers);
+    console.log('Request body:', req.body);
+    
     const { action, data } = req.body;
     
     try {
@@ -106,6 +110,7 @@ export async function registerRoutes(app: Express): Promise<void> {
       
       switch (action) {
         case 'authenticate':
+          console.log('Processing authenticate action');
           const { accessToken } = data;
           if (!accessToken) {
             return res.status(400).json({ message: 'Access token required' });
@@ -150,36 +155,47 @@ export async function registerRoutes(app: Express): Promise<void> {
           });
 
         case 'updateProfile':
+          console.log('Processing updateProfile action');
           const profileToken = req.headers.authorization?.replace('Bearer ', '');
+          console.log('Profile token:', profileToken);
+          
           if (!profileToken) {
+            console.log('No token provided in request');
             return res.status(401).json({ message: 'No token provided' });
           }
 
           let decoded;
           try {
             decoded = jwt.verify(profileToken, JWT_SECRET) as any;
+            console.log('Decoded token:', decoded);
           } catch (tokenError) {
+            console.log('Invalid token error:', tokenError);
             return res.status(401).json({ message: 'Invalid token' });
           }
           
           const userId = decoded.userId;
+          console.log('User ID from token:', userId);
 
           const updateData = data;
+          console.log('Update data:', updateData);
           
           // Validate required fields
           if (!updateData.email || !updateData.phone || !updateData.country) {
+            console.log('Missing required fields');
             return res.status(400).json({ message: 'Email, phone, and country are required' });
           }
 
           // Validate email format
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(updateData.email)) {
+            console.log('Invalid email format');
             return res.status(400).json({ message: 'Invalid email format' });
           }
 
           // Validate phone format (allow only numbers and common separators)
           const phoneRegex = /^[\d\s\-\+\(\)]+$/;
           if (!phoneRegex.test(updateData.phone)) {
+            console.log('Invalid phone number format');
             return res.status(400).json({ message: 'Invalid phone number format' });
           }
 
@@ -187,27 +203,33 @@ export async function registerRoutes(app: Express): Promise<void> {
           if (updateData.gameAccounts) {
             if (updateData.gameAccounts.pubg) {
               if (!updateData.gameAccounts.pubg.ign || !updateData.gameAccounts.pubg.uid) {
+                console.log('PUBG IGN and UID are required');
                 return res.status(400).json({ message: 'PUBG IGN and UID are required' });
               }
               // Validate UID is numeric
               if (!/^\d+$/.test(updateData.gameAccounts.pubg.uid)) {
+                console.log('PUBG UID must be numeric');
                 return res.status(400).json({ message: 'PUBG UID must be numeric' });
               }
             }
             
             if (updateData.gameAccounts.mlbb) {
               if (!updateData.gameAccounts.mlbb.userId || !updateData.gameAccounts.mlbb.zoneId) {
+                console.log('MLBB User ID and Zone ID are required');
                 return res.status(400).json({ message: 'MLBB User ID and Zone ID are required' });
               }
               // Validate IDs are numeric
               if (!/^\d+$/.test(updateData.gameAccounts.mlbb.userId) || !/^\d+$/.test(updateData.gameAccounts.mlbb.zoneId)) {
+                console.log('MLBB User ID and Zone ID must be numeric');
                 return res.status(400).json({ message: 'MLBB User ID and Zone ID must be numeric' });
               }
             }
           }
 
+          console.log('Updating user with data:', updateData);
           const updatedUser = await storage.updateUser(userId, updateData);
           if (!updatedUser) {
+            console.log('User not found');
             return res.status(404).json({ message: 'User not found' });
           }
 
@@ -223,6 +245,7 @@ export async function registerRoutes(app: Express): Promise<void> {
           });
 
         default:
+          console.log('Invalid action:', action);
           return res.status(400).json({ message: 'Invalid action' });
       }
     } catch (error) {
