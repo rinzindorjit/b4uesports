@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { jwtSign, jwtVerify } from "./_utils";
+import { jwt } from "./_utils";
 import fetch from 'node-fetch';
 
 // Utility functions for reading request body
@@ -82,6 +82,7 @@ export default async function handler(req, res) {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json'
+              // Removed X-API-Key header as it's not needed for /me endpoint
             }
           });
 
@@ -118,10 +119,10 @@ export default async function handler(req, res) {
             walletAddress: userData.wallet_address || ''
           };
 
-          const token = jwtSign({ 
+          const token = jwt.sign({ 
             pi_id: userId,
             username: userData.username
-          });
+          }, process.env.JWT_SECRET || 'fallback-secret');
           
           console.log("JWT token generated");
           return res.status(200).json({ 
@@ -141,7 +142,7 @@ export default async function handler(req, res) {
       if (body.action === "getProfile") {
         try {
           const token = getToken(req);
-          const decoded = jwtVerify(token);
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
           const user = store.users[decoded.pi_id];
           return res.status(200).json({ user });
         } catch (error) {
@@ -155,7 +156,7 @@ export default async function handler(req, res) {
     if (method === "GET") {
       try {
         const token = getToken(req);
-        const decoded = jwtVerify(token);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
         const user = store.users[decoded.pi_id];
         return res.status(200).json({ user });
       } catch (error) {

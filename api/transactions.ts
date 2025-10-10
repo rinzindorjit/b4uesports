@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { jwtVerify } from "./_utils";
+import { jwt } from "./_utils";
 
 // Utility functions for reading request body
 async function readBody(req) {
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     if (method === "GET") {
       try {
         const token = getToken(req);
-        const decoded = jwtVerify(token);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
         
         // Get user's transactions
         const userTransactions = store.transactions.filter(txn => txn.userId === decoded.pi_id);
@@ -64,7 +64,7 @@ export default async function handler(req, res) {
     if (method === "POST") {
       try {
         const token = getToken(req);
-        const decoded = jwtVerify(token);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
         const body = await readBody(req);
         
         if (body.action === "create") {
