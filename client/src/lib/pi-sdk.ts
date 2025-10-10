@@ -5,7 +5,7 @@ declare global {
     Pi: {
       init: (config: { version: string; sandbox?: boolean }) => void;
       authenticate: (
-        scopes: string[], 
+        scopes: string[],
         onIncompletePaymentFound?: (payment: any) => void
       ) => Promise<{ accessToken: string; user: { uid: string; username: string } }>;
       createPayment: (
@@ -30,6 +30,7 @@ declare global {
 export class PiSDK {
   private static instance: PiSDK;
   private initialized = false;
+  private grantedScopes: string[] = []; // ✅ store granted scopes
 
   static getInstance(): PiSDK {
     if (!PiSDK.instance) {
@@ -38,89 +39,80 @@ export class PiSDK {
     return PiSDK.instance;
   }
 
-  // Enhanced initialization with dynamic SDK loading
+  // ✅ Enhanced initialization with dynamic SDK loading
   async init(sandbox: boolean = process.env.NODE_ENV !== 'production'): Promise<void> {
     if (this.initialized) {
       console.log('Pi SDK already initialized');
       return;
     }
-    
+
     try {
-      // First, ensure we're in the Pi Browser
       if (!isPiBrowser()) {
         throw new Error('Please open this app in the Pi Browser app for authentication to work properly.');
       }
-      
-      // First, ensure the Pi SDK is loaded
+
       await loadPiSDK();
-      
-      // Wait for Pi SDK to be available on window object
-      await waitForPiSDK(45000); // 45 second timeout for better mobile support
-      
+      await waitForPiSDK(45000);
+
       if (typeof window !== 'undefined' && window.Pi) {
-        // Always use version "2.0" as required by Pi Network
-        window.Pi.init({ 
-          version: "2.0", 
-          sandbox 
+        window.Pi.init({
+          version: '2.0',
+          sandbox,
         });
         this.initialized = true;
-        console.log('Pi SDK initialized with version 2.0, sandbox:', sandbox);
+        console.log('✅ Pi SDK initialized with version 2.0, sandbox:', sandbox);
       } else {
-        throw new Error('Pi SDK not available after loading. Please make sure you are using the Pi Browser app and refresh the page.');
+        throw new Error('Pi SDK not available after loading. Please refresh the page in Pi Browser.');
       }
     } catch (error) {
-      console.error('Pi SDK initialization failed:', error);
-      this.initialized = false; // Reset initialization state on error
+      console.error('❌ Pi SDK initialization failed:', error);
+      this.initialized = false;
       throw error;
     }
   }
 
+  // ✅ Authenticate and track granted scopes
   async authenticate(
     scopes: string[] = ['payments', 'username', 'wallet_address'],
     onIncompletePaymentFound?: (payment: any) => void
   ): Promise<{ accessToken: string; user: { uid: string; username: string; wallet_address?: string } } | null> {
-    // Ensure Pi SDK is loaded and initialized
     try {
       if (!this.initialized) {
-        // Use sandbox mode based on environment
         const isSandbox = process.env.NODE_ENV !== 'production';
         await this.init(isSandbox);
       }
-      
-      // Additional check to ensure Pi is available
+
       if (!window.Pi) {
-        throw new Error('Pi SDK not properly loaded. Please refresh the page or try again in the Pi Browser.');
+        throw new Error('Pi SDK not loaded properly. Please refresh the page in the Pi Browser.');
       }
 
-      console.log('Calling Pi.authenticate with scopes:', scopes);
-      // Add a timeout to the authentication call with proper Pi Network timeout values
+      console.log('🔐 Calling Pi.authenticate with scopes:', scopes);
       const authPromise = window.Pi.authenticate(scopes, onIncompletePaymentFound);
-      // Use 180 seconds timeout as recommended for mobile compatibility
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser for pending requests')), 180000)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser.')), 180000)
       );
-      
-      const authResult = await Promise.race([authPromise, timeoutPromise]) as { accessToken: string; user: { uid: string; username: string } };
-      console.log('Pi authentication successful:', authResult);
+
+      const authResult = (await Promise.race([authPromise, timeoutPromise])) as {
+        accessToken: string;
+        user: { uid: string; username: string };
+      };
+
+      // ✅ Save granted scopes
+      this.grantedScopes = scopes;
+      console.log('✅ Pi authentication successful. Granted scopes:', scopes);
+
       return authResult;
     } catch (error: any) {
-      console.error('Pi authentication failed:', error);
-      
-      // More specific error handling
-      if (error.message && error.message.includes('timeout')) {
-        throw new Error('Authentication timed out. Please check your Pi Browser for pending authentication requests and approve them. On mobile, look for a notification banner. If you don\'t see a prompt, try refreshing the page or restarting the Pi Browser app.');
-      } else if (error.message && error.message.includes('cancelled')) {
-        throw new Error('Authentication was cancelled in the Pi Browser.');
-      } else if (error.message && error.message.includes('Pi Network is not available')) {
-        throw new Error('Pi Network is not available. Please make sure you are using the Pi Browser app.');
-      } else if (error.message && (error.message.includes('User closed') || error.message.includes('User cancelled'))) {
-        throw new Error('Authentication was cancelled. Please try again and approve the authentication request in the Pi Browser.');
-      } else if (error.message && error.message.includes('load')) {
-        throw new Error('Failed to load Pi SDK. Please check your internet connection and make sure you are using the Pi Browser app.');
-      } else {
-        throw new Error(`Authentication failed: ${error.message || 'Unknown error'}. Please try again and make sure you are using the Pi Browser. If the issue persists, try refreshing the page or restarting the Pi Browser app.`);
-      }
+      console.error('❌ Pi authentication failed:', error);
+      throw new Error(
+        `Authentication failed: ${error.message || 'Unknown error'}. Please retry in Pi Browser.`
+      );
     }
+  }
+
+  // ✅ Helper to check if current session includes a scope
+  hasScope(scope: string): boolean {
+    return this.grantedScopes.includes(scope);
   }
 
   createPayment(
@@ -137,23 +129,31 @@ export class PiSDK {
     }
   ): void {
     if (!this.initialized || !window.Pi) {
-      const errorMessage = 'Pi SDK not initialized. Please make sure you are using the Pi Browser app and refresh the page.';
+      const errorMessage = 'Pi SDK not initialized. Please use Pi Browser and refresh the page.';
       console.error(errorMessage);
       callbacks.onError(new Error(errorMessage));
       return;
     }
 
-    console.log('Creating Pi payment:', paymentData);
+    // ✅ Ensure user has "payments" scope before creating a payment
+    if (!this.hasScope('payments')) {
+      const errorMessage = 'Cannot create a payment without "payments" scope. Please re-authenticate.';
+      console.error(errorMessage);
+      callbacks.onError(new Error(errorMessage));
+      return;
+    }
+
+    console.log('💰 Creating Pi payment:', paymentData);
     window.Pi.createPayment(paymentData, callbacks);
   }
 
   isInitialized(): boolean {
     return this.initialized;
   }
-  
-  // Method to reset the SDK state (useful for testing or error recovery)
+
   reset(): void {
     this.initialized = false;
+    this.grantedScopes = [];
   }
 }
 
