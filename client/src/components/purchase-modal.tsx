@@ -36,23 +36,23 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
       setIsProcessing(false);
       
       // Pre-fill game account info if available
-      if (user?.gameAccounts) {
+      if (user && user.gameAccounts && pkg && pkg.game) {
         if (pkg.game === 'PUBG' && user.gameAccounts.pubg) {
-          setGameAccount({
-            ...gameAccount,
-            ign: user.gameAccounts.pubg.ign,
-            uid: user.gameAccounts.pubg.uid,
-          });
+          setGameAccount(prev => ({
+            ...prev,
+            ign: user.gameAccounts!.pubg!.ign || '',
+            uid: user.gameAccounts!.pubg!.uid || '',
+          }));
         } else if (pkg.game === 'MLBB' && user.gameAccounts.mlbb) {
-          setGameAccount({
-            ...gameAccount,
-            userId: user.gameAccounts.mlbb.userId,
-            zoneId: user.gameAccounts.mlbb.zoneId,
-          });
+          setGameAccount(prev => ({
+            ...prev,
+            userId: user.gameAccounts!.mlbb!.userId || '',
+            zoneId: user.gameAccounts!.mlbb!.zoneId || '',
+          }));
         }
       }
     }
-  }, [isOpen, user, pkg.game]);
+  }, [isOpen, user, pkg]);
 
   const handleConfirmPurchase = () => {
     // Validate game account info
@@ -100,6 +100,16 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
   };
 
   const handleProcessPayment = async () => {
+    // Add safety checks at the beginning
+    if (!pkg) {
+      toast({
+        title: "Error",
+        description: "Package information is missing.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!passphrase) {
       toast({
         title: "Passphrase Required",
@@ -229,7 +239,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
           </DialogTitle>
         </DialogHeader>
         
-        {step === 'confirm' && (
+        {step === 'confirm' && pkg && (
           <>
             <div className="text-center mb-6">
               <div className="flex items-center justify-center mb-4">
@@ -336,7 +346,7 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
           </>
         )}
         
-        {step === 'passphrase' && (
+        {step === 'passphrase' && pkg && (
           <>
             <div className="text-center mb-6">
               <div className="bg-primary/10 rounded-lg p-4 mb-4">
@@ -402,6 +412,12 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
               </Button>
             </div>
           </>
+        )}
+        
+        {!pkg && step !== 'processing' && (
+          <div className="text-center py-8">
+            <p>Loading package information...</p>
+          </div>
         )}
       </DialogContent>
     </Dialog>
