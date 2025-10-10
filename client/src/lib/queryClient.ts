@@ -13,7 +13,8 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   // Ensure the URL is correctly formatted
-  const apiUrl = import.meta.env.VITE_API_URL || '';
+  // Fallback to empty string if VITE_API_URL is not available
+  const apiUrl = typeof process !== 'undefined' && process.env.VITE_API_URL || '';
   // For relative URLs, when deployed to the same domain as the API
   let fullUrl = url;
   if (apiUrl) {
@@ -55,7 +56,8 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const url = queryKey.join("/") as string;
-    const apiUrl = import.meta.env.VITE_API_URL || '';
+    // Fallback to empty string if VITE_API_URL is not available
+    const apiUrl = typeof process !== 'undefined' && process.env.VITE_API_URL || '';
     // For relative URLs, when deployed to the same domain as the API
     let fullUrl = url;
     if (apiUrl) {

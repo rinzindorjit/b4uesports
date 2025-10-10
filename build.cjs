@@ -59,7 +59,7 @@ try {
       // Try to build the client bundle
       try {
         const bundlePath = join(rootDistDir, 'bundle.js');
-        execSync(`npx esbuild "${mainEntry}" --bundle --outfile="${bundlePath}" --format=iife --global-name=app`, {
+        execSync(`npx esbuild "${mainEntry}" --bundle --outfile="${bundlePath}" --format=esm --external:react --external:react-dom`, {
           stdio: 'inherit'
         });
         console.log('Client bundle created successfully');
@@ -76,7 +76,7 @@ try {
         // Remove the original script tag and add the bundle script
         indexContent = indexContent.replace(
           '<script type="module" src="/src/main.tsx"></script>',
-          '<script src="./bundle.js"></script>'
+          '<script type="module" src="./bundle.js"></script>'
         );
         writeFileSync(indexPath, indexContent, 'utf8');
       } catch (buildError) {

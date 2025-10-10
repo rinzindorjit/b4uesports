@@ -132,7 +132,8 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
 
       // Ensure Pi SDK is initialized before authentication
       if (!piSDK.isInitialized()) {
-        const isSandbox = process.env.VITE_PI_SANDBOX === 'true';
+        // Use a default value for sandbox mode
+        const isSandbox = true; // Always use sandbox for development
         await piSDK.init(isSandbox); // Initialize with sandbox mode for Testnet
       }
 

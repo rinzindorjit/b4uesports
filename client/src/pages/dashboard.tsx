@@ -150,7 +150,7 @@ export default function Dashboard() {
         <>
           <ParticleBackground />
           <Navigation 
-            isTestnet={import.meta.env.DEV} 
+            isTestnet={typeof process !== 'undefined' && process.env.NODE_ENV === 'development'} 
           />
           
           {/* Dashboard Header */}

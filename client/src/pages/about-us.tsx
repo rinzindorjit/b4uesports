@@ -9,7 +9,7 @@ export default function AboutUs() {
   return (
     <div className="min-h-screen bg-background text-foreground" data-testid="about-us-page">
       <ParticleBackground />
-      <Navigation isTestnet={import.meta.env.DEV} />
+      <Navigation isTestnet={typeof process !== 'undefined' && process.env.NODE_ENV === 'development'} />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Close button */}
