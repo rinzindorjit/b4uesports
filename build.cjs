@@ -59,7 +59,7 @@ try {
       // Try to build the client bundle
       try {
         const bundlePath = join(rootDistDir, 'bundle.js');
-        execSync(`npx esbuild "${mainEntry}" --bundle --outfile="${bundlePath}" --format=esm --external:react --external:react-dom`, {
+        execSync(`npx esbuild "${mainEntry}" --bundle --outfile="${bundlePath}" --format=esm`, {
           stdio: 'inherit'
         });
         console.log('Client bundle created successfully');
