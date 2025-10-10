@@ -4,6 +4,7 @@ import ParticleBackground from '@/components/particle-background';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BRAND_LOGOS } from '@/lib/constants';
+import { Link } from 'wouter';
 
 export default function OurHistory() {
   const milestones = [
@@ -77,6 +78,17 @@ export default function OurHistory() {
       <Navigation isTestnet={import.meta.env.DEV} />
       
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {/* Close button */}
+        <div className="flex justify-end mb-4">
+          <Link 
+            href="/" 
+            className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          >
+            <i className="fas fa-times mr-2"></i>
+            Close
+          </Link>
+        </div>
+
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-6">
             <img 
