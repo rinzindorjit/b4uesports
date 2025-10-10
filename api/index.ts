@@ -26,6 +26,125 @@ async function readBody(req) {
   });
 }
 
+// Pi Network verification service
+function getPiNetworkService() {
+  return {
+    verifyAccessToken: async (accessToken) => {
+      if (!accessToken) throw new Error('Missing access token');
+      
+      try {
+        const response = await fetch(`${PI_API_URL}/me`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          let errorMessage = 'Unknown error';
+          try {
+            const errorData = await response.json();
+            errorMessage = (errorData && errorData['message']) || errorMessage;
+          } catch (e) {
+            // If we can't parse the error response, use the status text
+            errorMessage = response.statusText || errorMessage;
+          }
+          throw new Error(`Pi Network API error: ${response.status} - ${errorMessage}`);
+        }
+        
+        const userData = await response.json();
+        
+        return {
+          username: userData['username'],
+          pi_id: userData['uid'],
+          email: userData['email'] || '',
+        };
+      } catch (error) {
+        console.error('Pi Network verification failed:', error);
+        throw new Error(`Failed to verify Pi Network access token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    },
+  };
+}
+
+// In-memory store (replace with DB later)
+const store = {
+  users: {},
+  transactions: [],
+  packages: [
+    // PUBG Packages
+    { 
+      id: 'pubg-1', 
+      game: 'PUBG', 
+      name: 'Small UC Pack', 
+      inGameAmount: 100, 
+      usdtValue: '10.00',
+      image: '/images/pubg-small.jpg',
+      isActive: true 
+    },
+    { 
+      id: 'pubg-2', 
+      game: 'PUBG', 
+      name: 'Medium UC Pack', 
+      inGameAmount: 250, 
+      usdtValue: '25.00',
+      image: '/images/pubg-medium.jpg',
+      isActive: true 
+    },
+    { 
+      id: 'pubg-3', 
+      game: 'PUBG', 
+      name: 'Large UC Pack', 
+      inGameAmount: 500, 
+      usdtValue: '50.00',
+      image: '/images/pubg-large.jpg',
+      isActive: true 
+    },
+    // MLBB Packages
+    { 
+      id: 'mlbb-1', 
+      game: 'MLBB', 
+      name: 'Small Diamond Pack', 
+      inGameAmount: 50, 
+      usdtValue: '10.00',
+      image: '/images/mlbb-small.jpg',
+      isActive: true 
+    },
+    { 
+      id: 'mlbb-2', 
+      game: 'MLBB', 
+      name: 'Medium Diamond Pack', 
+      inGameAmount: 125, 
+      usdtValue: '25.00',
+      image: '/images/mlbb-medium.jpg',
+      isActive: true 
+    },
+    { 
+      id: 'mlbb-3', 
+      game: 'MLBB', 
+      name: 'Large Diamond Pack', 
+      inGameAmount: 250, 
+      usdtValue: '50.00',
+      image: '/images/mlbb-large.jpg',
+      isActive: true 
+    },
+  ],
+  payments: [],
+};
+
+function getStorage() {
+  return store;
+}
+
+function jwtVerify(token) {
+  return jwt.verify(token, JWT_SECRET);
+}
+
+function jwtSign(payload) {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+}
+
 export default async function handler(req, res) {
   const { url, method } = req;
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -35,6 +154,84 @@ export default async function handler(req, res) {
   if (method === "OPTIONS") return res.status(200).end();
 
   try {
+    // ========= /api/users =========
+    if (url.includes("/users")) {
+      if (method === "POST") {
+        const body = await readBody(req);
+        const { action, data } = body;
+
+        if (action === "authenticate") {
+          const { accessToken } = data;
+          if (!accessToken) {
+            return res.status(400).json({ message: 'Access token required' });
+          }
+
+          try {
+            const piService = getPiNetworkService();
+            const piUser = await piService.verifyAccessToken(accessToken);
+            
+            // Check if user exists, if not create new user
+            const store = getStorage();
+            if (!store.users[piUser.pi_id]) {
+              store.users[piUser.pi_id] = {
+                ...piUser,
+                id: piUser.pi_id,
+                createdAt: new Date().toISOString(),
+              };
+            }
+
+            // Generate JWT token for session
+            const token = jwtSign(piUser);
+            
+            return res.status(200).json({ 
+              user: {
+                id: piUser.pi_id,
+                username: piUser.username,
+                email: piUser.email,
+              },
+              token 
+            });
+          } catch (err) {
+            console.error("Authentication failed:", err);
+            return res.status(500).json({ 
+              message: `Failed to verify Pi Network access token: ${err.message || 'Unknown error'}` 
+            });
+          }
+        }
+
+        return res.status(400).json({ message: "Invalid action for /api/users" });
+      }
+      
+      if (method === "GET") {
+        const { action } = req.query || {};
+        const token = req.headers.authorization?.split(" ")[1];
+        
+        if (action === "me") {
+          if (!token) return res.status(401).json({ message: "No token provided" });
+
+          try {
+            const decoded = jwtVerify(token);
+            const store = getStorage();
+            const user = store.users[decoded.pi_id];
+            if (!user) return res.status(404).json({ message: "User not found" });
+
+            return res.status(200).json({
+              id: user.id,
+              username: user.username,
+              email: user.email,
+            });
+          } catch (err) {
+            console.error("Token verification failed:", err);
+            return res.status(401).json({ message: "Invalid token" });
+          }
+        }
+        
+        return res.status(400).json({ message: "Invalid action for /api/users" });
+      }
+      
+      return res.status(405).json({ message: "Method not allowed for /api/users" });
+    }
+
     // ========= /api/pi-price =========
     if (url.includes("/pi-price")) {
       if (method === "GET") {
@@ -77,6 +274,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       message: "B4U Esports Unified API Online",
       endpoints: [
+        "/api/users",
         "/api/pi-price",
         "/api/health"
       ]
