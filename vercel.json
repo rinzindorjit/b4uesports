@@ -14,31 +14,31 @@
   "rewrites": [
     {
       "source": "/api/payments",
-      "destination": "/api/payments.js"
+      "destination": "/api/dist/payments.js"
     },
     {
       "source": "/api/transactions",
-      "destination": "/api/transactions.js"
+      "destination": "/api/dist/transactions.js"
     },
     {
       "source": "/api/packages",
-      "destination": "/api/packages.js"
+      "destination": "/api/dist/packages.js"
     },
     {
       "source": "/api/pi-price",
-      "destination": "/api/pi-price.js"
+      "destination": "/api/dist/pi-price.js"
     },
     {
       "source": "/api/health",
-      "destination": "/api/health.js"
+      "destination": "/api/dist/health.js"
     },
     {
       "source": "/api/test",
-      "destination": "/api/test.js"
+      "destination": "/api/dist/test.js"
     },
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "destination": "/api/dist/index.js"
     },
     {
       "source": "/(.*)",

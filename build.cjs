@@ -9,29 +9,25 @@ try {
     stdio: 'inherit' 
   });
   
-  // Compile API TypeScript files to JavaScript in the api directory
+  // Compile API TypeScript files to JavaScript in the api/dist directory
   console.log('Compiling API files...');
   const apiSourceDir = join(process.cwd(), 'api');
+  const apiOutputDir = join(apiSourceDir, 'dist');
+  
+  // Create output directory if it doesn't exist
+  if (!existsSync(apiOutputDir)) {
+    mkdirSync(apiOutputDir, { recursive: true });
+    console.log(`Created output directory: ${apiOutputDir}`);
+  }
   
   // Get all .ts files in the api directory
   const files = readdirSync(apiSourceDir);
   const tsFiles = files.filter(file => file.endsWith('.ts'));
   
-  // Remove any existing .js files in the api directory to prevent conflicts
-  const existingJsFiles = files.filter(file => file.endsWith('.js'));
-  if (existingJsFiles.length > 0) {
-    console.log('Removing existing JavaScript files:', existingJsFiles);
-    for (const file of existingJsFiles) {
-      const filePath = join(apiSourceDir, file);
-      unlinkSync(filePath);
-      console.log(`Removed ${filePath}`);
-    }
-  }
-  
-  // Compile each TypeScript file individually to the same api directory
+  // Compile each TypeScript file individually to the output directory
   for (const file of tsFiles) {
     const sourcePath = join(apiSourceDir, file);
-    const destPath = join(apiSourceDir, file.replace('.ts', '.js'));
+    const destPath = join(apiOutputDir, file.replace('.ts', '.js'));
     
     console.log(`Compiling ${file} to ${destPath}...`);
     // Use CommonJS format for Vercel compatibility
@@ -47,14 +43,30 @@ try {
     }
   }
   
+  // Copy all non-TypeScript files to the output directory
+  const nonTsFiles = files.filter(file => !file.endsWith('.ts') && !file.endsWith('.json') && !file.endsWith('.md'));
+  for (const file of nonTsFiles) {
+    const sourcePath = join(apiSourceDir, file);
+    const destPath = join(apiOutputDir, file);
+    
+    // Check if source file exists and is a file (not a directory)
+    if (existsSync(sourcePath)) {
+      const stats = statSync(sourcePath);
+      if (stats.isFile()) {
+        copyFileSync(sourcePath, destPath);
+        console.log(`Copied ${file} to ${destPath}`);
+      }
+    }
+  }
+  
   // Post-process compiled files to fix import extensions
-  const updatedFiles = readdirSync(apiSourceDir);
+  const updatedFiles = readdirSync(apiOutputDir);
   const compiledJsFiles = updatedFiles.filter(file => file.endsWith('.js'));
   
   console.log('Compiled JS files:', compiledJsFiles);
   
   for (const file of compiledJsFiles) {
-    const filePath = join(apiSourceDir, file);
+    const filePath = join(apiOutputDir, file);
     let content = readFileSync(filePath, 'utf8');
     
     // Check for various import patterns that might need .js extension fixes
@@ -82,6 +94,21 @@ try {
         console.log(`Fixed import extensions in ${file} (Pattern 3)`);
       }
     }
+    
+    // Also fix imports that reference the dist directory
+    content = content.replace(/from "\.\/([^"]+)"/g, (match, p1) => {
+      if (!p1.endsWith('.js')) {
+        return `from "./${p1}.js"`;
+      }
+      return match;
+    });
+    
+    content = content.replace(/from '\.\/([^']+)'/g, (match, p1) => {
+      if (!p1.endsWith('.js')) {
+        return `from './${p1}.js'`;
+      }
+      return match;
+    });
     
     // Write the file only if content was changed
     writeFileSync(filePath, content, 'utf8');
