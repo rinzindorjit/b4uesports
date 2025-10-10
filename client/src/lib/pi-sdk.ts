@@ -45,9 +45,6 @@ export class PiSDK {
 
   // ✅ Enhanced initialization with dynamic SDK loading
   async init(sandbox: boolean = process.env.VITE_PI_SANDBOX === 'true'): Promise<void> {
-    console.log('🔍 Checking VITE_PI_SANDBOX env var:', process.env.VITE_PI_SANDBOX);
-    console.log('🔍 VITE_PI_SANDBOX === "true":', process.env.VITE_PI_SANDBOX === 'true');
-    console.log('🔍 Using sandbox mode:', sandbox);
     if (this.initialized) {
       console.log('Pi SDK already initialized');
       return;
@@ -86,9 +83,6 @@ export class PiSDK {
     try {
       if (!this.initialized) {
         const isSandbox = process.env.VITE_PI_SANDBOX === 'true';
-        console.log('🔍 Auth method - VITE_PI_SANDBOX env var:', process.env.VITE_PI_SANDBOX);
-        console.log('🔍 Auth method - VITE_PI_SANDBOX === "true":', process.env.VITE_PI_SANDBOX === 'true');
-        console.log('🔍 Auth method - Using sandbox mode:', isSandbox);
         await this.init(isSandbox);
       }
 
