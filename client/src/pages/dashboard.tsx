@@ -59,7 +59,8 @@ export default function Dashboard() {
       }
       const data = await response.json();
       console.log('Packages fetched:', data); // Debug log
-      return data;
+      // Ensure we always return an array
+      return Array.isArray(data) ? data : [];
     },
     retry: 3, // Retry up to 3 times on failure
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes

@@ -308,7 +308,10 @@ export async function registerRoutes(app: Express): Promise<void> {
       const pricingService = await getPricingService();
       
       const packages = await storage.getActivePackages();
+      console.log('Packages retrieved from storage:', packages); // Debug log
+      
       const currentPiPrice = await pricingService.getCurrentPiPrice();
+      console.log('Current Pi price:', currentPiPrice); // Debug log
 
       const packagesWithPiPricing = packages.map((pkg: any) => ({
         ...pkg,
@@ -316,6 +319,7 @@ export async function registerRoutes(app: Express): Promise<void> {
         currentPiPrice: currentPiPrice,
       }));
 
+      console.log('Packages with Pi pricing:', packagesWithPiPricing); // Debug log
       res.json(packagesWithPiPricing);
     } catch (error) {
       console.error('Packages fetch error:', error);
