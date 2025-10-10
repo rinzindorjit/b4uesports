@@ -19,13 +19,17 @@ router.get("/pi-price", async (_req, res) => {
       throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`);
     }
 
+    // Validate Content-Type header from CoinGecko
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error(`CoinGecko returned invalid content type: ${contentType}`);
+    }
+
     // Use safer approach to parse JSON - let the fetch API handle it first
     let data;
     try {
       data = await response.json();
     } catch (parseError: any) {
-      const text = await response.text();
-      console.error("CoinGecko returned non-JSON:", text);
       throw new Error(`Invalid JSON from CoinGecko: ${parseError.message}`);
     }
 
@@ -33,14 +37,16 @@ router.get("/pi-price", async (_req, res) => {
 
     if (typeof price !== "number") throw new Error("Invalid price data");
 
+    // Always return valid JSON
     return res.status(200).json({
       price,
       lastUpdated: new Date().toISOString(),
     });
   } catch (error) {
+    // Log errors outside the response body
     console.error("Failed to fetch Pi price:", error);
     
-    // Fallback to fixed price if API fails
+    // Fallback to fixed price if API fails - always return valid JSON
     const fixedPrice = 0.24069;
     return res.status(200).json({
       price: fixedPrice,
