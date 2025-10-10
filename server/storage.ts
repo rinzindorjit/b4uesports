@@ -26,22 +26,17 @@ const mockPriceHistory: PiPriceHistory[] = [];
 // Initialize with default packages if empty
 function initializeMockPackages() {
   if (mockPackages.length === 0) {
-    // PUBG packages
+    // PUBG packages - removed specified packages
     const pubgPackages = [
-      { amount: 325, usdtValue: 6.5 },
-      { amount: 660, usdtValue: 12.0 },
       { amount: 1800, usdtValue: 25.0 },
       { amount: 3850, usdtValue: 49.0 },
       { amount: 8100, usdtValue: 96.0 },
       { amount: 16200, usdtValue: 186.0 },
       { amount: 24300, usdtValue: 278.0 },
-      { amount: 32400, usdtValue: 369.0 },
-      { amount: 40500, usdtValue: 459.0 },
     ];
     
-    // MLBB packages
+    // MLBB packages - removed specified packages
     const mlbbPackages = [
-      { amount: 278, usdtValue: 6.0 },
       { amount: 571, usdtValue: 11.0 },
       { amount: 1783, usdtValue: 33.0 },
       { amount: 3005, usdtValue: 52.0 },

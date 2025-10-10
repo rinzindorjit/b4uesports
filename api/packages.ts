@@ -5,34 +5,7 @@ const store = {
   users: {},
   transactions: [],
   packages: [
-    // PUBG Packages
-    { 
-      id: 'pubg-1', 
-      game: 'PUBG', 
-      name: '60 UC Pack', 
-      inGameAmount: 60, 
-      usdtValue: '1.5000',
-      image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
-      isActive: true 
-    },
-    { 
-      id: 'pubg-2', 
-      game: 'PUBG', 
-      name: '325 UC Pack', 
-      inGameAmount: 325, 
-      usdtValue: '6.5000',
-      image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
-      isActive: true 
-    },
-    { 
-      id: 'pubg-3', 
-      game: 'PUBG', 
-      name: '660 UC Pack', 
-      inGameAmount: 660, 
-      usdtValue: '12.0000',
-      image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
-      isActive: true 
-    },
+    // PUBG Packages - removed specified packages
     { 
       id: 'pubg-4', 
       game: 'PUBG', 
@@ -78,43 +51,7 @@ const store = {
       image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
       isActive: true 
     },
-    { 
-      id: 'pubg-9', 
-      game: 'PUBG', 
-      name: '32400 UC Pack', 
-      inGameAmount: 32400, 
-      usdtValue: '369.0000',
-      image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
-      isActive: true 
-    },
-    { 
-      id: 'pubg-10', 
-      game: 'PUBG', 
-      name: '40500 UC Pack', 
-      inGameAmount: 40500, 
-      usdtValue: '459.0000',
-      image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png',
-      isActive: true 
-    },
-    // MLBB Packages
-    { 
-      id: 'mlbb-1', 
-      game: 'MLBB', 
-      name: '56 Diamonds Pack', 
-      inGameAmount: 56, 
-      usdtValue: '3.0000',
-      image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png',
-      isActive: true 
-    },
-    { 
-      id: 'mlbb-2', 
-      game: 'MLBB', 
-      name: '278 Diamonds Pack', 
-      inGameAmount: 278, 
-      usdtValue: '6.0000',
-      image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png',
-      isActive: true 
-    },
+    // MLBB Packages - removed specified packages
     { 
       id: 'mlbb-3', 
       game: 'MLBB', 
@@ -164,11 +101,17 @@ const store = {
   payments: [],
 };
 
+// Helper function to calculate Pi amount from USD value
+function calculatePiAmount(usdValue, piPrice) {
+  if (!usdValue || !piPrice) return null;
+  return usdValue / piPrice;
+}
+
 function getStorage() {
   return store;
 }
 
-function handler(req, res) {
+async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -180,8 +123,24 @@ function handler(req, res) {
 
   try {
     if (method === "GET") {
-      // Return the packages array directly instead of wrapping it in an object
-      return res.status(200).json(store.packages);
+      // Get current Pi price
+      let piPrice = 0.24069; // Default fallback price
+      try {
+        const piPriceResponse = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4');
+        const piPriceData = await piPriceResponse.json();
+        piPrice = piPriceData['pi-network']?.usd || piPrice;
+      } catch (error) {
+        console.error('Failed to fetch Pi price for packages:', error);
+      }
+      
+      // Add Pi pricing information to packages
+      const packagesWithPricing = store.packages.map(pkg => ({
+        ...pkg,
+        piPrice: calculatePiAmount(parseFloat(pkg.usdtValue), piPrice),
+        currentPiPrice: piPrice
+      }));
+      
+      return res.status(200).json(packagesWithPricing);
     }
     return res.status(405).json({ message: "Only GET allowed for /api/packages" });
   } catch (err) {

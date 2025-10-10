@@ -217,9 +217,6 @@ export default function PurchaseModal({ isOpen, onClose, package: pkg }: Purchas
                 <p className="text-2xl font-bold text-primary">
                   {pkg.piPrice?.toFixed(2)} π
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  ≈ ${(parseFloat(pkg.usdtValue) || 0).toFixed(2)} USD
-                </p>
               </div>
               
               <div className="bg-blue-500/20 border border-blue-500 rounded-lg p-3 mb-4">
