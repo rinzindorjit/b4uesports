@@ -3,12 +3,6 @@ const { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, unlinkS
 const { join } = require('path');
 
 try {
-  // Run the main build command for client
-  console.log('Running client build...');
-  execSync('npx vite build', { 
-    stdio: 'inherit' 
-  });
-  
   // Compile API TypeScript files to JavaScript in the api/dist directory
   console.log('Compiling API files...');
   const apiSourceDir = join(process.cwd(), 'api');

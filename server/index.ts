@@ -2,7 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
 import { createServer, type Server } from "http";
 import { registerRoutes } from "./routes.js";
-import { setupVite, serveStatic, log } from "./vite.js";
+import { serveStatic, log } from "./static.js";
 import { initializePackages } from "./utils/initialize-packages.js";
 import { updatePackageImages } from "./utils/update-package-images.js";
 
@@ -71,7 +71,7 @@ if (isDevelopment && !isVercel) {
     await updatePackageImages();
   }
   
-  // Register API routes BEFORE setting up Vite in development
+  // Register API routes
   await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -87,14 +87,8 @@ if (isDevelopment && !isVercel) {
   // In Vercel environment, we don't need to start the server
   // Vercel will handle the serverless functions directly
   if (!isVercel) {
-    // importantly only setup vite in development and after
-    // setting up all the other routes so the catch-all route
-    // doesn't interfere with the other routes
-    if (isDevelopment) {
-      await setupVite(app, server);
-    } else {
-      serveStatic(app);
-    }
+    // Serve static files
+    serveStatic(app);
 
     // ALWAYS serve the app on the port specified in the environment variable PORT
     // Other ports are firewalled. Default to 5000 if not specified.

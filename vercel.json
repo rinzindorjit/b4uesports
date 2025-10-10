@@ -3,8 +3,7 @@
   "buildCommand": "npm run build-deploy",
   "outputDirectory": "dist",
   "env": {
-    "PI_SANDBOX": "true",
-    "VITE_PI_SANDBOX": "true"
+    "PI_SANDBOX": "true"
   },
   "rewrites": [
     {
