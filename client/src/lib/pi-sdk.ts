@@ -44,7 +44,7 @@ export class PiSDK {
   }
 
   // ✅ Enhanced initialization with dynamic SDK loading
-  async init(sandbox: boolean = process.env.NODE_ENV !== 'production'): Promise<void> {
+  async init(sandbox: boolean = process.env.PI_SANDBOX === 'true'): Promise<void> {
     if (this.initialized) {
       console.log('Pi SDK already initialized');
       return;
@@ -82,7 +82,7 @@ export class PiSDK {
   ): Promise<{ accessToken: string; user: { uid: string; username: string; wallet_address?: string } } | null> {
     try {
       if (!this.initialized) {
-        const isSandbox = process.env.NODE_ENV !== 'production';
+        const isSandbox = process.env.PI_SANDBOX === 'true';
         await this.init(isSandbox);
       }
 
@@ -151,36 +151,34 @@ export class PiSDK {
     window.Pi.createPayment(paymentData, callbacks);
   }
 
-  // ✅ New method for direct wallet transactions
-  async sendTransaction(
+  // ✅ New method for request-based payments with server-side approval
+  async requestPayment(
     amount: string,
-    memo: string,
-    recipient: string = "GA67F4RLREQP6KLEVMTBJDHKDWOGNX5DBKKGDNHR5S6QAALISFL3LEDZ" // Default to your app wallet
+    memo: string
   ): Promise<any> {
     if (!this.initialized || !window.Pi) {
       throw new Error('Pi SDK not initialized. Please use Pi Browser and refresh the page.');
     }
 
-    // ✅ Ensure user has "payments" scope before sending transaction
+    // ✅ Ensure user has "payments" scope before requesting payment
     if (!this.hasScope('payments')) {
-      throw new Error('Cannot send transaction without "payments" scope. Please re-authenticate.');
+      throw new Error('Cannot request payment without "payments" scope. Please re-authenticate.');
     }
 
     try {
-      console.log('💰 Sending Pi transaction:', { amount, recipient, memo });
+      console.log('💰 Requesting Pi payment:', { amount, memo });
       const result = await window.Pi.request({
-        method: "pi_sendTransaction",
+        method: "pi_requestPayment",
         params: {
           amount: amount,
-          recipient: recipient,
           memo: memo
         }
       });
       
-      console.log('✅ Transaction result:', result);
+      console.log('✅ Payment request result:', result);
       return result;
     } catch (error) {
-      console.error('❌ Transaction failed:', error);
+      console.error('❌ Payment request failed:', error);
       throw error;
     }
   }

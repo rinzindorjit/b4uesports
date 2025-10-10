@@ -166,7 +166,7 @@ The application uses the following environment variables for Pi Network integrat
 
 ```env
 # Pi Network Server API Key (required for payment processing)
-PI_SERVER_API_KEY=your_pi_server_api_key
+PI_API_KEY=your_pi_api_key
 
 # Pi Network Sandbox Mode
 # true = Testnet (development)
@@ -181,6 +181,22 @@ JWT_SECRET=your_secure_jwt_secret
 
 - **Testnet (Sandbox: true)**: Uses `https://sandbox.minepi.com/v2` endpoints for safe testing
 - **Mainnet (Sandbox: false)**: Uses `https://api.minepi.com/v2` endpoints for real transactions
+
+### Payment Flow
+
+The payment flow follows Pi Network's recommended approach with server-side approval:
+
+1. Client initiates payment using `Pi.createPayment` method
+2. Pi Network calls `onReadyForServerApproval` callback with a paymentId
+3. Client sends paymentId to server for approval
+4. Server approves payment by calling Pi Network API endpoint `/payments/{payment_id}/approve`
+5. Pi Network processes the blockchain transaction
+6. Pi Network calls `onReadyForServerCompletion` callback with transaction details
+7. Server completes the payment process and user receives confirmation
+
+### Wallet Address
+
+All payments are sent to the app's wallet address: `GA67F4RLREQP6KLEVMTBJDHKDWOGNX5DBKKGDNHR5S6QAALISFL3LEDZ`
 
 ## Getting Started
 

@@ -10,7 +10,7 @@ interface PiNetworkContextType {
   authenticate: () => Promise<void>;
   logout: () => void;
   createPayment: (paymentData: PaymentData, callbacks: PaymentCallbacks) => void;
-  sendTransaction: (amount: string, memo: string, recipient?: string) => Promise<any>; // ✅ Add new function type
+  requestPayment: (amount: string, memo: string) => Promise<any>; // ✅ Add new function type
   token: string | null;
 }
 
@@ -132,7 +132,8 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
 
       // Ensure Pi SDK is initialized before authentication
       if (!piSDK.isInitialized()) {
-        await piSDK.init(true); // Initialize with sandbox mode for Testnet
+        const isSandbox = process.env.PI_SANDBOX === 'true';
+        await piSDK.init(isSandbox); // Initialize with sandbox mode for Testnet
       }
 
       // Authenticate with Pi Network using required scopes
@@ -378,34 +379,55 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
     piSDK.createPayment(enhancedPaymentData, enhancedCallbacks);
   };
 
-  // ✅ New function for direct wallet transactions
-  const sendTransaction = async (amount: string, memo: string, recipient?: string) => {
+  // ✅ New function for request-based payments with server-side approval
+  const requestPayment = async (amount: string, memo: string) => {
     if (!isAuthenticated || !user) {
       throw new Error('User not authenticated');
     }
 
     try {
-      const result = await piSDK.sendTransaction(amount, memo, recipient);
+      // First, request the payment from the user
+      const result = await piSDK.requestPayment(amount, memo);
       
-      if (result && result.approved) {
-        toast({
-          title: "✅ Payment Successful",
-          description: "Your payment was processed successfully!",
+      if (result && result.transaction_id) {
+        console.log('Payment requested, now approving with server:', result.transaction_id);
+        
+        // Then, send to server for approval
+        const response = await apiRequest('POST', '/api/payments', {
+          action: 'approve',
+          data: { 
+            transaction_id: result.transaction_id,
+            amount: amount,
+            recipient: "GA67F4RLREQP6KLEVMTBJDHKDWOGNX5DBKKGDNHR5S6QAALISFL3LEDZ",
+            memo: memo
+          }
         });
         
-        // Refresh user data to update transaction history
-        refreshUserData();
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(`Server approval failed: ${errorData.error || response.statusText}`);
+        }
+        
+        const approvalData = await response.json();
+        console.log('Server approval response:', approvalData);
+        
+        if (approvalData && approvalData.status === 'approved') {
+          toast({
+            title: "✅ Payment Successful",
+            description: "Your payment was processed successfully!",
+          });
+          
+          // Refresh user data to update transaction history
+          refreshUserData();
+          return approvalData;
+        } else {
+          throw new Error('Payment approval failed');
+        }
       } else {
-        toast({
-          title: "Payment Expired",
-          description: "The payment process has timed out. No funds were moved from your wallet.",
-          variant: "destructive",
-        });
+        throw new Error('Payment request failed - no transaction ID received');
       }
-      
-      return result;
     } catch (error: any) {
-      console.error('Transaction failed:', error);
+      console.error('Payment failed:', error);
       toast({
         title: "Payment Failed",
         description: error.message || "An error occurred during payment processing. Please try again.",
@@ -439,7 +461,7 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       authenticate,
       logout,
       createPayment,
-      sendTransaction, // ✅ Add the new function to the context
+      requestPayment,
       token,
     }}>
       {children}
