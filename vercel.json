@@ -8,27 +8,27 @@
   "rewrites": [
     {
       "source": "/api/payments",
-      "destination": "/api/dist/payments.js"
+      "destination": "/api/payments.js"
     },
     {
       "source": "/api/transactions",
-      "destination": "/api/dist/transactions.js"
+      "destination": "/api/transactions.js"
     },
     {
       "source": "/api/packages",
-      "destination": "/api/dist/packages.js"
+      "destination": "/api/packages.js"
     },
     {
       "source": "/api/pi-price",
-      "destination": "/api/dist/pi-price.js"
+      "destination": "/api/pi-price.js"
     },
     {
       "source": "/api/health",
-      "destination": "/api/dist/health.js"
+      "destination": "/api/health.js"
     },
     {
       "source": "/api/(.*)",
-      "destination": "/api/dist/index.js"
+      "destination": "/api/index.js"
     },
     {
       "source": "/(.*)",
