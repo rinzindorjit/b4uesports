@@ -1,6 +1,18 @@
 // @ts-nocheck
 import fetch from 'node-fetch';
 
+// Debug logging for sandbox detection
+console.log("🔍 DEBUG: process.env.PI_SANDBOX raw value:", process.env.PI_SANDBOX);
+
+const PI_SANDBOX = String(process.env.PI_SANDBOX || "").toLowerCase() === "true";
+console.log("🔍 DEBUG: PI_SANDBOX boolean value:", PI_SANDBOX);
+
+const PI_SERVER_URL = PI_SANDBOX
+  ? "https://sandbox.minepi.com/v2"
+  : "https://api.minepi.com/v2";
+
+console.log("🔍 DEBUG: PI_SERVER_URL:", PI_SERVER_URL);
+
 // Utility functions for reading request body
 async function readBody(req) {
   return new Promise((resolve, reject) => {
