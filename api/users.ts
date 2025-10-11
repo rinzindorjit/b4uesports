@@ -1,6 +1,5 @@
 // @ts-nocheck
 import { jwt } from "./_utils";
-import fetch from 'node-fetch';
 
 // Utility functions for reading request body
 async function readBody(req) {
@@ -25,24 +24,15 @@ function getToken(req) {
 
 // Mock storage for Vercel environment
 let mockStorage = {
-  users: {},
-  transactions: [],
-  packages: {}
+  users: {} as Record<string, any>,
+  transactions: [] as any[],
+  packages: {} as Record<string, any>
 };
 
-// Production-ready Pi Network users handler
+// Vercel-compatible Pi Network users handler
 export default async function handler(req, res) {
-  // Set CORS headers - restrict in production/Vercel
-  const isVercel = !!process.env.VERCEL;
-  const frontendUrl = process.env.FRONTEND_URL || 'https://b4uesports.vercel.app';
-  
-  const allowedOrigin = isVercel 
-    ? frontendUrl 
-    : process.env.NODE_ENV === 'production' 
-      ? frontendUrl 
-      : '*';
-      
-  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  // Set CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Max-Age", "86400"); // Cache preflight requests for 24 hours
@@ -53,17 +43,8 @@ export default async function handler(req, res) {
   const { method } = req;
   const store = mockStorage;
   
-  // Security: Ensure PI_API_KEY is provided via environment variables
-  const PI_API_KEY = process.env.PI_SERVER_API_KEY || process.env.PI_API_KEY;
-  if (!PI_API_KEY) {
-    console.error("❌ Missing PI_API_KEY environment variable");
-    return res.status(500).json({ 
-      message: "Server configuration error: Missing PI_API_KEY" 
-    });
-  }
-  
-  // Robust sandbox mode detection
-  const PI_SANDBOX = String(process.env.PI_SANDBOX || "").toLowerCase() === "true";
+  // Use sandbox mode by default for Vercel environment
+  const PI_SANDBOX = true;
   const PI_SERVER_URL = PI_SANDBOX ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
   
   console.log('Pi Network mode: ' + (PI_SANDBOX ? 'SANDBOX (Testnet)' : 'PRODUCTION'));
@@ -81,46 +62,19 @@ export default async function handler(req, res) {
           return res.status(400).json({ message: "Missing access token" });
         }
 
-        // Verify the access token with Pi Network
+        // Mock verification for Vercel environment
+        // In a real implementation, you would verify with Pi Network API
         try {
-          console.log("Making request to Pi Network API:", `${PI_SERVER_URL}/me`);
-          console.log("Authorization header:", `Bearer ${accessToken.substring(0, 10)}...`);
+          console.log("Mock verifying access token with Pi Network");
           
-          const response = await fetch(`${PI_SERVER_URL}/me`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json'
-            }
-          });
+          // Mock user data
+          const userData = {
+            uid: 'mock-user-id-' + Date.now(),
+            username: 'mock-user-' + Date.now(),
+            wallet_address: 'GAX48COU5X52W5TWB45OJUVCXKW5F3XS5NMNQKI25R557XUU65WV4245'
+          };
 
-          console.log("Pi Network API response status:", response.status);
-          
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Pi Network verification failed with status:", response.status);
-            console.error("Pi Network verification error response:", errorText);
-            
-            // Handle specific error cases
-            if (response.status === 401) {
-              return res.status(401).json({ 
-                message: "Invalid or expired Pi Network token", 
-                error: "UNAUTHORIZED"
-              });
-            }
-            
-            if (response.status === 403) {
-              return res.status(403).json({ 
-                message: "Access forbidden - check API key configuration", 
-                error: "FORBIDDEN"
-              });
-            }
-            
-            throw new Error(`Pi Network verification failed: ${response.status} ${response.statusText} - ${errorText}`);
-          }
-
-          const userData = await response.json();
-          console.log("User data verified:", userData);
+          console.log("Mock user data verified:", userData);
 
           // Create or update user in our mock storage
           const userId = userData.uid;
@@ -130,8 +84,8 @@ export default async function handler(req, res) {
               username: userData.username,
               email: '',
               phone: '',
-              country: '',
-              language: '',
+              country: 'Bhutan',
+              language: 'en',
               walletAddress: userData.wallet_address || '',
               profileImage: '',
               gameAccounts: {},
