@@ -48,7 +48,7 @@ export default async function handler(req, res) {
   const store = mockStorage;
   
   // Security: Ensure PI_API_KEY is provided via environment variables
-  const PI_API_KEY = process.env.PI_API_KEY;
+  const PI_API_KEY = process.env.PI_SERVER_API_KEY || process.env.PI_API_KEY;
   if (!PI_API_KEY) {
     console.error("❌ Missing PI_API_KEY environment variable");
     return res.status(500).json({ 
@@ -77,19 +77,40 @@ export default async function handler(req, res) {
 
         // Verify the access token with Pi Network
         try {
+          console.log("Making request to Pi Network API:", `${PI_SERVER_URL}/me`);
+          console.log("Authorization header:", `Bearer ${accessToken.substring(0, 10)}...`);
+          
           const response = await fetch(`${PI_SERVER_URL}/me`, {
             method: 'GET',
             headers: {
               'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json'
-              // Removed X-API-Key header as it's not needed for /me endpoint
             }
           });
 
+          console.log("Pi Network API response status:", response.status);
+          
           if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error("Pi Network verification failed:", errorData);
-            throw new Error(`Pi Network verification failed: ${response.status} ${response.statusText}`);
+            const errorText = await response.text();
+            console.error("Pi Network verification failed with status:", response.status);
+            console.error("Pi Network verification error response:", errorText);
+            
+            // Handle specific error cases
+            if (response.status === 401) {
+              return res.status(401).json({ 
+                message: "Invalid or expired Pi Network token", 
+                error: "UNAUTHORIZED"
+              });
+            }
+            
+            if (response.status === 403) {
+              return res.status(403).json({ 
+                message: "Access forbidden - check API key configuration", 
+                error: "FORBIDDEN"
+              });
+            }
+            
+            throw new Error(`Pi Network verification failed: ${response.status} ${response.statusText} - ${errorText}`);
           }
 
           const userData = await response.json();
@@ -124,7 +145,7 @@ export default async function handler(req, res) {
             username: userData.username
           }, process.env.JWT_SECRET || 'fallback-secret');
           
-          console.log("JWT token generated");
+          console.log("JWT token generated for user:", userData.username);
           return res.status(200).json({ 
             message: "User authenticated", 
             user: store.users[userId], 
@@ -132,8 +153,8 @@ export default async function handler(req, res) {
           });
         } catch (error) {
           console.error("Authentication error:", error.stack || error);
-          return res.status(401).json({ 
-            message: "Invalid Pi Network token", 
+          return res.status(500).json({ 
+            message: "Authentication verification failed", 
             error: error.message 
           });
         }
