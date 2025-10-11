@@ -1,6 +1,6 @@
 import express from 'express';
 import serverless from 'serverless-http';
-import { registerRoutes } from './routes';
+import { registerRoutes } from './routes.js';
 
 // Create Express app
 const app = express();
