@@ -1,24 +1,18 @@
 {
   "version": 2,
-  "routes": [
+  "builds": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/vercel-handler.ts"
+      "src": "api/**/*.ts",
+      "use": "@vercel/node"
     }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1.ts" },
+    { "src": "/(.*)", "dest": "/dist/$1" }
   ],
   "env": {
     "NODE_ENV": "production",
     "FRONTEND_URL": "https://b4uesports.vercel.app",
     "API_URL": "https://b4uesports.vercel.app"
-  },
-  "functions": {
-    "api/vercel-handler.ts": {
-      "runtime": "@vercel/node@4.0.0",
-      "includeFiles": "dist/**,server/**,api/**"
-    }
   }
 }
