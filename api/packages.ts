@@ -19,25 +19,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Mock storage for Vercel environment
   const mockStorage = {
     packages: [
-      // PUBG Packages
-      { id: 'pubg-uc50', game: 'PUBG', name: '50 UC', inGameAmount: 50, usdtValue: '0.99', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 5 },
-      { id: 'pubg-uc100', game: 'PUBG', name: '100 UC', inGameAmount: 100, usdtValue: '1.99', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 10 },
-      { id: 'pubg-uc200', game: 'PUBG', name: '200 UC', inGameAmount: 200, usdtValue: '3.99', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 20 },
-      { id: 'pubg-uc400', game: 'PUBG', name: '400 UC', inGameAmount: 400, usdtValue: '7.99', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 40 },
-      { id: 'pubg-uc800', game: 'PUBG', name: '800 UC', inGameAmount: 800, usdtValue: '15.99', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 80 },
-      { id: 'pubg-uc1600', game: 'PUBG', name: '1600 UC', inGameAmount: 1600, usdtValue: '31.99', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 160 },
-      { id: 'pubg-uc2000', game: 'PUBG', name: '2000 UC', inGameAmount: 2000, usdtValue: '39.99', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 200 },
-      { id: 'pubg-uc4000', game: 'PUBG', name: '4000 UC', inGameAmount: 4000, usdtValue: '79.99', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 400 },
+      // PUBG Packages - Updated to match actual packages with correct piPrice values
+      { id: 'pubg-60', game: 'PUBG', name: '60 UC', inGameAmount: 60, usdtValue: '1.5000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 6 },
+      { id: 'pubg-325', game: 'PUBG', name: '325 UC', inGameAmount: 325, usdtValue: '6.5000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 27 },
+      { id: 'pubg-660', game: 'PUBG', name: '660 UC', inGameAmount: 660, usdtValue: '12.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 50 },
+      { id: 'pubg-1800', game: 'PUBG', name: '1800 UC', inGameAmount: 1800, usdtValue: '25.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 104 },
+      { id: 'pubg-3850', game: 'PUBG', name: '3850 UC', inGameAmount: 3850, usdtValue: '49.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 204 },
+      { id: 'pubg-8100', game: 'PUBG', name: '8100 UC', inGameAmount: 8100, usdtValue: '96.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 399 },
+      { id: 'pubg-16200', game: 'PUBG', name: '16200 UC', inGameAmount: 16200, usdtValue: '186.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 773 },
+      { id: 'pubg-24300', game: 'PUBG', name: '24300 UC', inGameAmount: 24300, usdtValue: '278.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 1155 },
+      { id: 'pubg-32400', game: 'PUBG', name: '32400 UC', inGameAmount: 32400, usdtValue: '369.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 1533 },
+      { id: 'pubg-40500', game: 'PUBG', name: '40500 UC', inGameAmount: 40500, usdtValue: '459.0000', image: 'https://cdn.midasbuy.com/images/apps/pubgm/1599546041426W8hmErMS.png', isActive: true, piPrice: 1907 },
       
-      // MLBB Packages
-      { id: 'mlbb-diamond10', game: 'MLBB', name: '10 Diamond', inGameAmount: 10, usdtValue: '0.99', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 5 },
-      { id: 'mlbb-diamond50', game: 'MLBB', name: '50 Diamond', inGameAmount: 50, usdtValue: '4.99', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 25 },
-      { id: 'mlbb-diamond100', game: 'MLBB', name: '100 Diamond', inGameAmount: 100, usdtValue: '9.99', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 50 },
-      { id: 'mlbb-diamond200', game: 'MLBB', name: '200 Diamond', inGameAmount: 200, usdtValue: '19.99', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 100 },
-      { id: 'mlbb-diamond400', game: 'MLBB', name: '400 Diamond', inGameAmount: 400, usdtValue: '39.99', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 200 },
-      { id: 'mlbb-diamond800', game: 'MLBB', name: '800 Diamond', inGameAmount: 800, usdtValue: '79.99', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 400 },
-      { id: 'mlbb-diamond1000', game: 'MLBB', name: '1000 Diamond', inGameAmount: 1000, usdtValue: '99.99', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 500 },
-      { id: 'mlbb-diamond2000', game: 'MLBB', name: '2000 Diamond', inGameAmount: 2000, usdtValue: '199.99', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 1000 }
+      // MLBB Packages - Updated to match actual packages with correct piPrice values
+      { id: 'mlbb-56', game: 'MLBB', name: '56 Diamonds', inGameAmount: 56, usdtValue: '3.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 12 },
+      { id: 'mlbb-278', game: 'MLBB', name: '278 Diamonds', inGameAmount: 278, usdtValue: '6.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 25 },
+      { id: 'mlbb-571', game: 'MLBB', name: '571 Diamonds', inGameAmount: 571, usdtValue: '11.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 46 },
+      { id: 'mlbb-1783', game: 'MLBB', name: '1783 Diamonds', inGameAmount: 1783, usdtValue: '33.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 137 },
+      { id: 'mlbb-3005', game: 'MLBB', name: '3005 Diamonds', inGameAmount: 3005, usdtValue: '52.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 216 },
+      { id: 'mlbb-6012', game: 'MLBB', name: '6012 Diamonds', inGameAmount: 6012, usdtValue: '99.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 411 },
+      { id: 'mlbb-12000', game: 'MLBB', name: '12000 Diamonds', inGameAmount: 12000, usdtValue: '200.0000', image: 'https://b4uesports.com/wp-content/uploads/2025/04/1000077486.png', isActive: true, piPrice: 831 }
     ]
   };
 

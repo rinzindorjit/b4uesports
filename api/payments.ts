@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import axios from 'axios';
 
 // Utility functions for reading request body
 async function readBody(req: VercelRequest): Promise<any> {
@@ -15,12 +16,11 @@ async function readBody(req: VercelRequest): Promise<any> {
   });
 }
 
-// Mock storage for Vercel environment
-let mockStorage = {
-  users: {} as Record<string, any>,
-  transactions: [] as any[],
-  packages: {} as Record<string, any>
-};
+// Determine if we're in sandbox (Testnet) mode
+const isSandbox = process.env.PI_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
+const PI_API_BASE_URL = isSandbox ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
+
+console.log(`Pi Network service initialized in ${isSandbox ? 'SANDBOX (Testnet)' : 'PRODUCTION (Mainnet)'} mode`);
 
 // Vercel-compatible Pi Network payments handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -40,12 +40,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ message: "Method not allowed. Only POST requests are allowed." });
   }
 
-  // Use sandbox mode by default for Vercel environment
-  const PI_SANDBOX = true;
-  const PI_SERVER_URL = PI_SANDBOX ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
-  
-  console.log('Pi Network mode: ' + (PI_SANDBOX ? 'SANDBOX (Testnet)' : 'PRODUCTION'));
-  console.log('Pi Network endpoint: ' + PI_SERVER_URL);
+  console.log('Pi Network mode: ' + (isSandbox ? 'SANDBOX (Testnet)' : 'PRODUCTION'));
+  console.log('Pi Network endpoint: ' + PI_API_BASE_URL);
 
   try {
     // Parse request body
@@ -55,6 +51,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Validate action parameter
     if (!action) {
       return res.status(400).json({ message: "Missing action parameter" });
+    }
+
+    // Check if PI_SERVER_API_KEY is configured
+    const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
+    if (!PI_SERVER_API_KEY) {
+      console.error('PI_SERVER_API_KEY is not configured in environment variables');
+      return res.status(500).json({ 
+        message: 'Payment service not properly configured. Please contact administrator.' 
+      });
     }
 
     switch (action) {
@@ -67,26 +72,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
           const { paymentId } = data;
           
-          console.log('Mock approving payment: ' + paymentId);
+          console.log('Approving payment: ' + paymentId);
 
-          // Mock approval - in a real implementation, you would call the Pi Network API
-          const approvalData = {
-            paymentId,
-            status: 'approved',
-            timestamp: new Date().toISOString()
-          };
+          // Approve payment with Pi Network
+          const response = await axios.post(
+            `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
+            {},
+            {
+              headers: {
+                'Authorization': `Key ${PI_SERVER_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
           
-          console.log('Payment approved: ' + paymentId);
+          console.log(`✅ Payment approved on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId);
           return res.json({
             message: "Payment approved successfully",
-            payment: approvalData,
+            payment: response.data,
             status: "approved"
           });
         } catch (error: any) {
-          console.error("❌ Approval error:", error.stack || error);
+          console.error("❌ Approval error:", error.response?.data || error.message);
           return res.status(500).json({ 
             message: "Payment approval failed",
-            error: error.message 
+            error: error.response?.data || error.message 
           });
         }
 
@@ -101,27 +111,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
           const { paymentId, txid } = data;
           
-          console.log('Mock completing payment: ' + paymentId + ' with txid: ' + txid);
+          console.log('Completing payment: ' + paymentId + ' with txid: ' + txid);
 
-          // Mock completion - in a real implementation, you would call the Pi Network API
-          const completionData = {
-            paymentId,
-            txid,
-            status: 'completed',
-            timestamp: new Date().toISOString()
-          };
+          // Complete payment with Pi Network
+          const response = await axios.post(
+            `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
+            { txid },
+            {
+              headers: {
+                'Authorization': `Key ${PI_SERVER_API_KEY}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
           
-          console.log('Payment completed: ' + paymentId);
+          console.log(`✅ Payment completed on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId, "TXID:", txid);
           return res.json({ 
             message: "Payment completed successfully",
-            payment: completionData,
+            payment: response.data,
             status: "completed"
           });
         } catch (error: any) {
-          console.error("❌ Completion error:", error.stack || error);
+          console.error("❌ Completion error:", error.response?.data || error.message);
           return res.status(500).json({ 
             message: "Payment completion failed",
-            error: error.message 
+            error: error.response?.data || error.message 
           });
         }
 
