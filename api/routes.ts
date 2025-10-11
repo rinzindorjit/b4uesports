@@ -249,15 +249,25 @@ export async function registerRoutes(app: Express): Promise<void> {
                   id: piUser.uid,
                   piUID: piUser.uid,
                   username: piUser.username,
-                  email: '',
-                  phone: '',
-                  country: 'Bhutan',
-                  language: 'en',
-                  walletAddress: '', // Will be updated when they make their first transaction
+                  email: piUser.email || '',
+                  phone: piUser.phone || '',
+                  country: piUser.country || 'Bhutan',
+                  language: piUser.language || 'en',
+                  walletAddress: piUser.wallet_address || '', // Will be updated when they make their first transaction
+                  profileImage: piUser.profile_image || '',
                   gameAccounts: {}
                 };
                 mockStorage.users[piUser.uid] = newUser;
                 user = newUser;
+              } else {
+                // Update existing user with latest data from Pi Network
+                user.username = piUser.username;
+                user.email = piUser.email || '';
+                user.phone = piUser.phone || '';
+                user.country = piUser.country || 'Bhutan';
+                user.language = piUser.language || 'en';
+                user.walletAddress = piUser.wallet_address || '';
+                user.profileImage = piUser.profile_image || '';
               }
 
               // Generate JWT token for session

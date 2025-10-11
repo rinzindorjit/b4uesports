@@ -43,16 +43,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Use sandbox mode by default for Vercel environment
-    const PI_SANDBOX = true;
+    const PI_SANDBOX = process.env.PI_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
     const PI_SERVER_URL = PI_SANDBOX ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
     
     console.log('Pi Network mode: ' + (PI_SANDBOX ? 'SANDBOX (Testnet)' : 'PRODUCTION'));
     console.log('Pi Network endpoint: ' + PI_SERVER_URL);
     console.log("Authorization header:", `Bearer ${token.substring(0, 10)}...`);
 
-    // For Vercel environment, we'll use a mock verification
-    // In a real implementation with proper environment variables, you would use:
-    /*
+    // Verify the token with the Pi Network API
     const response = await fetch(`${PI_SERVER_URL}/me`, {
       method: "GET",
       headers: {
@@ -61,23 +59,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     });
 
+    // Check if we got HTML content (which indicates an error)
+    const contentType = response.headers.get('content-type') || '';
+    console.log('Response Content-Type:', contentType);
+    
+    if (contentType.includes('text/html')) {
+      const errorText = await response.text();
+      console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
+      console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
+      return res.status(500).json({ 
+        message: "Pi Network verification failed - received HTML error page",
+        error: "CloudFront blocked the request",
+        status: response.status,
+        details: errorText.substring(0, 1000)
+      });
+    }
+
     const data = await response.json();
     if (!response.ok) {
       console.error("Pi Network verification failed:", response.status, data);
       return res.status(response.status).json(data);
     }
-    */
-
-    // Mock verification for Vercel environment
-    const mockData = {
-      uid: 'mock-user-id-' + Date.now(),
-      username: 'mock-user-' + Date.now(),
-      wallet_address: 'GAX48COU5X52W5TWB45OJUVCXKW5F3XS5NMNQKI25R557XUU65WV4245'
-    };
     
-    console.log("Mock user data verified:", mockData);
+    console.log("User data verified:", data);
     
-    res.status(200).json(mockData);
+    res.status(200).json(data);
   } catch (err: any) {
     console.error("Pi Auth Error:", err);
     res.status(500).json({ 

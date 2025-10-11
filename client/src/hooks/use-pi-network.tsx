@@ -304,37 +304,34 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       const userData = await response.json();
       console.log('Authentication successful, received data:', userData);
       
-      // Create or update user in our mock storage
-      const userId = userData.uid;
-      // In a real implementation, you would store this in a database
-      // For now, we'll create a mock user object
-      const mockUser = {
-        id: userId,
-        username: userData.username,
-        email: '',
-        phone: '',
-        country: 'Bhutan',
-        language: 'en',
+      // Create user object using actual data from Pi Network
+      const actualUser: User = {
+        id: userData.uid,
+        username: userData.username, // Use the actual username from Pi Network
+        email: userData.email || '',
+        phone: userData.phone || '',
+        country: userData.country || 'BT', // Default to Bhutan
+        language: userData.language || 'en',
         walletAddress: userData.wallet_address || '',
-        profileImage: '',
+        profileImage: userData.profile_image || '',
         gameAccounts: {},
         referralCode: ''
       };
 
-      // Generate a mock token for session management
-      const mockToken = btoa(JSON.stringify({ 
-        pi_id: userId,
-        username: userData.username,
+      // Generate a proper token for session management
+      const userToken = btoa(JSON.stringify({ 
+        pi_id: userData.uid,
+        username: userData.username, // Use the actual username from Pi Network
         exp: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
       }));
 
-      setUser(mockUser);
-      setToken(mockToken);
+      setUser(actualUser);
+      setToken(userToken);
       setIsAuthenticated(true);
       
       // Save to localStorage
-      localStorage.setItem('pi_token', mockToken);
-      localStorage.setItem('pi_user', JSON.stringify(mockUser));
+      localStorage.setItem('pi_token', userToken);
+      localStorage.setItem('pi_user', JSON.stringify(actualUser));
       
       // Show success message
       toast({

@@ -1,5 +1,18 @@
 import { jwt } from "./_utils";
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import fetch from 'node-fetch';
+
+// Define the user data interface
+interface PiUserData {
+  uid: string;
+  username: string;
+  email?: string;
+  phone?: string;
+  country?: string;
+  language?: string;
+  wallet_address?: string;
+  profile_image?: string;
+}
 
 // Utility functions for reading request body
 async function readBody(req: VercelRequest): Promise<any> {
@@ -44,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const store = mockStorage;
   
   // Use sandbox mode by default for Vercel environment
-  const PI_SANDBOX = true;
+  const PI_SANDBOX = process.env.PI_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
   const PI_SERVER_URL = PI_SANDBOX ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
   
   console.log('Pi Network mode: ' + (PI_SANDBOX ? 'SANDBOX (Testnet)' : 'PRODUCTION'));
@@ -62,19 +75,44 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           return res.status(400).json({ message: "Missing access token" });
         }
 
-        // Mock verification for Vercel environment
-        // In a real implementation, you would verify with Pi Network API
+        // Real verification with Pi Network API
         try {
-          console.log("Mock verifying access token with Pi Network");
+          console.log("Verifying access token with Pi Network API");
           
-          // Mock user data
-          const userData = {
-            uid: 'mock-user-id-' + Date.now(),
-            username: 'mock-user-' + Date.now(),
-            wallet_address: 'GAX48COU5X52W5TWB45OJUVCXKW5F3XS5NMNQKI25R557XUU65WV4245'
-          };
+          const response = await fetch(`${PI_SERVER_URL}/me`, {
+            method: "GET",
+            headers: {
+              "Authorization": `Bearer ${accessToken}`,
+              "Content-Type": "application/json",
+            }
+          });
 
-          console.log("Mock user data verified:", userData);
+          // Check if we got HTML content (which indicates an error)
+          const contentType = response.headers.get('content-type') || '';
+          console.log('Response Content-Type:', contentType);
+          
+          if (contentType.includes('text/html')) {
+            const errorText = await response.text();
+            console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
+            console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
+            return res.status(500).json({ 
+              message: "Pi Network verification failed - received HTML error page",
+              error: "CloudFront blocked the request",
+              status: response.status,
+              details: errorText.substring(0, 1000)
+            });
+          }
+
+          const userData = await response.json() as PiUserData;
+          if (!response.ok) {
+            console.error("Pi Network verification failed:", response.status, userData);
+            return res.status(response.status).json({ 
+              message: "Pi Network verification failed",
+              error: userData
+            });
+          }
+
+          console.log("User data verified:", userData);
 
           // Create or update user in our mock storage
           const userId = userData.uid;
@@ -82,12 +120,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             store.users[userId] = {
               id: userId,
               username: userData.username,
-              email: '',
-              phone: '',
-              country: 'Bhutan',
-              language: 'en',
+              email: userData.email || '',
+              phone: userData.phone || '',
+              country: userData.country || 'Bhutan',
+              language: userData.language || 'en',
               walletAddress: userData.wallet_address || '',
-              profileImage: '',
+              profileImage: userData.profile_image || '',
               gameAccounts: {},
               referralCode: ''
             };
@@ -97,7 +135,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           store.users[userId] = {
             ...store.users[userId],
             username: userData.username,
-            walletAddress: userData.wallet_address || ''
+            email: userData.email || '',
+            phone: userData.phone || '',
+            country: userData.country || 'Bhutan',
+            language: userData.language || 'en',
+            walletAddress: userData.wallet_address || '',
+            profileImage: userData.profile_image || ''
           };
 
           const token = jwt.sign({ 
