@@ -215,6 +215,21 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
         } catch (error) {
           console.error(`Authentication attempt ${attempts} failed:`, error);
           
+          // Special handling for "Discarding message" error - retry immediately
+          if (error instanceof Error && error.message.includes('Discarding message')) {
+            toast({
+              title: "Pi Browser Issue Detected",
+              description: "Pi Browser app not properly loaded. Retrying authentication...",
+              variant: "destructive",
+            });
+            
+            // Wait a bit longer before retrying this specific error
+            if (attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 5000));
+              continue; // Continue to next attempt without incrementing error count
+            }
+          }
+          
           // If it's a timeout error, don't retry
           if (error instanceof Error && (error.message.includes('timeout') || error.message.includes('User closed'))) {
             throw error;
@@ -316,7 +331,7 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       } else if (errorMessage.includes('Please open this app in the Pi Browser')) {
         errorMessage = "We detected that you might not be using the official Pi Browser app. Please make sure you're using the Pi Browser app from the official Pi Network website or app store. If you are already using the Pi Browser, try refreshing the page.";
       } else if (errorMessage.includes('Discarding message')) {
-        errorMessage = "The Pi Browser app is not properly loaded. Please make sure you are using the official Pi Browser app, close and reopen the app, and try again. If the problem persists, restart your device and try once more.";
+        errorMessage = "The Pi Browser app is not properly loaded. Please close and reopen the Pi Browser app, then try authenticating again. If the problem persists, restart your device and try once more.";
       }
       
       toast({

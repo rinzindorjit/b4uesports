@@ -44,6 +44,42 @@ export class PiSDK {
     return PiSDK.instance;
   }
 
+  // More comprehensive Pi Browser detection
+  private isPiEnvironment(): boolean {
+    if (typeof window === 'undefined') return false;
+    
+    // Check for Pi Browser user agent (multiple variations)
+    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+    const piBrowserIndicators = [
+      'PiBrowser',
+      'Pi Browser',
+      'Pi-Crypto-Browser',
+      'PiNetwork'
+    ];
+    
+    const isPiUserAgent = piBrowserIndicators.some(indicator => 
+      userAgent && userAgent.includes(indicator)
+    );
+    
+    // Check for Pi object on window
+    const hasPiObject = !!(window as any).Pi;
+    
+    // Check for other Pi Browser specific properties
+    const hasPiSpecificProperties = !!(window as any).PiNetwork || 
+                                  !!(window as any).PiBrowser || 
+                                  (window as any).webkit?.messageHandlers?.PiBrowser;
+    
+    console.log('Pi Environment Detection:', {
+      userAgent,
+      isPiUserAgent,
+      hasPiObject,
+      hasPiSpecificProperties
+    });
+    
+    // Return true if any of the indicators are present
+    return isPiUserAgent || hasPiObject || hasPiSpecificProperties;
+  }
+
   // Enhanced initialization with dynamic SDK loading and proper sandbox detection
   async init(sandbox: boolean = true): Promise<void> {
     if (this.initialized) {
@@ -96,42 +132,6 @@ export class PiSDK {
       this.initialized = false;
       throw error;
     }
-  }
-
-  // More comprehensive Pi Browser detection
-  private isPiEnvironment(): boolean {
-    if (typeof window === 'undefined') return false;
-    
-    // Check for Pi Browser user agent (multiple variations)
-    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-    const piBrowserIndicators = [
-      'PiBrowser',
-      'Pi Browser',
-      'Pi-Crypto-Browser',
-      'PiNetwork'
-    ];
-    
-    const isPiUserAgent = piBrowserIndicators.some(indicator => 
-      userAgent && userAgent.includes(indicator)
-    );
-    
-    // Check for Pi object on window
-    const hasPiObject = !!(window as any).Pi;
-    
-    // Check for other Pi Browser specific properties
-    const hasPiSpecificProperties = !!(window as any).PiNetwork || 
-                                  !!(window as any).PiBrowser || 
-                                  (window as any).webkit?.messageHandlers?.PiBrowser;
-    
-    console.log('Pi Environment Detection:', {
-      userAgent,
-      isPiUserAgent,
-      hasPiObject,
-      hasPiSpecificProperties
-    });
-    
-    // Return true if any of the indicators are present
-    return isPiUserAgent || hasPiObject || hasPiSpecificProperties;
   }
 
   // Authenticate and track granted scopes
@@ -199,6 +199,13 @@ export class PiSDK {
     } catch (error: any) {
       console.error('❌ Pi authentication failed:', error);
       
+      // Handle the specific "Discarding message" error
+      if (error.message && error.message.includes('Discarding message')) {
+        // This is a Pi Browser-specific error that often resolves itself with a retry
+        console.log('Detected "Discarding message" error, suggesting retry...');
+        throw new Error('The Pi Browser app is not properly loaded. Please close and reopen the Pi Browser app, then try authenticating again. If the problem persists, restart your device.');
+      }
+      
       // Provide more specific error messages
       let errorMessage = 'Authentication failed. Please try the following:';
       errorMessage += '\n1. Make sure you are using the official Pi Browser app';
@@ -208,8 +215,6 @@ export class PiSDK {
       
       if (error.message && error.message.includes('timeout')) {
         errorMessage = 'Authentication is taking longer than expected. Please check for Pi Browser notification banners and approve the authentication request. If you don\'t see a prompt, try refreshing the page.';
-      } else if (error.message && error.message.includes('Discarding message')) {
-        errorMessage = 'The Pi Browser app is not properly loaded. Please make sure you are using the official Pi Browser app, close and reopen the app, and try again.';
       }
       
       throw new Error(errorMessage);
