@@ -5,6 +5,9 @@ import jwt from 'jsonwebtoken';
 
 import { z } from "zod";
 
+// Import the pi-auth handler
+import piAuthHandler from '../api/pi-auth.js';
+
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';
 
 // Cache for imported modules to avoid repeated imports
@@ -513,6 +516,39 @@ export async function registerRoutes(app: Express): Promise<void> {
           console.error('Transactions fetch error:', error);
           return res.status(500).json({ message: 'Failed to fetch transactions' });
         }
+      });
+
+      // Pi Network authentication endpoint
+      app.post('/api/pi-auth', async (req: Request, res: Response) => {
+        // Create a wrapper to convert Express req/res to Vercel req/res
+        const vercelReq = {
+          method: req.method,
+          headers: req.headers,
+          body: req.body,
+          query: req.query,
+          url: req.url,
+          // Add other properties that might be needed
+        };
+        
+        const vercelRes = {
+          statusCode: res.statusCode,
+          statusMessage: res.statusMessage,
+          headers: {},
+          setHeader: res.setHeader.bind(res),
+          status: (code: number) => {
+            res.status(code);
+            return vercelRes;
+          },
+          json: (data: any) => {
+            return res.json(data);
+          },
+          end: () => {
+            return res.end();
+          }
+        };
+        
+        // Call the Vercel API handler
+        return await piAuthHandler(vercelReq as any, vercelRes as any);
       });
 
       // Pi price endpoint
