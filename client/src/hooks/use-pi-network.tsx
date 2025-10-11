@@ -19,9 +19,12 @@ const PiNetworkContext = createContext<PiNetworkContextType | undefined>(undefin
 
 // Helper function for API requests
 async function apiRequest(method: string, url: string, data?: any) {
-  // Check if we're running on Vercel
-  const isVercel = typeof process !== 'undefined' && !!process.env.VERCEL;
-  const apiUrl = typeof process !== 'undefined' && process.env.VITE_API_URL || '';
+  // Check if we're running on Vercel (safely check for process existence)
+  const isVercel = typeof window !== 'undefined' && (window as any).__env__?.VERCEL === '1';
+  // Fallback to checking if we're in a browser environment
+  const isBrowser = typeof window !== 'undefined';
+  // Use a safer approach for environment detection
+  const apiUrl = isBrowser ? (window as any).__env__?.VITE_API_URL || '' : '';
   
   // Construct full URL for local development, use relative URL for Vercel
   let fullUrl = url;

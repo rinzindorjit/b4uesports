@@ -14,8 +14,8 @@ export async function apiRequest(
 ): Promise<Response> {
   // Ensure the URL is correctly formatted
   // Fallback to empty string if VITE_API_URL is not available
-  const isVercel = typeof process !== 'undefined' && !!process.env.VERCEL;
-  const apiUrl = typeof process !== 'undefined' && process.env.VITE_API_URL || '';
+  const isVercel = typeof window !== 'undefined' && (window as any).__env__?.VERCEL === '1';
+  const apiUrl = typeof window !== 'undefined' ? (window as any).__env__?.VITE_API_URL || '' : '';
   
   // For relative URLs, when deployed to the same domain as the API
   let fullUrl = url;
@@ -63,8 +63,8 @@ export const getQueryFn: <T>(options: {
     const url = queryKey.join("/") as string;
     
     // Fallback to empty string if VITE_API_URL is not available
-    const isVercel = typeof process !== 'undefined' && !!process.env.VERCEL;
-    const apiUrl = typeof process !== 'undefined' && process.env.VITE_API_URL || '';
+    const isVercel = typeof window !== 'undefined' && (window as any).__env__?.VERCEL === '1';
+    const apiUrl = typeof window !== 'undefined' ? (window as any).__env__?.VITE_API_URL || '' : '';
     
     // For relative URLs, when deployed to the same domain as the API
     let fullUrl = url;

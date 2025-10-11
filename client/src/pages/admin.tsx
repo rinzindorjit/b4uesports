@@ -9,7 +9,7 @@ export default function AdminPanel() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <ParticleBackground />
-      <Navigation isTestnet={typeof process !== 'undefined' && process.env.NODE_ENV === 'development'} />
+      <Navigation isTestnet={true} />
       
       {/* Admin Header */}
       <div className="bg-red-900/20 border-b border-red-500/30">
