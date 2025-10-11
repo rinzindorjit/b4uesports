@@ -79,6 +79,39 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     
     try {
+      // Check if we're in the Pi Browser
+      if (typeof window !== 'undefined') {
+        const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+        const isPiBrowser = userAgent && (userAgent.indexOf('PiBrowser') !== -1 || userAgent.indexOf('Pi Browser') !== -1);
+        
+        // Additional check for Pi object
+        const hasPiObject = !!(window as any).Pi;
+        
+        if (!isPiBrowser && !hasPiObject) {
+          throw new Error('Please open this app in the Pi Browser app for authentication to work properly.');
+        }
+        
+        // If we detect we're in Pi Browser but Pi object is not available, wait a bit more
+        if (isPiBrowser && !hasPiObject) {
+          console.log('Detected Pi Browser but Pi object not available yet, waiting...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Check again
+          if (!(window as any).Pi) {
+            console.log('Still waiting for Pi object...');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            if (!(window as any).Pi) {
+              console.warn('Pi object still not available after waiting');
+              toast({
+                title: "Pi SDK Loading",
+                description: "Pi SDK is still loading. Please wait a moment and check for any Pi Browser notification banners.",
+              });
+            }
+          }
+        }
+      }
+      
       // Handle incomplete payments as required by Pi Network
       const onIncompletePaymentFound = (payment: any) => {
         console.log('Incomplete payment found:', payment);
@@ -282,6 +315,8 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
         errorMessage += " Failed to load Pi SDK. Please check your internet connection and make sure you are using the Pi Browser app.";
       } else if (errorMessage.includes('Please open this app in the Pi Browser')) {
         errorMessage = "We detected that you might not be using the official Pi Browser app. Please make sure you're using the Pi Browser app from the official Pi Network website or app store. If you are already using the Pi Browser, try refreshing the page.";
+      } else if (errorMessage.includes('Discarding message')) {
+        errorMessage = "The Pi Browser app is not properly loaded. Please make sure you are using the official Pi Browser app, close and reopen the app, and try again. If the problem persists, restart your device and try once more.";
       }
       
       toast({

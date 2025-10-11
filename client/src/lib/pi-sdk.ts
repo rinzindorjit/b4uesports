@@ -166,6 +166,12 @@ export class PiSDK {
         }
       }
 
+      // Additional check to ensure Pi object is properly initialized
+      if (!window.Pi || typeof window.Pi.authenticate !== 'function') {
+        console.error('Pi SDK not properly initialized or authenticate function not available');
+        throw new Error('Pi SDK not properly initialized. Please make sure you are using the official Pi Browser app and refresh the page.');
+      }
+
       console.log('🔐 Calling Pi.authenticate with scopes:', scopes);
       
       // Add timeout to the authentication promise
@@ -178,6 +184,12 @@ export class PiSDK {
         accessToken: string;
         user: { uid: string; username: string; wallet_address?: string };
       };
+
+      // Validate the authentication result
+      if (!authResult || !authResult.accessToken || !authResult.user) {
+        console.error('Invalid authentication result received:', authResult);
+        throw new Error('Authentication failed - invalid response from Pi Network. Please try again.');
+      }
 
       // Save granted scopes
       this.grantedScopes = scopes;
@@ -196,6 +208,8 @@ export class PiSDK {
       
       if (error.message && error.message.includes('timeout')) {
         errorMessage = 'Authentication is taking longer than expected. Please check for Pi Browser notification banners and approve the authentication request. If you don\'t see a prompt, try refreshing the page.';
+      } else if (error.message && error.message.includes('Discarding message')) {
+        errorMessage = 'The Pi Browser app is not properly loaded. Please make sure you are using the official Pi Browser app, close and reopen the app, and try again.';
       }
       
       throw new Error(errorMessage);
