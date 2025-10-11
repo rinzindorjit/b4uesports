@@ -283,12 +283,9 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       // Send access token to backend for verification according to Pi Network guidelines
       // The user information obtained with this method should not be passed to your backend
       // and should only be used for presentation logic
-      console.log('Sending authentication request to /api/users');
-      const response = await apiRequest('POST', '/api/users', {
-        action: 'authenticate',
-        data: {
-          accessToken: authResult.accessToken,
-        }
+      console.log('Sending authentication request to /api/pi-auth');
+      const response = await apiRequest('POST', '/api/pi-auth', {
+        token: authResult.accessToken,
       });
       console.log('Authentication response:', response.status, response.statusText);
       
@@ -298,21 +295,45 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
         throw new Error(errorData.message || `Backend verification failed with status ${response.status}`);
       }
       
-      const data = await response.json();
-      console.log('Authentication successful, received data:', data);
+      const userData = await response.json();
+      console.log('Authentication successful, received data:', userData);
       
-      setUser(data.user);
-      setToken(data.token);
+      // Create or update user in our mock storage
+      const userId = userData.uid;
+      // In a real implementation, you would store this in a database
+      // For now, we'll create a mock user object
+      const mockUser = {
+        id: userId,
+        username: userData.username,
+        email: '',
+        phone: '',
+        country: 'Bhutan',
+        language: 'en',
+        walletAddress: userData.wallet_address || '',
+        profileImage: '',
+        gameAccounts: {},
+        referralCode: ''
+      };
+
+      // Generate a mock token for session management
+      const mockToken = btoa(JSON.stringify({ 
+        pi_id: userId,
+        username: userData.username,
+        exp: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days
+      }));
+
+      setUser(mockUser);
+      setToken(mockToken);
       setIsAuthenticated(true);
       
       // Save to localStorage
-      localStorage.setItem('pi_token', data.token);
-      localStorage.setItem('pi_user', JSON.stringify(data.user));
+      localStorage.setItem('pi_token', mockToken);
+      localStorage.setItem('pi_user', JSON.stringify(mockUser));
       
       // Show success message
       toast({
         title: "✅ Authentication Successful",
-        description: `Welcome to Testnet mode, ${data.user.username}!`,
+        description: `Welcome to Testnet mode, ${userData.username}!`,
       });
       
     } catch (error: any) {
