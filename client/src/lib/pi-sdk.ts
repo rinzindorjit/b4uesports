@@ -77,6 +77,7 @@ export class PiSDK {
     });
     
     // Return true if any of the indicators are present
+    // More lenient approach - if we're not sure, we'll assume it's Pi environment
     return isPiUserAgent || hasPiObject || hasPiSpecificProperties;
   }
 
@@ -93,6 +94,7 @@ export class PiSDK {
       if (!isPiEnvironment) {
         console.warn('Not detected as Pi Browser environment, but continuing with initialization...');
         // Don't throw error immediately, try to initialize anyway
+        console.warn('Environment Warning: Pi Browser environment not detected. Proceeding with initialization anyway.');
       }
 
       // Load Pi SDK
@@ -122,15 +124,24 @@ export class PiSDK {
             });
             this.initialized = true;
             console.log('✅ Pi SDK initialized with version 2.0, sandbox mode:', this.sandboxMode);
+          } else {
+            // If still not available after timeout, show a warning but don't fail
+            console.warn('Pi SDK still not available after timeout. Authentication may fail.');
+            console.warn('Pi SDK Warning: Pi SDK is not available. Authentication may not work properly.');
+            // Still mark as initialized to allow authentication attempts
+            this.initialized = true;
           }
-        }, 1000);
+        }, 3000);
         // Mark as initialized to allow authentication attempts
         this.initialized = true;
       }
     } catch (error) {
       console.error('❌ Pi SDK initialization failed:', error);
       this.initialized = false;
-      throw error;
+      // Even if initialization fails, don't throw error - let authentication handle it
+      console.warn('Initialization Warning: Pi SDK initialization encountered issues. Proceeding anyway.');
+      // Mark as initialized to allow authentication attempts
+      this.initialized = true;
     }
   }
 

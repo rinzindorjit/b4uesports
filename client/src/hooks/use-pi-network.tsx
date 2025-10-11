@@ -87,12 +87,31 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
         // Additional check for Pi object
         const hasPiObject = !!(window as any).Pi;
         
-        if (!isPiBrowser && !hasPiObject) {
-          throw new Error('Please open this app in the Pi Browser app for authentication to work properly.');
+        // More comprehensive Pi Browser detection
+        const isLikelyPiEnvironment = isPiBrowser || hasPiObject || 
+          !!(window as any).PiNetwork || 
+          !!(window as any).PiBrowser || 
+          (window as any).webkit?.messageHandlers?.PiBrowser;
+        
+        // Only throw error if we're certain we're not in Pi Browser
+        // Otherwise, show a warning and continue (more lenient approach)
+        if (!isLikelyPiEnvironment) {
+          console.warn('Pi Browser environment not detected, but continuing with authentication...');
+          toast({
+            title: "Environment Warning",
+            description: "Pi Browser environment not detected. Authentication may not work properly if you're not using the official Pi Browser app.",
+            variant: "destructive",
+          });
+        } else {
+          console.log('Likely Pi Browser environment detected:', {
+            isPiBrowser,
+            hasPiObject,
+            userAgent
+          });
         }
         
         // If we detect we're in Pi Browser but Pi object is not available, wait a bit more
-        if (isPiBrowser && !hasPiObject) {
+        if (isLikelyPiEnvironment && !hasPiObject) {
           console.log('Detected Pi Browser but Pi object not available yet, waiting...');
           await new Promise(resolve => setTimeout(resolve, 2000));
           
