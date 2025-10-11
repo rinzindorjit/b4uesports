@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import fetch from 'node-fetch';
 
 // Utility functions for reading request body
 async function readBody(req: VercelRequest): Promise<any> {
@@ -16,17 +15,19 @@ async function readBody(req: VercelRequest): Promise<any> {
   });
 }
 
-// Utility function to ensure consistent JSON responses
-function sendJsonResponse(res: VercelResponse, status: number, data: any) {
-  res.status(status).json(data);
-}
-
 // Determine if we're in sandbox (Testnet) mode
 // Safely check for environment variables
 const isSandbox = (process.env.PI_SANDBOX === 'true') || (process.env.NODE_ENV !== 'production');
 const PI_API_BASE_URL = isSandbox ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
 
 console.log(`Pi Network service initialized in ${isSandbox ? 'SANDBOX (Testnet)' : 'PRODUCTION (Mainnet)'} mode`);
+
+// Utility function to ensure consistent JSON responses
+function sendJsonResponse(res: VercelResponse, status: number, data: any) {
+  // Ensure we always return JSON
+  res.setHeader('Content-Type', 'application/json');
+  res.status(status).json(data);
+}
 
 // Vercel-compatible Pi Network payments handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -96,8 +97,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             'Content-Type': 'application/json',
           });
 
-          // Approve payment with Pi Network using node-fetch for better compatibility
-          const response = await fetch(
+          // Try different approaches to make the request
+          // Approach 1: POST with empty JSON body
+          let response = await fetch(
             `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
             {
               method: 'POST',
@@ -105,18 +107,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 'Authorization': `Key ${PI_SERVER_API_KEY}`,
                 'Content-Type': 'application/json',
               },
+              // Empty body as required by Pi Network API
               body: JSON.stringify({}),
             }
           );
+          
+          // If we get HTML content, try a different approach
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('text/html')) {
+            console.log('First approach failed with HTML response, trying alternative approach...');
+            
+            // Approach 2: POST with no body
+            response = await fetch(
+              `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Key ${PI_SERVER_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
+          }
           
           console.log(`Pi Network API response status:`, response.status);
           console.log(`Pi Network API response headers:`, Object.fromEntries(response.headers.entries()));
           
           // Check if we got HTML content (which indicates an error)
-          const contentType = response.headers.get('content-type') || '';
-          console.log('Response Content-Type:', contentType);
+          const finalContentType = response.headers.get('content-type') || '';
+          console.log('Response Content-Type:', finalContentType);
           
-          if (contentType.includes('text/html')) {
+          if (finalContentType.includes('text/html')) {
             const errorText = await response.text();
             console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
             console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
@@ -125,7 +146,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               error: "CloudFront blocked the request - check API key and permissions",
               status: response.status,
               details: errorText.substring(0, 1000),
-              contentType: contentType
+              contentType: finalContentType,
+              // Add more debugging information
+              debugInfo: {
+                paymentId: paymentId,
+                apiUrl: `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
+                requestMethod: 'POST',
+                requestHeaders: {
+                  'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`,
+                  'Content-Type': 'application/json',
+                }
+              }
             });
           }
           
@@ -141,7 +172,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               error: "Failed to parse response from Pi Network API",
               status: response.status,
               rawResponse: errorText.substring(0, 1000),
-              contentType: contentType
+              contentType: finalContentType
             });
           }
           
@@ -207,8 +238,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
           console.log('- Body:', { txid });
 
-          // Complete payment with Pi Network using node-fetch for better compatibility
-          const response = await fetch(
+          // Try different approaches to make the request
+          // Approach 1: POST with JSON body containing txid
+          let response = await fetch(
             `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
             {
               method: 'POST',
@@ -220,14 +252,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             }
           );
           
+          // If we get HTML content, try a different approach
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('text/html')) {
+            console.log('First approach failed with HTML response, trying alternative approach...');
+            
+            // Approach 2: POST with form-encoded body
+            response = await fetch(
+              `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
+              {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Key ${PI_SERVER_API_KEY}`,
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `txid=${encodeURIComponent(txid)}`,
+              }
+            );
+          }
+          
           console.log(`Pi Network API response status:`, response.status);
           console.log(`Pi Network API response headers:`, Object.fromEntries(response.headers.entries()));
           
           // Check if we got HTML content (which indicates an error)
-          const contentType = response.headers.get('content-type') || '';
-          console.log('Response Content-Type:', contentType);
+          const finalContentType = response.headers.get('content-type') || '';
+          console.log('Response Content-Type:', finalContentType);
           
-          if (contentType.includes('text/html')) {
+          if (finalContentType.includes('text/html')) {
             const errorText = await response.text();
             console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
             console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
@@ -236,7 +287,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               error: "CloudFront blocked the request - check API key and permissions",
               status: response.status,
               details: errorText.substring(0, 1000),
-              contentType: contentType
+              contentType: finalContentType,
+              // Add more debugging information
+              debugInfo: {
+                paymentId: paymentId,
+                txid: txid,
+                apiUrl: `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
+                requestMethod: 'POST',
+                requestHeaders: {
+                  'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`,
+                  'Content-Type': 'application/json',
+                }
+              }
             });
           }
           
@@ -252,7 +314,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               error: "Failed to parse response from Pi Network API",
               status: response.status,
               rawResponse: errorText.substring(0, 1000),
-              contentType: contentType
+              contentType: finalContentType
             });
           }
           
