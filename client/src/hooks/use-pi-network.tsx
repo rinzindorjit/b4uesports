@@ -418,7 +418,7 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       metadata: {
         ...paymentData.metadata,
         type: 'backend' as const,
-        userId: user.id,
+        userId: user.id, // Include userId in metadata for better tracking
       },
     };
 
@@ -430,7 +430,7 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
           // Server-Side Approval as required by Pi Network
           const response = await apiRequest('POST', '/api/payments', {
             action: 'approve',
-            data: { paymentId }
+            data: { paymentId } // Send consistent data structure
           });
           
           const responseText = await response.text();
@@ -461,7 +461,7 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
           // Server-Side Completion as required by Pi Network
           const response = await apiRequest('POST', '/api/payments', {
             action: 'complete',
-            data: { paymentId, txid }
+            data: { paymentId, txid } // Send consistent data structure
           });
           
           const responseText = await response.text();
@@ -534,13 +534,13 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       if (result && result.transaction_id) {
         console.log('Payment requested, now approving with server:', result.transaction_id);
         
-        // Then, send to server for approval
+        // Then, send to server for approval with consistent data structure
         const response = await apiRequest('POST', '/api/payments', {
           action: 'approve',
           data: { 
-            transaction_id: result.transaction_id,
+            transaction_id: result.transaction_id, // Use transaction_id as the identifier
+            userId: user.id, // Include userId for tracking
             amount: amount,
-            recipient: "GA67F4RLREQP6KLEVMTBJDHKDWOGNX5DBKKGDNHR5S6QAALISFL3LEDZ",
             memo: memo
           }
         });

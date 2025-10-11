@@ -389,13 +389,19 @@ export async function registerRoutes(app: Express): Promise<void> {
           switch (action) {
             case 'approve':
               // Server-Side Approval as required by Pi Network
-              const paymentToApprove = await storage.getTransactionByPaymentId(data.paymentId);
+              // Handle both paymentId and transaction_id
+              const paymentIdToApprove = data.paymentId || data.transaction_id;
+              if (!paymentIdToApprove) {
+                return res.status(400).json({ message: 'paymentId or transaction_id is required' });
+              }
+              
+              const paymentToApprove = await storage.getTransactionByPaymentId(paymentIdToApprove);
               if (!paymentToApprove) {
                 return res.status(404).json({ message: 'Payment not found' });
               }
               
               // Approve payment with Pi Network
-              const approved = await piNetworkService.approvePayment(data.paymentId, PI_SERVER_API_KEY);
+              const approved = await piNetworkService.approvePayment(paymentIdToApprove, PI_SERVER_API_KEY);
               if (!approved) {
                 return res.status(500).json({ message: 'Failed to approve payment with Pi Network' });
               }
@@ -406,13 +412,25 @@ export async function registerRoutes(app: Express): Promise<void> {
 
             case 'complete':
               // Server-Side Completion as required by Pi Network
-              const paymentToComplete = await storage.getTransactionByPaymentId(data.paymentId);
+              // Handle both paymentId and transaction_id
+              const paymentIdToComplete = data.paymentId || data.transaction_id;
+              const txid = data.txid;
+              
+              if (!paymentIdToComplete) {
+                return res.status(400).json({ message: 'paymentId or transaction_id is required' });
+              }
+              
+              if (!txid) {
+                return res.status(400).json({ message: 'txid is required' });
+              }
+              
+              const paymentToComplete = await storage.getTransactionByPaymentId(paymentIdToComplete);
               if (!paymentToComplete) {
                 return res.status(404).json({ message: 'Payment not found' });
               }
               
               // Complete payment with Pi Network
-              const completed = await piNetworkService.completePayment(data.paymentId, data.txid, PI_SERVER_API_KEY);
+              const completed = await piNetworkService.completePayment(paymentIdToComplete, txid, PI_SERVER_API_KEY);
               if (!completed) {
                 return res.status(500).json({ message: 'Failed to complete payment with Pi Network' });
               }
@@ -420,7 +438,7 @@ export async function registerRoutes(app: Express): Promise<void> {
               // Update payment status in our database
               const completedPayment = await storage.updateTransaction(paymentToComplete.id, { 
                 status: 'completed',
-                txid: data.txid
+                txid: txid
               });
               
               // Send confirmation email if user has provided email
@@ -446,8 +464,8 @@ export async function registerRoutes(app: Express): Promise<void> {
                     piAmount: paymentToComplete.piAmount,
                     usdAmount: paymentToComplete.usdAmount,
                     gameAccount: gameAccountInfo,
-                    transactionId: data.txid,
-                    paymentId: data.paymentId,
+                    transactionId: txid,
+                    paymentId: paymentIdToComplete,
                     isTestnet: piNetworkService.isSandbox
                   });
                 }
@@ -483,7 +501,7 @@ export async function registerRoutes(app: Express): Promise<void> {
           res.json(transactions);
         } catch (error) {
           console.error('Transactions fetch error:', error);
-          res.status(500).json({ message: 'Failed to fetch transactions' });
+          return res.status(500).json({ message: 'Failed to fetch transactions' });
         }
       });
 

@@ -16,6 +16,11 @@ async function readBody(req: VercelRequest): Promise<any> {
   });
 }
 
+// Utility function to ensure consistent JSON responses
+function sendJsonResponse(res: VercelResponse, status: number, data: any) {
+  res.status(status).json(data);
+}
+
 // Determine if we're in sandbox (Testnet) mode
 // Safely check for environment variables
 const isSandbox = (process.env.PI_SANDBOX === 'true') || (process.env.NODE_ENV !== 'production');
@@ -38,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Only allow POST requests
   if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed. Only POST requests are allowed." });
+    return sendJsonResponse(res, 405, { message: "Method not allowed. Only POST requests are allowed." });
   }
 
   console.log('Pi Network mode: ' + (isSandbox ? 'SANDBOX (Testnet)' : 'PRODUCTION'));
@@ -51,14 +56,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     // Validate action parameter
     if (!action) {
-      return res.status(400).json({ message: "Missing action parameter" });
+      return sendJsonResponse(res, 400, { message: "Missing action parameter" });
     }
 
     // Check if PI_SERVER_API_KEY is configured
     const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
     if (!PI_SERVER_API_KEY) {
       console.error('❌ PI_SERVER_API_KEY is not configured in environment variables');
-      return res.status(500).json({ 
+      return sendJsonResponse(res, 500, { 
         message: 'Payment service not properly configured. Please contact administrator.',
         error: 'Missing PI_SERVER_API_KEY environment variable'
       });
@@ -71,12 +76,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'approve':
         try {
           // Validate required data
-          if (!data || !data.paymentId) {
-            return res.status(400).json({ message: "paymentId is required" });
+          if (!data) {
+            return sendJsonResponse(res, 400, { message: "Data is required" });
           }
 
-          const { paymentId } = data;
-          
+          // Handle both paymentId and transaction_id
+          const paymentId = data.paymentId || data.transaction_id;
+          if (!paymentId) {
+            return sendJsonResponse(res, 400, { message: "paymentId or transaction_id is required" });
+          }
+
           console.log('Approving payment: ' + paymentId);
 
           // Log the request details for debugging
@@ -111,7 +120,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const errorText = await response.text();
             console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
             console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
-            return res.status(500).json({ 
+            return sendJsonResponse(res, 500, { 
               message: "Payment approval failed - received HTML error page from CloudFront",
               error: "CloudFront blocked the request - check API key and permissions",
               status: response.status,
@@ -127,7 +136,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           } catch (parseError) {
             const errorText = await response.text();
             console.error('❌ Failed to parse JSON response:', errorText);
-            return res.status(500).json({ 
+            return sendJsonResponse(res, 500, { 
               message: "Payment approval failed - invalid response format",
               error: "Failed to parse response from Pi Network API",
               status: response.status,
@@ -139,14 +148,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // Check for successful response
           if (response.ok) {
             console.log(`✅ Payment approved on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId);
-            return res.json({
+            return sendJsonResponse(res, 200, {
               message: "Payment approved successfully",
               payment: responseData,
               status: "approved"
             });
           } else {
             console.error("❌ Approval error:", response.status, responseData);
-            return res.status(response.status).json({ 
+            return sendJsonResponse(res, response.status, { 
               message: "Payment approval failed",
               error: responseData,
               status: response.status
@@ -155,7 +164,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } catch (error: any) {
           console.error("❌ Approval error:", error.message);
           console.error("Error stack:", error.stack);
-          return res.status(500).json({ 
+          return sendJsonResponse(res, 500, { 
             message: "Payment approval failed",
             error: error.message,
             stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
@@ -165,14 +174,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'complete':
         try {
           // Validate required data
-          if (!data || !data.paymentId || !data.txid) {
-            return res.status(400).json({ 
-              message: "paymentId and txid are required for completion" 
+          if (!data) {
+            return sendJsonResponse(res, 400, { 
+              message: "Data is required for completion" 
             });
           }
 
-          const { paymentId, txid } = data;
+          // Handle both paymentId and transaction_id
+          const paymentId = data.paymentId || data.transaction_id;
+          const txid = data.txid;
           
+          if (!paymentId) {
+            return sendJsonResponse(res, 400, { 
+              message: "paymentId or transaction_id is required for completion" 
+            });
+          }
+          
+          if (!txid) {
+            return sendJsonResponse(res, 400, { 
+              message: "txid is required for completion" 
+            });
+          }
+
           console.log('Completing payment: ' + paymentId + ' with txid: ' + txid);
 
           // Log the request details for debugging
@@ -208,7 +231,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const errorText = await response.text();
             console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
             console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
-            return res.status(500).json({ 
+            return sendJsonResponse(res, 500, { 
               message: "Payment completion failed - received HTML error page from CloudFront",
               error: "CloudFront blocked the request - check API key and permissions",
               status: response.status,
@@ -224,7 +247,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           } catch (parseError) {
             const errorText = await response.text();
             console.error('❌ Failed to parse JSON response:', errorText);
-            return res.status(500).json({ 
+            return sendJsonResponse(res, 500, { 
               message: "Payment completion failed - invalid response format",
               error: "Failed to parse response from Pi Network API",
               status: response.status,
@@ -236,14 +259,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           // Check for successful response
           if (response.ok) {
             console.log(`✅ Payment completed on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId, "TXID:", txid);
-            return res.json({ 
+            return sendJsonResponse(res, 200, { 
               message: "Payment completed successfully",
               payment: responseData,
               status: "completed"
             });
           } else {
             console.error("❌ Completion error:", response.status, responseData);
-            return res.status(response.status).json({ 
+            return sendJsonResponse(res, response.status, { 
               message: "Payment completion failed",
               error: responseData,
               status: response.status
@@ -252,7 +275,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } catch (error: any) {
           console.error("❌ Completion error:", error.message);
           console.error("Error stack:", error.stack);
-          return res.status(500).json({ 
+          return sendJsonResponse(res, 500, { 
             message: "Payment completion failed",
             error: error.message,
             stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
@@ -260,11 +283,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
 
       default:
-        return res.status(400).json({ message: `Invalid action: ${action}` });
+        return sendJsonResponse(res, 400, { message: `Invalid action: ${action}` });
     }
   } catch (error: any) {
     console.error('🔥 Payment operation error:', error.stack || error);
-    return res.status(500).json({ 
+    return sendJsonResponse(res, 500, { 
       message: 'Payment operation failed',
       error: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
