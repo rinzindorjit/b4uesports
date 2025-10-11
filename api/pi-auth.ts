@@ -56,6 +56,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "B4U-Esports-App/1.0",
       }
     });
 

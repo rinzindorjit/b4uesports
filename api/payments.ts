@@ -87,6 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const testResponse = await fetch(testUrl, {
       headers: {
         'Authorization': `Key ${PI_SERVER_API_KEY}`,
+        'Accept': 'application/json',
       }
     });
     
@@ -142,6 +143,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
           console.log('Approving payment: ' + paymentId);
 
+          // Pre-validation: Check if payment exists and is in 'created' status
+          // This helps avoid CloudFront blocks by ensuring we only approve valid payments
+          console.log('Pre-validating payment before approval...');
+          const paymentDetails = await fetch(`${PI_API_BASE_URL}/payments/${paymentId}`, {
+            headers: {
+              'Authorization': `Key ${PI_SERVER_API_KEY}`,
+              'Accept': 'application/json',
+              'User-Agent': 'B4U-Esports-App/1.0'
+            },
+          });
+          
+          console.log(`Payment details response status:`, paymentDetails.status);
+          
+          if (!paymentDetails.ok) {
+            const errorDetails = await paymentDetails.text();
+            console.error('Payment details fetch failed:', paymentDetails.status, errorDetails);
+            return sendJsonResponse(res, 500, { 
+              message: "Payment pre-validation failed",
+              error: errorDetails,
+              status: paymentDetails.status
+            });
+          }
+          
+          const paymentData: any = await paymentDetails.json();
+          console.log('Payment details:', paymentData);
+          
+          // Check if payment is in 'created' status
+          if (paymentData.status !== 'created') {
+            console.error('Payment is not in created status:', paymentData.status);
+            return sendJsonResponse(res, 400, { 
+              message: "Payment is not in created status",
+              status: paymentData.status
+            });
+          }
+
           // Log the request details for debugging
           console.log('Making server-to-server request to Pi Network API:');
           console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/approve`);
@@ -156,6 +192,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               method: 'POST',
               headers: {
                 'Authorization': `Key ${PI_SERVER_API_KEY}`,
+                'Accept': 'application/json',
+                'User-Agent': 'B4U-Esports-App/1.0',
               },
             }
           );
@@ -258,6 +296,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
           console.log('Completing payment: ' + paymentId + ' with txid: ' + txid);
 
+          // Pre-validation: Check if payment exists and is in 'approved' status
+          // This helps avoid CloudFront blocks by ensuring we only complete valid payments
+          console.log('Pre-validating payment before completion...');
+          const paymentDetails = await fetch(`${PI_API_BASE_URL}/payments/${paymentId}`, {
+            headers: {
+              'Authorization': `Key ${PI_SERVER_API_KEY}`,
+              'Accept': 'application/json',
+              'User-Agent': 'B4U-Esports-App/1.0'
+            },
+          });
+          
+          console.log(`Payment details response status:`, paymentDetails.status);
+          
+          if (!paymentDetails.ok) {
+            const errorDetails = await paymentDetails.text();
+            console.error('Payment details fetch failed:', paymentDetails.status, errorDetails);
+            return sendJsonResponse(res, 500, { 
+              message: "Payment pre-validation failed",
+              error: errorDetails,
+              status: paymentDetails.status
+            });
+          }
+          
+          const paymentData: any = await paymentDetails.json();
+          console.log('Payment details:', paymentData);
+          
+          // Check if payment is in 'approved' status
+          if (paymentData.status !== 'approved') {
+            console.error('Payment is not in approved status:', paymentData.status);
+            return sendJsonResponse(res, 400, { 
+              message: "Payment is not in approved status",
+              status: paymentData.status
+            });
+          }
+
           // Log the request details for debugging
           console.log('Making server-to-server request to Pi Network API:');
           console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/complete`);
@@ -274,6 +347,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               headers: {
                 'Authorization': `Key ${PI_SERVER_API_KEY}`,
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'User-Agent': 'B4U-Esports-App/1.0',
               },
               body: JSON.stringify({ txid }),
             }

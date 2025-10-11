@@ -24,6 +24,8 @@ const piNetworkService = {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
+          "Accept": "application/json",
+          "User-Agent": "B4U-Esports-App/1.0",
         },
       });
 
@@ -45,23 +47,85 @@ const piNetworkService = {
   approvePayment: async (paymentId: string, apiKey: string) => {
     try {
       console.log('Approving payment with Pi Network API:');
-      console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/approve`);
+      const url = `${PI_API_BASE_URL}/payments/${paymentId}/approve`;
+      console.log('- URL:', url);
       console.log('- Headers:', {
         'Authorization': `Key ${apiKey.substring(0, 8)}...`,
-        'Content-Type': 'application/json',
       });
 
-      const response = await fetch(
-        `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Key ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({}),
+      // Pre-validation: Check if payment exists and is in 'created' status
+      // This helps avoid CloudFront blocks by ensuring we only approve valid payments
+      console.log('Pre-validating payment before approval...');
+      const paymentDetails = await fetch(`${PI_API_BASE_URL}/payments/${paymentId}`, {
+        headers: {
+          'Authorization': `Key ${apiKey}`,
+          'Accept': 'application/json',
+          'User-Agent': 'B4U-Esports-App/1.0'
+        },
+      });
+      
+      console.log(`Payment details response status:`, paymentDetails.status);
+      
+      if (!paymentDetails.ok) {
+        const errorDetails = await paymentDetails.text();
+        console.error('Payment details fetch failed:', paymentDetails.status, errorDetails);
+        return false;
+      }
+      
+      const paymentData: any = await paymentDetails.json();
+      console.log('Payment details:', paymentData);
+      
+      // Check if payment is in 'created' status
+      if (paymentData.status !== 'created') {
+        console.error('Payment is not in created status:', paymentData.status);
+        return false;
+      }
+
+      // Test API key validity first with minimal headers
+      const testUrl = `${PI_API_BASE_URL}/me`;
+      console.log('Testing API key validity...');
+      console.log('Request URL:', testUrl);
+      console.log('Request headers:', {
+        'Authorization': `Key ${apiKey.substring(0, 8)}...`,
+      });
+      
+      const testResponse = await fetch(testUrl, {
+        headers: {
+          'Authorization': `Key ${apiKey}`,
+          'Accept': 'application/json',
+          'User-Agent': 'B4U-Esports-App/1.0',
         }
-      );
+      });
+      
+      console.log(`API key test response status:`, testResponse.status);
+      console.log(`API key test response headers:`, Object.fromEntries(testResponse.headers.entries()));
+      
+      // Check if we got HTML content (which indicates an error)
+      const testContentType = testResponse.headers.get('content-type') || '';
+      console.log('API key test Content-Type:', testContentType);
+      
+      if (testContentType.includes('text/html')) {
+        const errorText = await testResponse.text();
+        console.error('❌ Received HTML response instead of JSON for API key test');
+        console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
+        return false;
+      }
+      
+      if (!testResponse.ok) {
+        const testError = await testResponse.text();
+        console.error('API key test failed:', testResponse.status, testError);
+        return false;
+      }
+
+      // Make the approval request with minimal headers as per documentation
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Key ${apiKey}`,
+          'Accept': 'application/json',
+          'User-Agent': 'B4U-Esports-App/1.0',
+        },
+      });
       
       console.log(`Pi Network API response status:`, response.status);
       console.log(`Pi Network API response headers:`, Object.fromEntries(response.headers.entries()));
@@ -107,10 +171,38 @@ const piNetworkService = {
       console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/complete`);
       console.log('- Headers:', {
         'Authorization': `Key ${apiKey.substring(0, 8)}...`,
-        'Content-Type': 'application/json',
       });
       console.log('- Body:', { txid });
 
+      // Pre-validation: Check if payment exists and is in 'approved' status
+      // This helps avoid CloudFront blocks by ensuring we only complete valid payments
+      console.log('Pre-validating payment before completion...');
+      const paymentDetails = await fetch(`${PI_API_BASE_URL}/payments/${paymentId}`, {
+        headers: {
+          'Authorization': `Key ${apiKey}`,
+          'Accept': 'application/json',
+          'User-Agent': 'B4U-Esports-App/1.0'
+        },
+      });
+      
+      console.log(`Payment details response status:`, paymentDetails.status);
+      
+      if (!paymentDetails.ok) {
+        const errorDetails = await paymentDetails.text();
+        console.error('Payment details fetch failed:', paymentDetails.status, errorDetails);
+        return false;
+      }
+      
+      const paymentData: any = await paymentDetails.json();
+      console.log('Payment details:', paymentData);
+      
+      // Check if payment is in 'approved' status
+      if (paymentData.status !== 'approved') {
+        console.error('Payment is not in approved status:', paymentData.status);
+        return false;
+      }
+
+      // Make the completion request with minimal headers as per documentation
       const response = await fetch(
         `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
         {
@@ -118,6 +210,8 @@ const piNetworkService = {
           headers: {
             'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'B4U-Esports-App/1.0',
           },
           body: JSON.stringify({ txid }),
         }
