@@ -1,5 +1,5 @@
-import { storage } from "../storage";
-import { PACKAGE_IMAGES } from "../../client/src/lib/constants";
+import { storage } from "../storage.js";
+import { PACKAGE_IMAGES } from "../../client/src/lib/constants.js";
 
 async function updatePackageImages() {
   try {
