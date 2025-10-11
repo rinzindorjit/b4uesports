@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { insertUserSchema, insertPackageSchema } from "@shared/schema";
+
 import { z } from "zod";
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fallback-secret';

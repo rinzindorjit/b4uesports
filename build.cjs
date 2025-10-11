@@ -45,6 +45,14 @@ try {
       copyRecursiveSync(clientPublicDir, rootDistDir);
     }
     
+    // Copy Font Awesome webfonts to dist directory
+    const fontAwesomeWebfontsDir = join(process.cwd(), 'node_modules', '@fortawesome', 'fontawesome-free', 'webfonts');
+    const distWebfontsDir = join(rootDistDir, 'webfonts');
+    if (existsSync(fontAwesomeWebfontsDir)) {
+      copyRecursiveSync(fontAwesomeWebfontsDir, distWebfontsDir);
+      console.log('Copied Font Awesome webfonts to dist/webfonts');
+    }
+    
     // Create a simple client bundle using esbuild
     const mainEntry = join(clientSrcDir, 'main.tsx');
     const testMainEntry = join(clientSrcDir, 'test-main.tsx');

@@ -163,7 +163,17 @@ export default function Landing() {
               </CardContent>
             </Card>
             
-
+            <Card className="text-center bg-card/50 backdrop-blur-sm border-border">
+              <CardContent className="p-3 sm:p-6">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-4">
+                  <i className="fas fa-headset text-white text-base sm:text-xl"></i>
+                </div>
+                <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">24/7 Support</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
+                  Round-the-clock customer support to assist with any issues or questions.
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
           {/* In-Game Tokens Description */}

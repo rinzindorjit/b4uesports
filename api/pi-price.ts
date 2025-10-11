@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { createClient } from '@supabase/supabase-js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -87,9 +86,12 @@ async function fetchPriceFromCoinGecko(res: VercelResponse) {
     });
   } catch (error) {
     console.error("CoinGecko fetch failed:", error.stack || error);
-    return res.status(500).json({
-      error: "CoinGecko API Failure",
-      message: error.message,
+    // Fallback to fixed price if API fails - always return valid JSON
+    const fixedPrice = 0.24069;
+    return res.status(200).json({
+      price: fixedPrice,
+      lastUpdated: new Date().toISOString(),
+      source: "fallback",
     });
   }
 }

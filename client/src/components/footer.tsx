@@ -58,7 +58,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div className="text-center md:text-left" data-testid="footer-quick-links">
+          <div className="text-center flex flex-col items-center" data-testid="footer-quick-links">
             <h4 className="text-lg font-semibold mb-4 flex justify-between items-center">
               Quick Links
               <button 
@@ -78,7 +78,7 @@ export default function Footer() {
           </div>
 
           {/* Legal */}
-          <div className="text-center md:text-left" data-testid="footer-legal">
+          <div className="text-center flex flex-col items-center" data-testid="footer-legal">
             <h4 className="text-lg font-semibold mb-4 flex justify-between items-center">
               Legal
               <button 
