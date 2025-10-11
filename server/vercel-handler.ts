@@ -1,13 +1,13 @@
 import express from 'express';
 import serverless from 'serverless-http';
-import { registerRoutes } from './routes.js';
+import { registerRoutes } from './routes/index.js';
 
 // Create Express app
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Register routes
+// Register all routes
 registerRoutes(app).catch(error => {
   console.error('Failed to register routes:', error);
 });
