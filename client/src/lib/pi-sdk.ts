@@ -7,7 +7,7 @@ declare global {
       authenticate: (
         scopes: string[],
         onIncompletePaymentFound?: (payment: any) => void
-      ) => Promise<{ accessToken: string; user: { uid: string; username: string } }>;
+      ) => Promise<{ accessToken: string; user: { uid: string; username: string; wallet_address?: string } }>;
       createPayment: (
         paymentData: {
           amount: number;
@@ -34,7 +34,8 @@ declare global {
 export class PiSDK {
   private static instance: PiSDK;
   private initialized = false;
-  private grantedScopes: string[] = []; // ✅ store granted scopes
+  private grantedScopes: string[] = [];
+  private sandboxMode = true; // Default to sandbox mode for Testnet
 
   static getInstance(): PiSDK {
     if (!PiSDK.instance) {
@@ -43,28 +44,33 @@ export class PiSDK {
     return PiSDK.instance;
   }
 
-  // ✅ Enhanced initialization with dynamic SDK loading
-  async init(sandbox: boolean = process.env.VITE_PI_SANDBOX === 'true'): Promise<void> {
+  // Enhanced initialization with dynamic SDK loading and proper sandbox detection
+  async init(sandbox: boolean = true): Promise<void> {
     if (this.initialized) {
       console.log('Pi SDK already initialized');
       return;
     }
 
     try {
+      // Always check if we're in Pi Browser
       if (!isPiBrowser()) {
         throw new Error('Please open this app in the Pi Browser app for authentication to work properly.');
       }
 
+      // Load Pi SDK
       await loadPiSDK();
       await waitForPiSDK(45000);
 
       if (typeof window !== 'undefined' && window.Pi) {
+        // Set sandbox mode based on environment
+        this.sandboxMode = sandbox;
+        
         window.Pi.init({
           version: '2.0',
-          sandbox,
+          sandbox: this.sandboxMode, // Enable sandbox mode for Testnet
         });
         this.initialized = true;
-        console.log('✅ Pi SDK initialized with version 2.0, sandbox:', sandbox);
+        console.log('✅ Pi SDK initialized with version 2.0, sandbox mode:', this.sandboxMode);
       } else {
         throw new Error('Pi SDK not available after loading. Please refresh the page in Pi Browser.');
       }
@@ -75,15 +81,15 @@ export class PiSDK {
     }
   }
 
-  // ✅ Authenticate and track granted scopes
+  // Authenticate and track granted scopes
   async authenticate(
     scopes: string[] = ['payments', 'username', 'wallet_address'],
     onIncompletePaymentFound?: (payment: any) => void
   ): Promise<{ accessToken: string; user: { uid: string; username: string; wallet_address?: string } } | null> {
     try {
+      // Initialize SDK if not already done
       if (!this.initialized) {
-        const isSandbox = process.env.VITE_PI_SANDBOX === 'true';
-        await this.init(isSandbox);
+        await this.init(true); // Always use sandbox mode for Testnet
       }
 
       if (!window.Pi) {
@@ -98,10 +104,10 @@ export class PiSDK {
 
       const authResult = (await Promise.race([authPromise, timeoutPromise])) as {
         accessToken: string;
-        user: { uid: string; username: string };
+        user: { uid: string; username: string; wallet_address?: string };
       };
 
-      // ✅ Save granted scopes
+      // Save granted scopes
       this.grantedScopes = scopes;
       console.log('✅ Pi authentication successful. Granted scopes:', scopes);
 
@@ -114,7 +120,7 @@ export class PiSDK {
     }
   }
 
-  // ✅ Helper to check if current session includes a scope
+  // Helper to check if current session includes a scope
   hasScope(scope: string): boolean {
     return this.grantedScopes.includes(scope);
   }
@@ -139,7 +145,7 @@ export class PiSDK {
       return;
     }
 
-    // ✅ Ensure user has "payments" scope before creating a payment
+    // Ensure user has "payments" scope before creating a payment
     if (!this.hasScope('payments')) {
       const errorMessage = 'Cannot create a payment without "payments" scope. Please re-authenticate.';
       console.error(errorMessage);
@@ -151,7 +157,7 @@ export class PiSDK {
     window.Pi.createPayment(paymentData, callbacks);
   }
 
-  // ✅ New method for request-based payments with server-side approval
+  // New method for request-based payments with server-side approval
   async requestPayment(
     amount: string,
     memo: string
@@ -160,7 +166,7 @@ export class PiSDK {
       throw new Error('Pi SDK not initialized. Please use Pi Browser and refresh the page.');
     }
 
-    // ✅ Ensure user has "payments" scope before requesting payment
+    // Ensure user has "payments" scope before requesting payment
     if (!this.hasScope('payments')) {
       throw new Error('Cannot request payment without "payments" scope. Please re-authenticate.');
     }
@@ -187,9 +193,14 @@ export class PiSDK {
     return this.initialized;
   }
 
+  isSandboxMode(): boolean {
+    return this.sandboxMode;
+  }
+
   reset(): void {
     this.initialized = false;
     this.grantedScopes = [];
+    this.sandboxMode = true;
   }
 }
 

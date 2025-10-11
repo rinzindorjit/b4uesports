@@ -59,15 +59,8 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div className="text-center flex flex-col items-center" data-testid="footer-quick-links">
-            <h4 className="text-lg font-semibold mb-4 flex justify-between items-center">
+            <h4 className="text-lg font-semibold mb-4">
               Quick Links
-              <button 
-                onClick={toggleQuickLinks}
-                className="md:hidden text-muted-foreground hover:text-primary"
-                aria-label={isQuickLinksOpen ? "Minimize Quick Links" : "Expand Quick Links"}
-              >
-                <i className={`fas ${isQuickLinksOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-              </button>
             </h4>
             <ul className={`space-y-2 ${isQuickLinksOpen ? 'block' : 'hidden md:block'}`}>
               <li><Link href="/" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-home">Home</Link></li>
@@ -79,15 +72,8 @@ export default function Footer() {
 
           {/* Legal */}
           <div className="text-center flex flex-col items-center" data-testid="footer-legal">
-            <h4 className="text-lg font-semibold mb-4 flex justify-between items-center">
+            <h4 className="text-lg font-semibold mb-4">
               Legal
-              <button 
-                onClick={toggleLegal}
-                className="md:hidden text-muted-foreground hover:text-primary"
-                aria-label={isLegalOpen ? "Minimize Legal" : "Expand Legal"}
-              >
-                <i className={`fas ${isLegalOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}></i>
-              </button>
             </h4>
             <ul className={`space-y-2 ${isLegalOpen ? 'block' : 'hidden md:block'}`}>
               <li><Link href="/privacy-policy" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-privacy">Privacy Policy</Link></li>

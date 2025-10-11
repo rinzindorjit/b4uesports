@@ -1,5 +1,5 @@
 const { execSync } = require('child_process');
-const { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync, statSync, copyFileSync } = require('fs');
+const { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync, unlinkSync, statSync, copyFileSync, rmdirSync } = require('fs');
 const { join } = require('path');
 
 try {
@@ -281,20 +281,12 @@ try {
     console.log(`Copied ${file} to ${destPath}`);
   }
   
-  // Copy all non-TypeScript files to the dist/api directory
-  const nonTsFiles = files.filter(file => !file.endsWith('.ts') && !file.endsWith('.json') && !file.endsWith('.md'));
-  for (const file of nonTsFiles) {
-    const sourcePath = join(apiSourceDir, file);
-    const destPath = join(distApiDir, file);
-    
-    // Check if source file exists and is a file (not a directory)
-    if (existsSync(sourcePath)) {
-      const stats = statSync(sourcePath);
-      if (stats.isFile()) {
-        copyFileSync(sourcePath, destPath);
-        console.log(`Copied ${file} to ${destPath}`);
-      }
-    }
+  // Copy the shared schema file to dist/api for proper resolution
+  const sharedSchemaSource = join(process.cwd(), 'shared', 'schema.ts');
+  const sharedSchemaDest = join(distApiDir, 'schema.ts');
+  if (existsSync(sharedSchemaSource)) {
+    copyFileSync(sharedSchemaSource, sharedSchemaDest);
+    console.log(`Copied shared/schema.ts to ${sharedSchemaDest}`);
   }
   
   // Copy package.json to dist/api for Vercel
@@ -303,6 +295,15 @@ try {
   if (existsSync(packageJsonSource)) {
     copyFileSync(packageJsonSource, packageJsonDest);
     console.log(`Copied package.json to ${packageJsonDest}`);
+  }
+  
+  // Remove any compiled JavaScript files that might have been copied
+  const distApiFiles = readdirSync(distApiDir);
+  const jsFiles = distApiFiles.filter(file => file.endsWith('.js') || file.endsWith('.d.ts') || file.endsWith('.d.ts.map'));
+  for (const file of jsFiles) {
+    const filePath = join(distApiDir, file);
+    unlinkSync(filePath);
+    console.log(`Removed compiled file: ${filePath}`);
   }
   
   // Copy server files to dist/server for Vercel

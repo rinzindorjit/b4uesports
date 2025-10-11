@@ -154,13 +154,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
           console.log('Completing payment: ' + paymentId + ' with txid: ' + txid);
 
-          // For completion, we'll just return a success response
-          // In a production environment, you would update your persistent database here
+          // Call the Pi Network API for completion
+          const response = await fetch(`${PI_SERVER_URL}/payments/${paymentId}/complete`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Key ${PI_API_KEY}`
+            },
+            body: JSON.stringify({ txid })
+          });
+
+          const completionData = await response.json();
+          
+          if (!response.ok) {
+            console.error(`❌ Pi Network completion failed for ${paymentId}:`, completionData);
+            return res.status(response.status).json({ 
+              message: "Pi Network completion failed", 
+              error: completionData 
+            });
+          }
+          
           console.log('Payment completed: ' + paymentId);
           return res.json({ 
             message: "Payment completed successfully",
-            paymentId,
-            txid,
+            payment: completionData,
             status: "completed"
           });
         } catch (error) {

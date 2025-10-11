@@ -34,6 +34,31 @@ B4U Esports is a gaming platform that allows users to purchase in-game currency 
 - `EMAILJS_TEMPLATE_ID`: EmailJS template ID for email notifications
 - `EMAILJS_PUBLIC_KEY`: EmailJS public key for email notifications
 
+## Pi Network Testnet Integration
+
+This application fully supports Pi Network Testnet for development and testing purposes. For detailed information on how to configure and use Testnet mode, please refer to our comprehensive guide:
+
+[Pi Network Testnet Integration Guide](PI_NETWORK_TESTNET_GUIDE.md)
+
+### Quick Testnet Setup
+
+To enable Testnet mode, set the following environment variables:
+
+```env
+# Enable Testnet mode
+PI_SANDBOX=true
+
+# Pi Network Server API Key (from Pi Developer Portal Testnet section)
+PI_SERVER_API_KEY=your_testnet_api_key_here
+```
+
+### Key Benefits of Testnet Mode
+
+- Test payment flows without using real Pi coins
+- Safe environment for development and debugging
+- Full feature parity with Mainnet
+- No financial risk during testing
+
 ## Force rebuild by adding a comment
 Updated vercel.json configuration
 Updated package.json to use .cjs extension

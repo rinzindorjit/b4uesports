@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { toast } from '@/hooks/use-toast';
-import { piSDK } from '@/lib/pi-sdk';
-import type { User, PaymentData, PaymentCallbacks } from '@/types/pi-network';
+import { toast } from './use-toast';
+import { piSDK } from '../lib/pi-sdk';
+import type { User, PaymentData, PaymentCallbacks } from '../types/pi-network';
 
 interface PiNetworkContextType {
   isAuthenticated: boolean;
@@ -10,8 +10,9 @@ interface PiNetworkContextType {
   authenticate: () => Promise<void>;
   logout: () => void;
   createPayment: (paymentData: PaymentData, callbacks: PaymentCallbacks) => void;
-  requestPayment: (amount: string, memo: string) => Promise<any>; // ✅ Add new function type
+  requestPayment: (amount: string, memo: string) => Promise<any>;
   token: string | null;
+  isTestnet: boolean;
 }
 
 const PiNetworkContext = createContext<PiNetworkContextType | undefined>(undefined);
@@ -41,6 +42,7 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [authTimeout, setAuthTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isTestnet] = useState(true); // Always use Testnet mode
 
   // Check for existing session on mount
   useEffect(() => {
@@ -132,9 +134,8 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
 
       // Ensure Pi SDK is initialized before authentication
       if (!piSDK.isInitialized()) {
-        // Use a default value for sandbox mode
-        const isSandbox = true; // Always use sandbox for development
-        await piSDK.init(isSandbox); // Initialize with sandbox mode for Testnet
+        // Use sandbox mode for Testnet
+        await piSDK.init(true);
       }
 
       // Authenticate with Pi Network using required scopes
@@ -380,7 +381,7 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
     piSDK.createPayment(enhancedPaymentData, enhancedCallbacks);
   };
 
-  // ✅ New function for request-based payments with server-side approval
+  // New function for request-based payments with server-side approval
   const requestPayment = async (amount: string, memo: string) => {
     if (!isAuthenticated || !user) {
       throw new Error('User not authenticated');
@@ -464,6 +465,7 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       createPayment,
       requestPayment,
       token,
+      isTestnet,
     }}>
       {children}
     </PiNetworkContext.Provider>
