@@ -7,7 +7,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/server/vercel-handler.ts"
+      "dest": "/api/vercel-handler.ts"
     }
   ],
   "env": {
@@ -16,7 +16,7 @@
     "API_URL": "https://b4uesports.vercel.app"
   },
   "functions": {
-    "server/vercel-handler.ts": {
+    "api/vercel-handler.ts": {
       "runtime": "@vercel/node@2.0.0",
       "includeFiles": "dist/**,server/**,api/**"
     }

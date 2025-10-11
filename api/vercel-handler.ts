@@ -19,7 +19,7 @@ const registerRoutesWithTimeout = () => {
         clearTimeout(timeout);
         resolve();
       })
-      .catch((error) => {
+      .catch((error: any) => {
         clearTimeout(timeout);
         reject(error);
       });
@@ -31,7 +31,7 @@ registerRoutesWithTimeout()
   .then(() => {
     console.log('Routes registered successfully');
   })
-  .catch((error) => {
+  .catch((error: any) => {
     console.error('Failed to register routes:', error);
     // In a production environment, you might want to set up a basic error route
     app.get('*', (req, res) => {
