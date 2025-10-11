@@ -73,6 +73,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('PI_SERVER_API_KEY configured:', !!PI_SERVER_API_KEY);
     console.log('PI_SERVER_API_KEY length:', PI_SERVER_API_KEY.length);
 
+    // Test API key validity first
+    console.log('Testing API key validity...');
+    const testResponse = await fetch(`${PI_API_BASE_URL}/me`, {
+      headers: {
+        'Authorization': `Key ${PI_SERVER_API_KEY}`,
+        'Accept': 'application/json',
+        'User-Agent': 'B4U-Esports-App/1.0'
+      }
+    });
+    
+    console.log(`API key test response status:`, testResponse.status);
+    console.log(`API key test response headers:`, Object.fromEntries(testResponse.headers.entries()));
+    
+    // Check if we got HTML content (which indicates an error)
+    const testContentType = testResponse.headers.get('content-type') || '';
+    console.log('API key test Content-Type:', testContentType);
+    
+    if (testContentType.includes('text/html')) {
+      const errorText = await testResponse.text();
+      console.error('❌ Received HTML response instead of JSON for API key test');
+      console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
+      return sendJsonResponse(res, 500, { 
+        message: "API key test failed - received HTML error page from CloudFront",
+        error: "CloudFront blocked the request - check API key and permissions",
+        status: testResponse.status,
+        details: errorText.substring(0, 1000),
+        contentType: testContentType
+      });
+    }
+    
+    if (!testResponse.ok) {
+      const testError = await testResponse.text();
+      console.error('API key test failed:', testResponse.status, testError);
+      return sendJsonResponse(res, 500, { 
+        message: "API key test failed",
+        error: testError,
+        status: testResponse.status
+      });
+    }
+
     switch (action) {
       case 'approve':
         try {
@@ -104,8 +144,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             headers: {
               'Authorization': `Key ${PI_SERVER_API_KEY}`,
               'Accept': 'application/json',
+              'User-Agent': 'B4U-Esports-App/1.0'
             }
           });
+          
+          console.log(`Payment status check response status:`, statusCheck.status);
+          console.log(`Payment status check response headers:`, Object.fromEntries(statusCheck.headers.entries()));
+          
+          // Check if we got HTML content (which indicates an error)
+          const statusCheckContentType = statusCheck.headers.get('content-type') || '';
+          console.log('Payment status check Content-Type:', statusCheckContentType);
+          
+          if (statusCheckContentType.includes('text/html')) {
+            const errorText = await statusCheck.text();
+            console.error('❌ Received HTML response instead of JSON for payment status check');
+            console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
+            return sendJsonResponse(res, 500, { 
+              message: "Payment status check failed - received HTML error page from CloudFront",
+              error: "CloudFront blocked the request - check API key and permissions",
+              status: statusCheck.status,
+              details: errorText.substring(0, 1000),
+              contentType: statusCheckContentType
+            });
+          }
           
           if (!statusCheck.ok) {
             const statusError = await statusCheck.text();
@@ -117,7 +178,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             });
           }
           
-          const paymentStatus: any = await statusCheck.json();
+          let paymentStatus: any;
+          try {
+            paymentStatus = await statusCheck.json();
+          } catch (parseError) {
+            const errorText = await statusCheck.text();
+            console.error('❌ Failed to parse JSON response for payment status:', errorText);
+            return sendJsonResponse(res, 500, { 
+              message: "Payment status check failed - invalid response format",
+              error: "Failed to parse response from Pi Network API",
+              status: statusCheck.status,
+              rawResponse: errorText.substring(0, 1000),
+              contentType: statusCheckContentType
+            });
+          }
+          
           console.log('Payment status:', paymentStatus);
           
           // Check if payment is in a valid state for approval
@@ -139,38 +214,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 'Authorization': `Key ${PI_SERVER_API_KEY}`,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
+                'User-Agent': 'B4U-Esports-App/1.0'
               },
               body: JSON.stringify({}),
             }
           );
           
-          // If we get HTML content, try a different approach
-          const contentType = response.headers.get('content-type') || '';
-          if (contentType.includes('text/html')) {
-            console.log('First approach failed with HTML response, trying alternative approach...');
-            
-            // Approach 2: POST with no body but with Accept header
-            response = await fetch(
-              `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
-              {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Key ${PI_SERVER_API_KEY}`,
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json',
-                },
-              }
-            );
-          }
-          
           console.log(`Pi Network API response status:`, response.status);
           console.log(`Pi Network API response headers:`, Object.fromEntries(response.headers.entries()));
           
           // Check if we got HTML content (which indicates an error)
-          const finalContentType = response.headers.get('content-type') || '';
-          console.log('Response Content-Type:', finalContentType);
+          const contentType = response.headers.get('content-type') || '';
+          console.log('Response Content-Type:', contentType);
           
-          if (finalContentType.includes('text/html')) {
+          if (contentType.includes('text/html')) {
             const errorText = await response.text();
             console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
             console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
@@ -179,7 +236,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               error: "CloudFront blocked the request - check API key and permissions",
               status: response.status,
               details: errorText.substring(0, 1000),
-              contentType: finalContentType,
+              contentType: contentType,
               // Add more debugging information
               debugInfo: {
                 paymentId: paymentId,
@@ -189,6 +246,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`,
                   'Content-Type': 'application/json',
                   'Accept': 'application/json',
+                  'User-Agent': 'B4U-Esports-App/1.0'
                 }
               }
             });
@@ -206,7 +264,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               error: "Failed to parse response from Pi Network API",
               status: response.status,
               rawResponse: errorText.substring(0, 1000),
-              contentType: finalContentType
+              contentType: contentType
             });
           }
           
@@ -283,39 +341,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 'Authorization': `Key ${PI_SERVER_API_KEY}`,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json',
+                'User-Agent': 'B4U-Esports-App/1.0'
               },
               body: JSON.stringify({ txid }),
             }
           );
           
-          // If we get HTML content, try a different approach
-          const contentType = response.headers.get('content-type') || '';
-          if (contentType.includes('text/html')) {
-            console.log('First approach failed with HTML response, trying alternative approach...');
-            
-            // Approach 2: POST with form-encoded body and Accept header
-            response = await fetch(
-              `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
-              {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Key ${PI_SERVER_API_KEY}`,
-                  'Content-Type': 'application/x-www-form-urlencoded',
-                  'Accept': 'application/json',
-                },
-                body: `txid=${encodeURIComponent(txid)}`,
-              }
-            );
-          }
-          
           console.log(`Pi Network API response status:`, response.status);
           console.log(`Pi Network API response headers:`, Object.fromEntries(response.headers.entries()));
           
           // Check if we got HTML content (which indicates an error)
-          const finalContentType = response.headers.get('content-type') || '';
-          console.log('Response Content-Type:', finalContentType);
+          const contentType = response.headers.get('content-type') || '';
+          console.log('Response Content-Type:', contentType);
           
-          if (finalContentType.includes('text/html')) {
+          if (contentType.includes('text/html')) {
             const errorText = await response.text();
             console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
             console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
@@ -324,7 +363,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               error: "CloudFront blocked the request - check API key and permissions",
               status: response.status,
               details: errorText.substring(0, 1000),
-              contentType: finalContentType,
+              contentType: contentType,
               // Add more debugging information
               debugInfo: {
                 paymentId: paymentId,
@@ -335,6 +374,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`,
                   'Content-Type': 'application/json',
                   'Accept': 'application/json',
+                  'User-Agent': 'B4U-Esports-App/1.0'
                 }
               }
             });
@@ -352,7 +392,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               error: "Failed to parse response from Pi Network API",
               status: response.status,
               rawResponse: errorText.substring(0, 1000),
-              contentType: finalContentType
+              contentType: contentType
             });
           }
           
