@@ -16,11 +16,13 @@ async function readBody(req: VercelRequest): Promise<any> {
 }
 
 // Determine if we're in sandbox (Testnet) mode
-// Safely check for environment variables
-const isSandbox = (process.env.PI_SANDBOX === 'true') || (process.env.NODE_ENV !== 'production');
+// More explicit environment detection
+const isSandbox = process.env.PI_SANDBOX === 'true' || 
+                 (process.env.PI_SANDBOX !== 'false' && process.env.NODE_ENV !== 'production');
 const PI_API_BASE_URL = isSandbox ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
 
 console.log(`Pi Network service initialized in ${isSandbox ? 'SANDBOX (Testnet)' : 'PRODUCTION (Mainnet)'} mode`);
+console.log(`Environment variables: PI_SANDBOX=${process.env.PI_SANDBOX}, NODE_ENV=${process.env.NODE_ENV}`);
 
 // Utility function to ensure consistent JSON responses
 function sendJsonResponse(res: VercelResponse, status: number, data: any) {

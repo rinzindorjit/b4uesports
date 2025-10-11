@@ -1,10 +1,13 @@
 import fetch from 'node-fetch';
 
 // Determine if we're in sandbox (Testnet) mode based on environment
-const isSandbox = process.env.PI_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
+// More explicit environment detection
+const isSandbox = process.env.PI_SANDBOX === 'true' || 
+                 (process.env.PI_SANDBOX !== 'false' && process.env.NODE_ENV !== 'production');
 const PI_API_BASE_URL = isSandbox ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
 
 console.log(`Pi Network service initialized in ${isSandbox ? 'SANDBOX (Testnet)' : 'PRODUCTION (Mainnet)'} mode`);
+console.log(`Environment variables: PI_SANDBOX=${process.env.PI_SANDBOX}, NODE_ENV=${process.env.NODE_ENV}`);
 
 export const piNetworkService = {
   isSandbox,
