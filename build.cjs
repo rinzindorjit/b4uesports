@@ -106,17 +106,25 @@ try {
         });
         console.log('Client bundle created successfully');
         
-        // Build the test client bundle
-        execSync(`npx esbuild "${testMainEntry}" --bundle --outfile="${join(rootDistDir, 'test.js')}" --format=esm --jsx=automatic --alias:@=./client/src --alias:@shared=./shared --loader:.png=dataurl --loader:.jpg=dataurl --loader:.svg=dataurl --loader:.woff=dataurl --loader:.woff2=dataurl --loader:.ttf=dataurl --loader:.eot=dataurl`, {
-          stdio: 'inherit'
-        });
-        console.log('Test client bundle created successfully');
+        // Build the test client bundle only if the file exists
+        if (existsSync(testMainEntry)) {
+          execSync(`npx esbuild "${testMainEntry}" --bundle --outfile="${join(rootDistDir, 'test.js')}" --format=esm --jsx=automatic --alias:@=./client/src --alias:@shared=./shared --loader:.png=dataurl --loader:.jpg=dataurl --loader:.svg=dataurl --loader:.woff=dataurl --loader:.woff2=dataurl --loader:.ttf=dataurl --loader:.eot=dataurl`, {
+            stdio: 'inherit'
+          });
+          console.log('Test client bundle created successfully');
+        } else {
+          console.log('Test main entry file not found, skipping test bundle build');
+        }
         
-        // Build the simple react test client bundle
-        execSync(`npx esbuild "${simpleReactTestEntry}" --bundle --outfile="${join(rootDistDir, 'simple-react-test.js')}" --format=esm --jsx=automatic --alias:@=./client/src --alias:@shared=./shared --loader:.png=dataurl --loader:.jpg=dataurl --loader:.svg=dataurl --loader:.woff=dataurl --loader:.woff2=dataurl --loader:.ttf=dataurl --loader:.eot=dataurl`, {
-          stdio: 'inherit'
-        });
-        console.log('Simple React test client bundle created successfully');
+        // Build the simple react test client bundle only if the file exists
+        if (existsSync(simpleReactTestEntry)) {
+          execSync(`npx esbuild "${simpleReactTestEntry}" --bundle --outfile="${join(rootDistDir, 'simple-react-test.js')}" --format=esm --jsx=automatic --alias:@=./client/src --alias:@shared=./shared --loader:.png=dataurl --loader:.jpg=dataurl --loader:.svg=dataurl --loader:.woff=dataurl --loader:.woff2=dataurl --loader:.ttf=dataurl --loader:.eot=dataurl`, {
+            stdio: 'inherit'
+          });
+          console.log('Simple React test client bundle created successfully');
+        } else {
+          console.log('Simple React test entry file not found, skipping simple react test bundle build');
+        }
         
         // Update index.html to include the bundle and remove the original script tag
         let indexContent = readFileSync(indexPath, 'utf8');
@@ -137,8 +145,9 @@ try {
         );
         writeFileSync(indexPath, indexContent, 'utf8');
         
-        // Create a test.html file
-        const testHtml = `<!DOCTYPE html>
+        // Create a test.html file only if test bundle was created
+        if (existsSync(testMainEntry)) {
+          const testHtml = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -151,11 +160,13 @@ try {
     <script type="module" src="./test.js"></script>
   </body>
 </html>`;
-        writeFileSync(join(rootDistDir, 'test.html'), testHtml, 'utf8');
-        console.log('Created test.html');
+          writeFileSync(join(rootDistDir, 'test.html'), testHtml, 'utf8');
+          console.log('Created test.html');
+        }
         
-        // Create a simple-react-test.html file
-        const simpleReactTestHtml = `<!DOCTYPE html>
+        // Create a simple-react-test.html file only if simple react test bundle was created
+        if (existsSync(simpleReactTestEntry)) {
+          const simpleReactTestHtml = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -168,8 +179,9 @@ try {
     <script type="module" src="./simple-react-test.js"></script>
   </body>
 </html>`;
-        writeFileSync(join(rootDistDir, 'simple-react-test.html'), simpleReactTestHtml, 'utf8');
-        console.log('Created simple-react-test.html');
+          writeFileSync(join(rootDistDir, 'simple-react-test.html'), simpleReactTestHtml, 'utf8');
+          console.log('Created simple-react-test.html');
+        }
       } catch (buildError) {
         console.warn('Client build failed, using simplified index.html:', buildError.message);
         // Use a simplified index.html if build fails
