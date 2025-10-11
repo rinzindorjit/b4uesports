@@ -17,7 +17,7 @@
   },
   "functions": {
     "api/vercel-handler.ts": {
-      "runtime": "@vercel/node@2.0.0",
+      "runtime": "@vercel/node@4.0.0",
       "includeFiles": "dist/**,server/**,api/**"
     }
   }
