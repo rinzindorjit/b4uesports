@@ -40,17 +40,13 @@ export const piNetworkService = {
       console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/approve`);
       console.log('- Headers:', {
         'Authorization': `Key ${apiKey.substring(0, 8)}...`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
       });
 
-      // Test API key validity first
+      // Test API key validity first with minimal headers
       console.log('Testing API key validity...');
       const testResponse = await fetch(`${PI_API_BASE_URL}/me`, {
         headers: {
           'Authorization': `Key ${apiKey}`,
-          'Accept': 'application/json',
-          'User-Agent': 'B4U-Esports-App/1.0'
         }
       });
       
@@ -74,66 +70,14 @@ export const piNetworkService = {
         return false;
       }
 
-      // First, check if the payment exists and is in the correct state
-      console.log('Checking payment status before approval...');
-      const statusCheck = await fetch(`${PI_API_BASE_URL}/payments/${paymentId}`, {
-        headers: {
-          'Authorization': `Key ${apiKey}`,
-          'Accept': 'application/json',
-          'User-Agent': 'B4U-Esports-App/1.0'
-        }
-      });
-      
-      console.log(`Payment status check response status:`, statusCheck.status);
-      console.log(`Payment status check response headers:`, Object.fromEntries(statusCheck.headers.entries()));
-      
-      // Check if we got HTML content (which indicates an error)
-      const statusCheckContentType = statusCheck.headers.get('content-type') || '';
-      console.log('Payment status check Content-Type:', statusCheckContentType);
-      
-      if (statusCheckContentType.includes('text/html')) {
-        const errorText = await statusCheck.text();
-        console.error('❌ Received HTML response instead of JSON for payment status check');
-        console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
-        return false;
-      }
-      
-      if (!statusCheck.ok) {
-        const statusError = await statusCheck.text();
-        console.error('Payment status check failed:', statusCheck.status, statusError);
-        return false;
-      }
-      
-      let paymentStatus: any;
-      try {
-        paymentStatus = await statusCheck.json();
-      } catch (parseError) {
-        const errorText = await statusCheck.text();
-        console.error('❌ Failed to parse JSON response for payment status:', errorText);
-        return false;
-      }
-      
-      console.log('Payment status:', paymentStatus);
-      
-      // Check if payment is in a valid state for approval
-      if (paymentStatus.status !== 'created') {
-        console.error('Payment is not in "created" status:', paymentStatus.status);
-        return false;
-      }
-
-      // Try different approaches to make the request
-      // Approach 1: POST with empty JSON body and Accept header
-      let response = await fetch(
+      // Make the approval request with minimal headers as per documentation
+      const response = await fetch(
         `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
         {
           method: 'POST',
           headers: {
             'Authorization': `Key ${apiKey}`,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'User-Agent': 'B4U-Esports-App/1.0'
           },
-          body: JSON.stringify({}),
         }
       );
       
@@ -181,22 +125,17 @@ export const piNetworkService = {
       console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/complete`);
       console.log('- Headers:', {
         'Authorization': `Key ${apiKey.substring(0, 8)}...`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
       });
       console.log('- Body:', { txid });
 
-      // Try different approaches to make the request
-      // Approach 1: POST with JSON body containing txid and Accept header
-      let response = await fetch(
+      // Make the completion request with minimal headers as per documentation
+      const response = await fetch(
         `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
         {
           method: 'POST',
           headers: {
             'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'User-Agent': 'B4U-Esports-App/1.0'
           },
           body: JSON.stringify({ txid }),
         }
