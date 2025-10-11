@@ -520,6 +520,27 @@ export async function registerRoutes(app: Express): Promise<void> {
 
       // Pi Network authentication endpoint
       app.post('/api/pi-auth', async (req: Request, res: Response) => {
+        // Check if we're in sandbox development mode
+        const PI_SANDBOX = process.env.PI_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
+        
+        // For sandbox mode in development, we can provide a mock response
+        if (PI_SANDBOX && process.env.NODE_ENV === 'development') {
+          console.log('⚠️  Using mock authentication for sandbox development mode in server routes');
+          
+          // Return mock user data for development
+          const mockUserData = {
+            uid: "test-user-123",
+            username: "testuser",
+            email: "test@example.com",
+            wallet_address: "GCDRUIUPKN4WWD5O2XOWIQOU6O74J7WU52OZ22RLNTXNY356OF3Y2VKN",
+            profile_image: null,
+            country: "US",
+            language: "en"
+          };
+          
+          return res.status(200).json(mockUserData);
+        }
+        
         // Create a wrapper to convert Express req/res to Vercel req/res
         const vercelReq = {
           method: req.method,

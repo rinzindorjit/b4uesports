@@ -64,6 +64,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Pi Network endpoint: ' + PI_SERVER_URL);
     console.log('Authorization header: Bearer ' + token.substring(0, 10) + '...');
 
+    // For sandbox mode, we can provide a mock response for local development
+    // This should only be used for development/testing purposes
+    if (PI_SANDBOX && process.env.NODE_ENV === 'development') {
+      console.log('⚠️  Using mock authentication for sandbox development mode');
+      
+      // Return mock user data for development
+      const mockUserData = {
+        uid: "test-user-123",
+        username: "testuser",
+        email: "test@example.com",
+        wallet_address: "GCDRUIUPKN4WWD5O2XOWIQOU6O74J7WU52OZ22RLNTXNY356OF3Y2VKN",
+        profile_image: null,
+        country: "US",
+        language: "en"
+      };
+      
+      return res.status(200).json(mockUserData);
+    }
+
     // Verify the access token using the server API key
     // This is the correct way to verify access tokens server-side according to Pi Network guidelines
     const response = await fetch(`${PI_SERVER_URL}/auth/verify`, {
