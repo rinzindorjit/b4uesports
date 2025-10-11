@@ -81,6 +81,21 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Initialize Pi SDK on mount
+  useEffect(() => {
+    const initializePiSDK = async () => {
+      try {
+        console.log('Initializing Pi SDK on component mount...');
+        await piSDK.init(true);
+        console.log('Pi SDK initialized and ready for authentication');
+      } catch (error) {
+        console.error('Failed to initialize Pi SDK:', error);
+      }
+    };
+
+    initializePiSDK();
+  }, []);
+
   const authenticate = async () => {
     setIsLoading(true);
     
@@ -204,9 +219,11 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
 
       // Ensure Pi SDK is initialized before authentication
       if (!piSDK.isInitialized()) {
-        console.log('Initializing Pi SDK with more lenient approach...');
-        // Use sandbox mode for Testnet with more lenient initialization
+        console.log('Pi SDK not yet initialized, initializing now...');
         await piSDK.init(true);
+        console.log('Pi SDK initialized successfully');
+      } else {
+        console.log('Pi SDK already initialized');
       }
 
       // Add a small delay to ensure Pi object is fully loaded
@@ -298,7 +315,19 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error('Authentication failed with error data:', errorData);
-        throw new Error(errorData.message || `Backend verification failed with status ${response.status}`);
+        
+        // Provide specific guidance based on the error
+        let errorMessage = errorData.message || `Backend verification failed with status ${response.status}`;
+        
+        if (errorData.error === 'CloudFront blocked the request' || 
+            errorData.message?.includes('HTML error page')) {
+          errorMessage = "Authentication failed due to domain restrictions. " +
+            "This application must be accessed from the Pi Browser at a registered domain. " +
+            "If you're running locally, please deploy to a registered domain (e.g., Vercel) " +
+            "and access it through the Pi Browser.";
+        }
+        
+        throw new Error(errorMessage);
       }
       
       const userData = await response.json();
@@ -366,7 +395,15 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       } else if (errorMessage.includes('Invalid Pi Network token')) {
         errorMessage += " Please try again and make sure you approve the authentication request in the Pi Browser.";
       } else if (errorMessage.includes('Backend verification failed')) {
-        errorMessage += " There might be an issue with our Testnet servers. Please try again later.";
+        // Check if this is a CloudFront error
+        if (errorMessage.includes('HTML error page') || errorMessage.includes('CloudFront')) {
+          errorMessage = "Authentication failed due to domain restrictions. " +
+            "This application must be accessed from the Pi Browser at the registered domain " +
+            "https://b4uesports.vercel.app. Please deploy the application to a registered domain " +
+            "and access it through the Pi Browser.";
+        } else {
+          errorMessage += " There might be an issue with our Testnet servers. Please try again later.";
+        }
       } else if (errorMessage.includes('cancelled') || errorMessage.includes('User closed')) {
         errorMessage = "Authentication was cancelled. Please try again and approve the authentication request in the Pi Browser.";
       } else if (errorMessage.includes('load')) {

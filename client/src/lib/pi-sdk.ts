@@ -114,6 +114,7 @@ export class PiSDK {
         });
         this.initialized = true;
         console.log('✅ Pi SDK initialized with version 2.0, sandbox mode:', this.sandboxMode);
+        console.log('Pi SDK ready for authentication - you can now click the login button');
       } else {
         // Even if Pi object is not immediately available, we might still be in Pi Browser
         console.warn('Pi SDK object not immediately available, but continuing with initialization...');
@@ -137,6 +138,7 @@ export class PiSDK {
               });
               this.initialized = true;
               console.log('✅ Pi SDK initialized with version 2.0, sandbox mode:', this.sandboxMode);
+              console.log('Pi SDK ready for authentication - you can now click the login button');
             } catch (initError) {
               console.error('Pi SDK initialization error in timeout handler:', initError);
               // Still mark as initialized to allow authentication attempts

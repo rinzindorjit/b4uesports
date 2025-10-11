@@ -69,11 +69,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const errorText = await response.text();
       console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
       console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
+      
+      // Provide more specific guidance based on the error
+      let errorMessage = "Pi Network verification failed - received HTML error page from CloudFront";
+      let errorDetails = "CloudFront blocked the request";
+      
+      // Check if this is a domain restriction error
+      if (errorText.includes('soc') || errorText.includes('backendURL')) {
+        errorMessage = "Domain restriction error - requests must come from Pi Browser or a registered domain";
+        errorDetails = "You must access this application from the Pi Browser at the registered domain";
+      }
+      
       return res.status(500).json({ 
-        message: "Pi Network verification failed - received HTML error page",
-        error: "CloudFront blocked the request",
+        message: errorMessage,
+        error: errorDetails,
         status: response.status,
-        details: errorText.substring(0, 1000)
+        details: errorText.substring(0, 1000),
+        // Add helpful guidance for developers
+        guidance: {
+          domain: "Ensure you're accessing this application from a registered domain in the Pi Developer Portal",
+          browser: "Make sure you're using the Pi Browser to access the application",
+          deployment: "If running locally, deploy to a registered domain (e.g., Vercel)",
+          api_key: "Verify that PI_SERVER_API_KEY is properly configured in your environment"
+        }
       });
     }
 
@@ -90,7 +108,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error("Pi Auth Error:", err);
     res.status(500).json({ 
       message: "Backend verification failed", 
-      error: err.message 
+      error: err.message,
+      // Add helpful guidance for developers
+      guidance: {
+        domain: "Ensure you're accessing this application from a registered domain in the Pi Developer Portal",
+        browser: "Make sure you're using the Pi Browser to access the application",
+        deployment: "If running locally, deploy to a registered domain (e.g., Vercel)",
+        api_key: "Verify that PI_SERVER_API_KEY is properly configured in your environment"
+      }
     });
   }
 }

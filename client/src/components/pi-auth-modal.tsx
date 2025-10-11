@@ -23,6 +23,7 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
   }, [isOpen]);
 
   const handleAuthenticate = async () => {
+    console.log('User clicked authenticate button - triggering Pi Network authentication');
     setStep('processing');
     setError(null);
     try {
