@@ -14,13 +14,35 @@ export const piNetworkService = {
   
   verifyAccessToken: async (accessToken: string) => {
     try {
-      const res = await fetch(`${PI_API_BASE_URL}/me`, {
+      const url = `${PI_API_BASE_URL}/me`;
+      console.log('Verifying access token...');
+      console.log('Request URL:', url);
+      console.log('Request headers:', {
+        Authorization: `Bearer ${accessToken.substring(0, 8)}...`,
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      });
+      
+      const res = await fetch(url, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
           "Accept": "application/json",
         },
       });
+
+      console.log(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} /me response status:`, res.status);
+      console.log(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} /me response headers:`, Object.fromEntries(res.headers.entries()));
+      
+      const contentType = res.headers.get('content-type') || '';
+      console.log('Response Content-Type:', contentType);
+      
+      if (contentType.includes('text/html')) {
+        const errorText = await res.text();
+        console.error('❌ Received HTML response instead of JSON for access token verification');
+        console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
+        return null;
+      }
 
       if (!res.ok) {
         console.error(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} /me failed:`, res.statusText);
@@ -40,14 +62,21 @@ export const piNetworkService = {
   approvePayment: async (paymentId: string, apiKey: string) => {
     try {
       console.log('Approving payment with Pi Network API:');
-      console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/approve`);
+      const url = `${PI_API_BASE_URL}/payments/${paymentId}/approve`;
+      console.log('- URL:', url);
       console.log('- Headers:', {
         'Authorization': `Key ${apiKey.substring(0, 8)}...`,
       });
 
       // Test API key validity first with minimal headers
+      const testUrl = `${PI_API_BASE_URL}/me`;
       console.log('Testing API key validity...');
-      const testResponse = await fetch(`${PI_API_BASE_URL}/me`, {
+      console.log('Request URL:', testUrl);
+      console.log('Request headers:', {
+        'Authorization': `Key ${apiKey.substring(0, 8)}...`,
+      });
+      
+      const testResponse = await fetch(testUrl, {
         headers: {
           'Authorization': `Key ${apiKey}`,
         }
@@ -74,15 +103,12 @@ export const piNetworkService = {
       }
 
       // Make the approval request with minimal headers as per documentation
-      const response = await fetch(
-        `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Key ${apiKey}`,
-          },
-        }
-      );
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Key ${apiKey}`,
+        },
+      });
       
       console.log(`Pi Network API response status:`, response.status);
       console.log(`Pi Network API response headers:`, Object.fromEntries(response.headers.entries()));

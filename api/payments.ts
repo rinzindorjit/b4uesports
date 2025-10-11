@@ -51,6 +51,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   console.log('Pi Network mode: ' + (isSandbox ? 'SANDBOX (Testnet)' : 'PRODUCTION'));
   console.log('Pi Network endpoint: ' + PI_API_BASE_URL);
+  console.log('Environment variables: PI_SANDBOX=' + process.env.PI_SANDBOX + ', NODE_ENV=' + process.env.NODE_ENV);
 
   try {
     // Parse request body
@@ -76,8 +77,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('PI_SERVER_API_KEY length:', PI_SERVER_API_KEY.length);
 
     // Test API key validity first with minimal headers
+    const testUrl = `${PI_API_BASE_URL}/me`;
     console.log('Testing API key validity...');
-    const testResponse = await fetch(`${PI_API_BASE_URL}/me`, {
+    console.log('Request URL:', testUrl);
+    console.log('Request headers:', {
+      'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`,
+    });
+    
+    const testResponse = await fetch(testUrl, {
       headers: {
         'Authorization': `Key ${PI_SERVER_API_KEY}`,
       }
@@ -99,7 +106,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         error: "CloudFront blocked the request - check API key and permissions",
         status: testResponse.status,
         details: errorText.substring(0, 1000),
-        contentType: testContentType
+        contentType: testContentType,
+        debugInfo: {
+          requestUrl: testUrl,
+          requestHeaders: {
+            'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`,
+          }
+        }
       });
     }
     
