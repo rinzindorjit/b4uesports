@@ -1,9 +1,8 @@
-// @ts-nocheck
 import { jwt } from "./_utils";
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Utility functions for reading request body
-async function readBody(req: VercelRequest) {
+async function readBody(req: VercelRequest): Promise<any> {
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (chunk) => (data += chunk));
@@ -17,7 +16,7 @@ async function readBody(req: VercelRequest) {
   });
 }
 
-function getToken(req: VercelRequest) {
+function getToken(req: VercelRequest): string {
   const auth = req.headers["authorization"];
   if (!auth) throw new Error("Missing Authorization header");
   return auth.replace("Bearer ", "");
@@ -48,7 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "GET") {
       try {
         const token = getToken(req);
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
         
         // Get user's transactions
         const userTransactions = store.transactions.filter(txn => txn.userId === decoded.pi_id);
@@ -62,8 +61,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (method === "POST") {
       try {
         const token = getToken(req);
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
-        const body = await readBody(req);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+        const body: any = await readBody(req);
         
         if (body.action === "create") {
           const { packageId, gameAccount, piAmount, usdAmount, piPriceAtTime } = body.data;

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Production-ready packages handler
@@ -48,7 +47,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json(mockStorage.packages);
     }
     return res.status(405).json({ message: "Method not allowed. Only GET requests are allowed." });
-  } catch (err) {
+  } catch (err: any) {
     console.error("API Error:", err.stack || err);
     res.status(500).json({ 
       message: "Internal Server Error",

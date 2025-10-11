@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -27,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     console.log("Fetching Pi price...");
     return await fetchPriceFromCoinGecko(res);
-  } catch (error) {
+  } catch (error: any) {
     console.error("API handler error:", error.stack || error);
     return res.status(500).json({
       error: "Internal Server Error",
@@ -71,7 +70,7 @@ async function fetchPriceFromCoinGecko(res: VercelResponse) {
       throw new Error(`Invalid content type: ${contentType}`);
     }
 
-    const data = await response.json();
+    const data: any = await response.json();
     console.log("CoinGecko response data:", data);
 
     const price = data["pi-network"]?.usd;
@@ -84,7 +83,7 @@ async function fetchPriceFromCoinGecko(res: VercelResponse) {
       lastUpdated: new Date().toISOString(),
       source: "coingecko",
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("CoinGecko fetch failed:", error.stack || error);
     // Fallback to fixed price if API fails - always return valid JSON
     const fixedPrice = 0.24069;

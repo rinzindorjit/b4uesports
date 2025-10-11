@@ -1,8 +1,8 @@
-// @ts-nocheck
 import { jwt } from "./_utils";
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Utility functions for reading request body
-async function readBody(req) {
+async function readBody(req: VercelRequest): Promise<any> {
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (chunk) => (data += chunk));
@@ -16,7 +16,7 @@ async function readBody(req) {
   });
 }
 
-function getToken(req) {
+function getToken(req: VercelRequest): string {
   const auth = req.headers["authorization"];
   if (!auth) throw new Error("Missing Authorization header");
   return auth.replace("Bearer ", "");
@@ -30,7 +30,7 @@ let mockStorage = {
 };
 
 // Vercel-compatible Pi Network users handler
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -52,7 +52,7 @@ export default async function handler(req, res) {
 
   try {
     if (method === "POST") {
-      const body = await readBody(req);
+      const body: any = await readBody(req);
 
       if (body.action === "authenticate") {
         const { accessToken } = body.data;
@@ -111,7 +111,7 @@ export default async function handler(req, res) {
             user: store.users[userId], 
             token 
           });
-        } catch (error) {
+        } catch (error: any) {
           console.error("Authentication error:", error.stack || error);
           return res.status(500).json({ 
             message: "Authentication verification failed", 
@@ -123,10 +123,10 @@ export default async function handler(req, res) {
       if (body.action === "getProfile") {
         try {
           const token = getToken(req);
-          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
           const user = store.users[decoded.pi_id];
           return res.status(200).json({ user });
-        } catch (error) {
+        } catch (error: any) {
           return res.status(401).json({ message: "Invalid token" });
         }
       }
@@ -137,24 +137,20 @@ export default async function handler(req, res) {
     if (method === "GET") {
       try {
         const token = getToken(req);
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
         const user = store.users[decoded.pi_id];
         return res.status(200).json({ user });
-      } catch (error) {
+      } catch (error: any) {
         return res.status(401).json({ message: "Invalid token" });
       }
     }
 
     return res.status(405).json({ message: "Method not allowed. Only POST and GET requests are allowed." });
-  } catch (err) {
+  } catch (err: any) {
     console.error("API Error:", err.stack || err);
     res.status(500).json({
       message: "Internal Server Error",
-      error: process.env.NODE_ENV === "development" ? {
-        message: err.message,
-        stack: err.stack,
-        name: err.name
-      } : undefined
+      error: err.message
     });
   }
 }

@@ -1,8 +1,7 @@
-// @ts-nocheck
-// Mock Pi Network payments handler for Vercel environment
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Utility functions for reading request body
-async function readBody(req) {
+async function readBody(req: VercelRequest): Promise<any> {
   return new Promise((resolve, reject) => {
     let data = "";
     req.on("data", (chunk) => (data += chunk));
@@ -24,7 +23,7 @@ let mockStorage = {
 };
 
 // Vercel-compatible Pi Network payments handler
-export default async function handler(req, res) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
@@ -50,7 +49,7 @@ export default async function handler(req, res) {
 
   try {
     // Parse request body
-    const body = await readBody(req);
+    const body: any = await readBody(req);
     const { action, data } = body as { action: string; data: any };
     
     // Validate action parameter
@@ -83,7 +82,7 @@ export default async function handler(req, res) {
             payment: approvalData,
             status: "approved"
           });
-        } catch (error) {
+        } catch (error: any) {
           console.error("❌ Approval error:", error.stack || error);
           return res.status(500).json({ 
             message: "Payment approval failed",
@@ -118,7 +117,7 @@ export default async function handler(req, res) {
             payment: completionData,
             status: "completed"
           });
-        } catch (error) {
+        } catch (error: any) {
           console.error("❌ Completion error:", error.stack || error);
           return res.status(500).json({ 
             message: "Payment completion failed",
@@ -129,7 +128,7 @@ export default async function handler(req, res) {
       default:
         return res.status(400).json({ message: `Invalid action: ${action}` });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('🔥 Payment operation error:', error.stack || error);
     return res.status(500).json({ 
       message: 'Payment operation failed',
