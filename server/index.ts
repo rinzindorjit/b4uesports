@@ -13,7 +13,16 @@ const server = createServer(app);
 
 // Add CORS middleware
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Check if we're running on Vercel
+  const isVercel = !!process.env.VERCEL;
+  const frontendUrl = process.env.FRONTEND_URL || 'https://b4uesports.vercel.app';
+  
+  // Set CORS headers - restrict in production/Vercel
+  const allowedOrigin = isVercel 
+    ? frontendUrl 
+    : '*';
+    
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   

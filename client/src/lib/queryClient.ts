@@ -14,14 +14,19 @@ export async function apiRequest(
 ): Promise<Response> {
   // Ensure the URL is correctly formatted
   // Fallback to empty string if VITE_API_URL is not available
+  const isVercel = typeof process !== 'undefined' && !!process.env.VERCEL;
   const apiUrl = typeof process !== 'undefined' && process.env.VITE_API_URL || '';
+  
   // For relative URLs, when deployed to the same domain as the API
   let fullUrl = url;
-  if (apiUrl) {
-    // When using a separate API URL, use the full path
+  
+  // On Vercel, use relative URLs as the frontend and backend are on the same domain
+  if (!isVercel && apiUrl) {
+    // When using a separate API URL (local development), use the full path
     fullUrl = url.startsWith('/api') ? `${apiUrl}${url}` : `${apiUrl}/api/${url}`;
   } else {
-    // When deployed to the same domain, keep the full URL as is
+    // When deployed to the same domain (Vercel) or no API URL is set, keep the URL as is
+    // For relative URLs starting with /api, they'll work correctly on Vercel
     fullUrl = url;
   }
   
@@ -56,15 +61,21 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const url = queryKey.join("/") as string;
+    
     // Fallback to empty string if VITE_API_URL is not available
+    const isVercel = typeof process !== 'undefined' && !!process.env.VERCEL;
     const apiUrl = typeof process !== 'undefined' && process.env.VITE_API_URL || '';
+    
     // For relative URLs, when deployed to the same domain as the API
     let fullUrl = url;
-    if (apiUrl) {
-      // When using a separate API URL, use the full path
+    
+    // On Vercel, use relative URLs as the frontend and backend are on the same domain
+    if (!isVercel && apiUrl) {
+      // When using a separate API URL (local development), use the full path
       fullUrl = url.startsWith('/api') ? `${apiUrl}${url}` : `${apiUrl}/api/${url}`;
     } else {
-      // When deployed to the same domain, keep the full URL as is
+      // When deployed to the same domain (Vercel) or no API URL is set, keep the URL as is
+      // For relative URLs starting with /api, they'll work correctly on Vercel
       fullUrl = url;
     }
     

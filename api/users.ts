@@ -32,10 +32,16 @@ let mockStorage = {
 
 // Production-ready Pi Network users handler
 export default async function handler(req, res) {
-  // Set CORS headers - restrict in production
-  const allowedOrigin = process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL || 'https://yourdomain.com' 
-    : '*';
+  // Set CORS headers - restrict in production/Vercel
+  const isVercel = !!process.env.VERCEL;
+  const frontendUrl = process.env.FRONTEND_URL || 'https://b4uesports.vercel.app';
+  
+  const allowedOrigin = isVercel 
+    ? frontendUrl 
+    : process.env.NODE_ENV === 'production' 
+      ? frontendUrl 
+      : '*';
+      
   res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");

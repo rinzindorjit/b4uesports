@@ -19,6 +19,18 @@ const PiNetworkContext = createContext<PiNetworkContextType | undefined>(undefin
 
 // Helper function for API requests
 async function apiRequest(method: string, url: string, data?: any) {
+  // Check if we're running on Vercel
+  const isVercel = typeof process !== 'undefined' && !!process.env.VERCEL;
+  const apiUrl = typeof process !== 'undefined' && process.env.VITE_API_URL || '';
+  
+  // Construct full URL for local development, use relative URL for Vercel
+  let fullUrl = url;
+  if (!isVercel && apiUrl) {
+    // When using a separate API URL (local development), use the full path
+    fullUrl = url.startsWith('/api') ? `${apiUrl}${url}` : `${apiUrl}/api/${url}`;
+  }
+  // On Vercel, relative URLs will work correctly as frontend and backend are on the same domain
+  
   const token = localStorage.getItem('pi_token');
   
   const options: RequestInit = {
@@ -33,7 +45,7 @@ async function apiRequest(method: string, url: string, data?: any) {
     options.body = JSON.stringify(data);
   }
   
-  return fetch(url, options);
+  return fetch(fullUrl, options);
 }
 
 export function PiNetworkProvider({ children }: { children: React.ReactNode }) {

@@ -300,3 +300,75 @@ Note: GitHub Pages is a static hosting service and cannot run server-side code. 
 ## License
 
 MIT
+
+# B4U Esports Pi Network Marketplace
+
+## Environment Setup
+
+### Local Development
+
+1. Create a `.env` file in the root directory based on `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Create a `client/.env` file based on `client/.env.example`:
+   ```bash
+   cp client/.env.example client/.env
+   ```
+
+3. Update the environment variables in both files with your actual values.
+
+### Vercel Deployment
+
+For Vercel deployment, the following environment variables should be set in the Vercel dashboard:
+
+- `NODE_ENV=production`
+- `FRONTEND_URL=https://b4uesports.vercel.app`
+- `API_URL=https://b4uesports.vercel.app`
+- `PI_SERVER_API_KEY=your_pi_api_key_here`
+- `PI_SANDBOX=true` (for Testnet)
+- `JWT_SECRET=your_jwt_secret_here`
+- `SUPABASE_URL=your_supabase_url_here`
+- `SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key_here`
+
+## Development
+
+To run the development server:
+
+```bash
+npm run dev
+```
+
+The server will start on port 5000 by default.
+
+## Deployment
+
+This application is configured for deployment on Vercel. The `vercel.json` file contains the necessary configuration for proper deployment.
+
+## Troubleshooting
+
+### Authentication Issues
+
+If you're experiencing authentication issues:
+
+1. Make sure you're using the Pi Browser app
+2. Ensure the `PI_SERVER_API_KEY` is correctly set
+3. Check that `PI_SANDBOX` is set to `true` for Testnet
+4. Verify that the JWT secret is properly configured
+
+### CORS Issues
+
+If you encounter CORS errors:
+
+1. Check that `FRONTEND_URL` is correctly set
+2. Ensure the frontend and backend URLs match in your environment configuration
+3. For local development, the CORS policy is permissive (`*`)
+4. For production/Vercel, CORS is restricted to the `FRONTEND_URL`
+
+### API Connection Issues
+
+If the frontend cannot connect to the backend:
+
+1. For local development, ensure `VITE_API_URL` is set in `client/.env`
+2. For Vercel deployment, relative URLs are used as the frontend and backend are on the same domain
