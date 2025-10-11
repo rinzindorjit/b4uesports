@@ -25,18 +25,15 @@ function getToken(req: VercelRequest) {
 
 // Mock storage for Vercel environment
 let mockStorage = {
-  transactions: [],
-  users: {},
-  packages: {}
+  transactions: [] as any[],
+  users: {} as Record<string, any>,
+  packages: {} as Record<string, any>
 };
 
-// Production-ready transactions handler
+// Vercel-compatible transactions handler
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Set CORS headers - restrict in production
-  const allowedOrigin = process.env.NODE_ENV === 'production' 
-    ? process.env.FRONTEND_URL || 'https://yourdomain.com' 
-    : '*';
-  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  // Set CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Max-Age", "86400"); // Cache preflight requests for 24 hours
@@ -57,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const userTransactions = store.transactions.filter(txn => txn.userId === decoded.pi_id);
         
         return res.status(200).json({ transactions: userTransactions });
-      } catch (error) {
+      } catch (error: any) {
         return res.status(401).json({ message: "Invalid token" });
       }
     }
@@ -102,21 +99,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         
         return res.status(400).json({ message: "Invalid action" });
-      } catch (error) {
+      } catch (error: any) {
         return res.status(401).json({ message: "Invalid token" });
       }
     }
 
     return res.status(405).json({ message: "Method not allowed. Only GET and POST requests are allowed." });
-  } catch (err) {
+  } catch (err: any) {
     console.error("API Error:", err.stack || err);
     res.status(500).json({
       message: "Internal Server Error",
-      error: process.env.NODE_ENV === "development" ? {
-        message: err.message,
-        stack: err.stack,
-        name: err.name
-      } : undefined
+      error: err.message
     });
   }
 }
