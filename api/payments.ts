@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import axios from 'axios';
+import fetch from 'node-fetch';
 
 // Utility functions for reading request body
 async function readBody(req: VercelRequest): Promise<any> {
@@ -57,13 +57,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Check if PI_SERVER_API_KEY is configured
     const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
     if (!PI_SERVER_API_KEY) {
-      console.error('PI_SERVER_API_KEY is not configured in environment variables');
+      console.error('❌ PI_SERVER_API_KEY is not configured in environment variables');
       return res.status(500).json({ 
-        message: 'Payment service not properly configured. Please contact administrator.' 
+        message: 'Payment service not properly configured. Please contact administrator.',
+        error: 'Missing PI_SERVER_API_KEY environment variable'
       });
     }
 
     console.log('PI_SERVER_API_KEY configured:', !!PI_SERVER_API_KEY);
+    console.log('PI_SERVER_API_KEY length:', PI_SERVER_API_KEY.length);
 
     switch (action) {
       case 'approve':
@@ -78,68 +80,85 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.log('Approving payment: ' + paymentId);
 
           // Log the request details for debugging
-          console.log('Making request to Pi Network API:');
+          console.log('Making server-to-server request to Pi Network API:');
           console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/approve`);
           console.log('- Headers:', {
-            'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 5)}...`, // Log only first 5 chars for security
+            'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`, // Log first 8 chars for better security
             'Content-Type': 'application/json',
           });
 
-          // Approve payment with Pi Network
-          const response = await axios.post(
+          // Approve payment with Pi Network using node-fetch for better compatibility
+          const response = await fetch(
             `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
-            {},
             {
+              method: 'POST',
               headers: {
                 'Authorization': `Key ${PI_SERVER_API_KEY}`,
                 'Content-Type': 'application/json',
               },
-              // Add timeout to prevent hanging
-              timeout: 15000, // 15 second timeout
-              // Ensure we're not following redirects
-              maxRedirects: 0,
-              // Validate status to catch non-2xx responses
-              validateStatus: (status) => status < 500, // Accept all statuses to handle them manually
+              body: JSON.stringify({}),
             }
           );
           
           console.log(`Pi Network API response status:`, response.status);
-          console.log(`Pi Network API response headers:`, response.headers);
+          console.log(`Pi Network API response headers:`, Object.fromEntries(response.headers.entries()));
           
           // Check if we got HTML content (which indicates an error)
-          const contentType = response.headers['content-type'];
-          if (contentType && contentType.includes('text/html')) {
+          const contentType = response.headers.get('content-type') || '';
+          console.log('Response Content-Type:', contentType);
+          
+          if (contentType.includes('text/html')) {
+            const errorText = await response.text();
             console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
+            console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
             return res.status(500).json({ 
-              message: "Payment approval failed - received HTML error page",
+              message: "Payment approval failed - received HTML error page from CloudFront",
               error: "CloudFront blocked the request - check API key and permissions",
-              status: response.status
+              status: response.status,
+              details: errorText.substring(0, 1000),
+              contentType: contentType
+            });
+          }
+          
+          // Parse JSON response
+          let responseData;
+          try {
+            responseData = await response.json();
+          } catch (parseError) {
+            const errorText = await response.text();
+            console.error('❌ Failed to parse JSON response:', errorText);
+            return res.status(500).json({ 
+              message: "Payment approval failed - invalid response format",
+              error: "Failed to parse response from Pi Network API",
+              status: response.status,
+              rawResponse: errorText.substring(0, 1000),
+              contentType: contentType
             });
           }
           
           // Check for successful response
-          if (response.status >= 200 && response.status < 300) {
+          if (response.ok) {
             console.log(`✅ Payment approved on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId);
             return res.json({
               message: "Payment approved successfully",
-              payment: response.data,
+              payment: responseData,
               status: "approved"
             });
           } else {
-            console.error("❌ Approval error:", response.status, response.data);
+            console.error("❌ Approval error:", response.status, responseData);
             return res.status(response.status).json({ 
               message: "Payment approval failed",
-              error: response.data,
+              error: responseData,
               status: response.status
             });
           }
         } catch (error: any) {
-          console.error("❌ Approval error:", error.response?.data || error.message);
-          // Return more detailed error information
+          console.error("❌ Approval error:", error.message);
+          console.error("Error stack:", error.stack);
           return res.status(500).json({ 
             message: "Payment approval failed",
-            error: error.response?.data || error.message,
-            status: error.response?.status
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
           });
         }
 
@@ -157,69 +176,86 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.log('Completing payment: ' + paymentId + ' with txid: ' + txid);
 
           // Log the request details for debugging
-          console.log('Making request to Pi Network API:');
+          console.log('Making server-to-server request to Pi Network API:');
           console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/complete`);
           console.log('- Headers:', {
-            'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 5)}...`, // Log only first 5 chars for security
+            'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`, // Log first 8 chars for better security
             'Content-Type': 'application/json',
           });
           console.log('- Body:', { txid });
 
-          // Complete payment with Pi Network
-          const response = await axios.post(
+          // Complete payment with Pi Network using node-fetch for better compatibility
+          const response = await fetch(
             `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
-            { txid },
             {
+              method: 'POST',
               headers: {
                 'Authorization': `Key ${PI_SERVER_API_KEY}`,
                 'Content-Type': 'application/json',
               },
-              // Add timeout to prevent hanging
-              timeout: 15000, // 15 second timeout
-              // Ensure we're not following redirects
-              maxRedirects: 0,
-              // Validate status to catch non-2xx responses
-              validateStatus: (status) => status < 500, // Accept all statuses to handle them manually
+              body: JSON.stringify({ txid }),
             }
           );
           
           console.log(`Pi Network API response status:`, response.status);
-          console.log(`Pi Network API response headers:`, response.headers);
+          console.log(`Pi Network API response headers:`, Object.fromEntries(response.headers.entries()));
           
           // Check if we got HTML content (which indicates an error)
-          const contentType = response.headers['content-type'];
-          if (contentType && contentType.includes('text/html')) {
+          const contentType = response.headers.get('content-type') || '';
+          console.log('Response Content-Type:', contentType);
+          
+          if (contentType.includes('text/html')) {
+            const errorText = await response.text();
             console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
+            console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
             return res.status(500).json({ 
-              message: "Payment completion failed - received HTML error page",
+              message: "Payment completion failed - received HTML error page from CloudFront",
               error: "CloudFront blocked the request - check API key and permissions",
-              status: response.status
+              status: response.status,
+              details: errorText.substring(0, 1000),
+              contentType: contentType
+            });
+          }
+          
+          // Parse JSON response
+          let responseData;
+          try {
+            responseData = await response.json();
+          } catch (parseError) {
+            const errorText = await response.text();
+            console.error('❌ Failed to parse JSON response:', errorText);
+            return res.status(500).json({ 
+              message: "Payment completion failed - invalid response format",
+              error: "Failed to parse response from Pi Network API",
+              status: response.status,
+              rawResponse: errorText.substring(0, 1000),
+              contentType: contentType
             });
           }
           
           // Check for successful response
-          if (response.status >= 200 && response.status < 300) {
+          if (response.ok) {
             console.log(`✅ Payment completed on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId, "TXID:", txid);
             return res.json({ 
               message: "Payment completed successfully",
-              payment: response.data,
+              payment: responseData,
               status: "completed"
             });
           } else {
-            console.error("❌ Completion error:", response.status, response.data);
+            console.error("❌ Completion error:", response.status, responseData);
             return res.status(response.status).json({ 
               message: "Payment completion failed",
-              error: response.data,
+              error: responseData,
               status: response.status
             });
           }
         } catch (error: any) {
-          console.error("❌ Completion error:", error.response?.data || error.message);
-          // Return more detailed error information
+          console.error("❌ Completion error:", error.message);
+          console.error("Error stack:", error.stack);
           return res.status(500).json({ 
             message: "Payment completion failed",
-            error: error.response?.data || error.message,
-            status: error.response?.status
+            error: error.message,
+            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
           });
         }
 
@@ -230,7 +266,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('🔥 Payment operation error:', error.stack || error);
     return res.status(500).json({ 
       message: 'Payment operation failed',
-      error: error.message
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }

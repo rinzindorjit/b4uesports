@@ -1,6 +1,6 @@
 import { Express, Request, Response } from 'express';
 import { jwt } from './_utils.js';
-import axios from 'axios';
+import fetch from 'node-fetch';
 
 // Determine if we're in sandbox (Testnet) mode
 // Safely check for environment variables
@@ -20,25 +20,23 @@ let mockStorage = {
 const piNetworkService = {
   verifyAccessToken: async (accessToken: string) => {
     try {
-      const res = await axios.get(`${PI_API_BASE_URL}/me`, {
+      const res = await fetch(`${PI_API_BASE_URL}/me`, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        // Add timeout to prevent hanging
-        timeout: 10000, // 10 second timeout
       });
 
-      if (!res.status.toString().startsWith('2')) {
+      if (!res.ok) {
         console.error(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} /me failed:`, res.statusText);
         return null;
       }
 
-      const user = res.data;
+      const user = await res.json();
       console.log(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} verified user:`, user);
       return user;
     } catch (error: any) {
-      console.error(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} verification error:`, error.response?.data || error.message);
+      console.error(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} verification error:`, error.message);
       return null;
     }
   },
@@ -46,23 +44,58 @@ const piNetworkService = {
   // Payment approval method
   approvePayment: async (paymentId: string, apiKey: string) => {
     try {
-      const response = await axios.post(
+      console.log('Approving payment with Pi Network API:');
+      console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/approve`);
+      console.log('- Headers:', {
+        'Authorization': `Key ${apiKey.substring(0, 8)}...`,
+        'Content-Type': 'application/json',
+      });
+
+      const response = await fetch(
         `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
-        {},
         {
+          method: 'POST',
           headers: {
             'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
           },
-          // Add timeout to prevent hanging
-          timeout: 10000, // 10 second timeout
+          body: JSON.stringify({}),
         }
       );
       
-      console.log(`✅ Payment approved on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId);
-      return true;
+      console.log(`Pi Network API response status:`, response.status);
+      console.log(`Pi Network API response headers:`, Object.fromEntries(response.headers.entries()));
+      
+      // Check if we got HTML content (which indicates an error)
+      const contentType = response.headers.get('content-type') || '';
+      console.log('Response Content-Type:', contentType);
+      
+      if (contentType.includes('text/html')) {
+        const errorText = await response.text();
+        console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
+        console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
+        return false;
+      }
+      
+      // Parse JSON response
+      let responseData: any;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        const errorText = await response.text();
+        console.error('❌ Failed to parse JSON response:', errorText);
+        return false;
+      }
+      
+      if (response.ok) {
+        console.log(`✅ Payment approved on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId);
+        return true;
+      } else {
+        console.error('Payment approval failed:', response.status, responseData);
+        return false;
+      }
     } catch (error: any) {
-      console.error('Payment approval failed:', error.response?.data || error.message);
+      console.error('Payment approval failed:', error.message);
       return false;
     }
   },
@@ -70,23 +103,59 @@ const piNetworkService = {
   // Payment completion method
   completePayment: async (paymentId: string, txid: string, apiKey: string) => {
     try {
-      const response = await axios.post(
+      console.log('Completing payment with Pi Network API:');
+      console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/complete`);
+      console.log('- Headers:', {
+        'Authorization': `Key ${apiKey.substring(0, 8)}...`,
+        'Content-Type': 'application/json',
+      });
+      console.log('- Body:', { txid });
+
+      const response = await fetch(
         `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
-        { txid },
         {
+          method: 'POST',
           headers: {
             'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
           },
-          // Add timeout to prevent hanging
-          timeout: 10000, // 10 second timeout
+          body: JSON.stringify({ txid }),
         }
       );
       
-      console.log(`✅ Payment completed on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId, "TXID:", txid);
-      return true;
+      console.log(`Pi Network API response status:`, response.status);
+      console.log(`Pi Network API response headers:`, Object.fromEntries(response.headers.entries()));
+      
+      // Check if we got HTML content (which indicates an error)
+      const contentType = response.headers.get('content-type') || '';
+      console.log('Response Content-Type:', contentType);
+      
+      if (contentType.includes('text/html')) {
+        const errorText = await response.text();
+        console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
+        console.error('HTML Response (first 1000 chars):', errorText.substring(0, 1000));
+        return false;
+      }
+      
+      // Parse JSON response
+      let responseData: any;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        const errorText = await response.text();
+        console.error('❌ Failed to parse JSON response:', errorText);
+        return false;
+      }
+      
+      if (response.ok) {
+        console.log(`✅ Payment completed on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId, "TXID:", txid);
+        return true;
+      } else {
+        console.error('Payment completion failed:', response.status, responseData);
+        return false;
+      }
     } catch (error: any) {
-      console.error('Payment completion failed:', error.response?.data || error.message);
+      console.error('Payment completion failed:', error.message);
       return false;
     }
   }
@@ -97,11 +166,14 @@ const pricingService = {
   getCurrentPiPrice: async () => {
     try {
       // Use CoinGecko API to get the current Pi price with demo key
-      const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4', {
-        timeout: 5000 // 5 second timeout
-      });
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=pi-network&vs_currencies=usd&x_cg_demo_api_key=CG-z4MZkBd78fn7PgPhPYcKq1r4');
       
-      const price = response.data['pi-network']?.usd;
+      if (!response.ok) {
+        throw new Error(`CoinGecko API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const data: any = await response.json();
+      const price = data['pi-network']?.usd;
       
       if (typeof price !== 'number') {
         throw new Error('Invalid price data received from CoinGecko');
@@ -164,7 +236,7 @@ export async function registerRoutes(app: Express): Promise<void> {
                 return res.status(400).json({ message: 'Access token required' });
               }
 
-              const piUser = await piNetworkService.verifyAccessToken(accessToken);
+              const piUser: any = await piNetworkService.verifyAccessToken(accessToken);
               if (!piUser) {
                 return res.status(401).json({ message: 'Invalid Pi Network token' });
               }
@@ -309,11 +381,15 @@ export async function registerRoutes(app: Express): Promise<void> {
         
         // Check if PI_SERVER_API_KEY is configured
         if (!PI_SERVER_API_KEY) {
-          console.error('PI_SERVER_API_KEY is not configured in environment variables');
+          console.error('❌ PI_SERVER_API_KEY is not configured in environment variables');
           return res.status(500).json({ 
-            message: 'Payment service not properly configured. Please contact administrator.' 
+            message: 'Payment service not properly configured. Please contact administrator.',
+            error: 'Missing PI_SERVER_API_KEY environment variable'
           });
         }
+        
+        console.log('PI_SERVER_API_KEY configured:', !!PI_SERVER_API_KEY);
+        console.log('PI_SERVER_API_KEY length:', PI_SERVER_API_KEY.length);
         
         try {
           switch (action) {

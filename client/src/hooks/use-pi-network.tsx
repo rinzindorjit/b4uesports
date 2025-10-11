@@ -42,12 +42,15 @@ async function apiRequest(method: string, url: string, data?: any) {
       'Content-Type': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     },
+    // Add credentials for cross-origin requests if needed
+    credentials: 'include',
   };
   
   if (data) {
     options.body = JSON.stringify(data);
   }
   
+  console.log(`Making API request: ${method} ${fullUrl}`, data);
   return fetch(fullUrl, options);
 }
 
@@ -423,14 +426,27 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
     const enhancedCallbacks = {
       onReadyForServerApproval: async (paymentId: string) => {
         try {
+          console.log('Sending payment for server approval:', paymentId);
           // Server-Side Approval as required by Pi Network
           const response = await apiRequest('POST', '/api/payments', {
             action: 'approve',
             data: { paymentId }
           });
           
+          const responseText = await response.text();
+          console.log('Server approval response:', response.status, responseText);
+          
+          // Try to parse JSON, but handle if it's not JSON
+          let responseData;
+          try {
+            responseData = JSON.parse(responseText);
+          } catch (parseError) {
+            console.error('Failed to parse server approval response as JSON:', responseText);
+            throw new Error(`Server approval failed: ${responseText}`);
+          }
+          
           if (!response.ok) {
-            throw new Error(`Server approval failed with status ${response.status}`);
+            throw new Error(`Server approval failed with status ${response.status}: ${responseData.message || responseText}`);
           }
           
           callbacks.onReadyForServerApproval(paymentId);
@@ -441,14 +457,27 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
       },
       onReadyForServerCompletion: async (paymentId: string, txid: string) => {
         try {
+          console.log('Sending payment for server completion:', paymentId, txid);
           // Server-Side Completion as required by Pi Network
           const response = await apiRequest('POST', '/api/payments', {
             action: 'complete',
             data: { paymentId, txid }
           });
           
+          const responseText = await response.text();
+          console.log('Server completion response:', response.status, responseText);
+          
+          // Try to parse JSON, but handle if it's not JSON
+          let responseData;
+          try {
+            responseData = JSON.parse(responseText);
+          } catch (parseError) {
+            console.error('Failed to parse server completion response as JSON:', responseText);
+            throw new Error(`Server completion failed: ${responseText}`);
+          }
+          
           if (!response.ok) {
-            throw new Error(`Server completion failed with status ${response.status}`);
+            throw new Error(`Server completion failed with status ${response.status}: ${responseData.message || responseText}`);
           }
           
           // Refresh user data to update balance and transaction history
