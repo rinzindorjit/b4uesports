@@ -64,23 +64,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.log('Pi Network endpoint: ' + PI_SERVER_URL);
     console.log('Authorization header: Bearer ' + token.substring(0, 10) + '...');
 
-    // For sandbox mode, we can provide a mock response for local development
-    // This should only be used for development/testing purposes
-    if (PI_SANDBOX && process.env.NODE_ENV === 'development') {
-      console.log('⚠️  Using mock authentication for sandbox development mode');
+    // For localhost development, provide guidance on proper access
+    const isLocalhost = req.headers.host && req.headers.host.includes('localhost');
+    if (isLocalhost && process.env.NODE_ENV === 'development') {
+      console.log('⚠️  Accessing from localhost - for Pi Network integration, please use https://b4uesports.vercel.app');
       
-      // Return mock user data for development
-      const mockUserData = {
-        uid: "test-user-123",
-        username: "testuser",
-        email: "test@example.com",
-        wallet_address: "GCDRUIUPKN4WWD5O2XOWIQOU6O74J7WU52OZ22RLNTXNY356OF3Y2VKN",
-        profile_image: null,
-        country: "US",
-        language: "en"
-      };
-      
-      return res.status(200).json(mockUserData);
+      return res.status(400).json({ 
+        message: "Domain restriction error - for Pi Network integration, please access this application from https://b4uesports.vercel.app",
+        error: "Localhost access not permitted for Pi Network authentication",
+        guidance: {
+          access: "Please access this application from the registered domain https://b4uesports.vercel.app",
+          browser: "Make sure you're using the Pi Browser to access the application",
+          deployment: "The application is deployed and accessible at https://b4uesports.vercel.app",
+          api_key: "Verify that PI_SERVER_API_KEY is properly configured in your environment"
+        }
+      });
     }
 
     // Verify the access token using the server API key
