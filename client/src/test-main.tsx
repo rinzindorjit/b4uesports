@@ -1,20 +1,9 @@
 import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./index.css";
+import TestComponent from "./test-component";
 
 // Add debugging logs
-console.log("Starting React application initialization...");
+console.log("Starting Test React application initialization...");
 
-// Add a global error handler
-window.addEventListener('error', (event) => {
-  console.error('Global error handler:', event.error);
-});
-
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
-});
-
-// Add error handling
 try {
   console.log("Looking for root element...");
   const rootElement = document.getElementById("root");
@@ -26,9 +15,9 @@ try {
   
   console.log("Creating React root...");
   const root = createRoot(rootElement);
-  console.log("Rendering App component...");
-  root.render(<App />);
-  console.log("App component rendered successfully!");
+  console.log("Rendering TestComponent...");
+  root.render(<TestComponent />);
+  console.log("TestComponent rendered successfully!");
 } catch (error) {
   console.error("Failed to render React app:", error);
   

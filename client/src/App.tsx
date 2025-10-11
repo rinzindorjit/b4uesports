@@ -16,7 +16,11 @@ import AboutUs from "@/pages/about-us";
 import OurHistory from "@/pages/our-history";
 import NotFound from "@/pages/not-found";
 
+// Add debugging logs
+console.log("Loading App component...");
+
 function Router() {
+  console.log("Rendering Router component...");
   return (
     <Switch>
       <Route path="/" component={Landing} />
@@ -35,6 +39,7 @@ function Router() {
 }
 
 function App() {
+  console.log("Rendering App component...");
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

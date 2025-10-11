@@ -12,7 +12,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BRAND_LOGOS, GAME_LOGOS } from '@/lib/constants';
 import type { Package } from '@/types/pi-network';
 
+// Add debugging logs
+console.log("Loading Landing component...");
+
 export default function Landing() {
+  console.log("Rendering Landing component...");
   const { authenticate, isAuthenticated, isLoading: piLoading } = usePiNetwork();
   const { data: piPrice, error: piPriceError, isLoading: piPriceLoading } = usePiPrice();
   const [, setLocation] = useLocation();
@@ -21,6 +25,7 @@ export default function Landing() {
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
+    console.log("Landing component useEffect running...");
     if (isAuthenticated) {
       setLocation('/dashboard');
     }

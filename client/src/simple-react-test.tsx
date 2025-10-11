@@ -1,9 +1,22 @@
 import { createRoot } from "react-dom/client";
-import App from "./App";
-import "./index.css";
+import { useState } from "react";
+
+function SimpleComponent() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div style={{ padding: '20px', backgroundColor: '#f0f0f0', textAlign: 'center' }}>
+      <h1>Simple React Test</h1>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>
+        Increment
+      </button>
+    </div>
+  );
+}
 
 // Add debugging logs
-console.log("Starting React application initialization...");
+console.log("Starting Simple React application initialization...");
 
 // Add a global error handler
 window.addEventListener('error', (event) => {
@@ -26,9 +39,9 @@ try {
   
   console.log("Creating React root...");
   const root = createRoot(rootElement);
-  console.log("Rendering App component...");
-  root.render(<App />);
-  console.log("App component rendered successfully!");
+  console.log("Rendering SimpleComponent...");
+  root.render(<SimpleComponent />);
+  console.log("SimpleComponent rendered successfully!");
 } catch (error) {
   console.error("Failed to render React app:", error);
   

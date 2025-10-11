@@ -1,9 +1,4 @@
 import { 
-  users, 
-  packages, 
-  transactions, 
-  admins, 
-  piPriceHistory,
   type User, 
   type InsertUser,
   type Package,
@@ -13,8 +8,8 @@ import {
   type Admin,
   type InsertAdmin,
   type PiPriceHistory
-} from "@shared/schema";
-import bcrypt from 'bcrypt';
+} from "../shared/schema";
+import * as bcrypt from 'bcrypt';
 
 // Mock data for development
 const mockUsers: User[] = [];

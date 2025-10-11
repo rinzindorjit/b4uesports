@@ -57,6 +57,11 @@
   --ring: hsl(217, 91%, 60%);
 }
 
+/* Debug: Add a visible border to the root element to see if CSS is loading */
+#root {
+  border: 2px solid red !important;
+}
+
 @layer base {
   * {
     @apply border-border;

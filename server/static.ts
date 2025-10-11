@@ -23,6 +23,14 @@ export function serveStatic(app: Express) {
     );
   }
 
+  // Add logging for static file requests
+  app.use((req, res, next) => {
+    if (!req.path.startsWith('/api/')) {
+      log(`Static file request: ${req.method} ${req.path}`);
+    }
+    next();
+  });
+
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist, but exclude API routes
@@ -32,6 +40,7 @@ export function serveStatic(app: Express) {
       return next();
     }
     
+    log(`Serving index.html for: ${req.path}`);
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }

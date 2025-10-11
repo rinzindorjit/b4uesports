@@ -121,7 +121,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.log('Payment approved: ' + paymentId);
           return res.json({
             message: "Payment approved successfully",
-            payment: approvalData
+            payment: approvalData,
+            status: "approved"
           });
         } catch (error) {
           console.error("❌ Approval error:", error.stack || error);
@@ -153,13 +154,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
           console.log('Completing payment: ' + paymentId + ' with txid: ' + txid);
 
+          // For completion, we'll just return a success response
           // In a production environment, you would update your persistent database here
-          // For now, we'll just return a success response
           console.log('Payment completed: ' + paymentId);
           return res.json({ 
             message: "Payment completed successfully",
             paymentId,
-            txid
+            txid,
+            status: "completed"
           });
         } catch (error) {
           console.error("❌ Completion error:", error.stack || error);

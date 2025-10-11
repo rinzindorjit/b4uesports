@@ -47,6 +47,8 @@ try {
     
     // Create a simple client bundle using esbuild
     const mainEntry = join(clientSrcDir, 'main.tsx');
+    const testMainEntry = join(clientSrcDir, 'test-main.tsx');
+    const simpleReactTestEntry = join(clientSrcDir, 'simple-react-test.tsx');
     const appEntry = join(clientSrcDir, 'App.tsx');
     const indexHtml = join(clientSourceDir, 'index.html');
     
@@ -58,12 +60,30 @@ try {
       
       // Process CSS with Tailwind CLI first
       try {
-        // Use Tailwind CLI to process the CSS
+        // Use Tailwind CLI to process the CSS with content hashing for cache busting
         const { execSync: cssExecSync } = require('child_process');
-        cssExecSync(`npx tailwindcss -i "${join(clientSrcDir, 'index.css')}" -o "${join(rootDistDir, 'main.css')}" --minify`, {
+        const crypto = require('crypto');
+        const fs = require('fs');
+        
+        // Generate a hash based on the CSS content
+        const cssContent = fs.readFileSync(join(clientSrcDir, 'index.css'), 'utf8');
+        const cssHash = crypto.createHash('md5').update(cssContent).digest('hex').substring(0, 8);
+        const hashedCssName = `main-${cssHash}.css`;
+        const hashedCssPath = join(rootDistDir, hashedCssName);
+        
+        cssExecSync(`npx tailwindcss -i "${join(clientSrcDir, 'index.css')}" -o "${hashedCssPath}" --minify`, {
           stdio: 'inherit'
         });
-        console.log('Processed CSS with Tailwind successfully');
+        console.log(`Processed CSS with Tailwind successfully: ${hashedCssName}`);
+        
+        // Update index.html to reference the hashed CSS file
+        let indexContent = readFileSync(indexPath, 'utf8');
+        indexContent = indexContent.replace(
+          '<link rel="stylesheet" href="./main.css">',
+          `<link rel="stylesheet" href="./${hashedCssName}">`
+        );
+        writeFileSync(indexPath, indexContent, 'utf8');
+        console.log(`Updated index.html to reference ${hashedCssName}`);
       } catch (cssError) {
         console.warn('CSS processing failed:', cssError.message);
         // Fallback: copy the original CSS file
@@ -72,18 +92,34 @@ try {
       
       // Try to build the client bundle
       try {
-        execSync(`npx esbuild "${mainEntry}" --bundle --outdir="${rootDistDir}" --format=esm --jsx=automatic --alias:@=./client/src --alias:@shared=./shared --loader:.png=dataurl --loader:.jpg=dataurl --loader:.svg=dataurl --loader:.woff=dataurl --loader:.woff2=dataurl --loader:.ttf=dataurl --loader:.eot=dataurl`, {
+        // Specify the output file name to ensure consistency
+        execSync(`npx esbuild "${mainEntry}" --bundle --outfile="${join(rootDistDir, 'main.js')}" --format=esm --jsx=automatic --alias:@=./client/src --alias:@shared=./shared --loader:.png=dataurl --loader:.jpg=dataurl --loader:.svg=dataurl --loader:.woff=dataurl --loader:.woff2=dataurl --loader:.ttf=dataurl --loader:.eot=dataurl`, {
           stdio: 'inherit'
         });
         console.log('Client bundle created successfully');
         
+        // Build the test client bundle
+        execSync(`npx esbuild "${testMainEntry}" --bundle --outfile="${join(rootDistDir, 'test.js')}" --format=esm --jsx=automatic --alias:@=./client/src --alias:@shared=./shared --loader:.png=dataurl --loader:.jpg=dataurl --loader:.svg=dataurl --loader:.woff=dataurl --loader:.woff2=dataurl --loader:.ttf=dataurl --loader:.eot=dataurl`, {
+          stdio: 'inherit'
+        });
+        console.log('Test client bundle created successfully');
+        
+        // Build the simple react test client bundle
+        execSync(`npx esbuild "${simpleReactTestEntry}" --bundle --outfile="${join(rootDistDir, 'simple-react-test.js')}" --format=esm --jsx=automatic --alias:@=./client/src --alias:@shared=./shared --loader:.png=dataurl --loader:.jpg=dataurl --loader:.svg=dataurl --loader:.woff=dataurl --loader:.woff2=dataurl --loader:.ttf=dataurl --loader:.eot=dataurl`, {
+          stdio: 'inherit'
+        });
+        console.log('Simple React test client bundle created successfully');
+        
         // Update index.html to include the bundle and remove the original script tag
         let indexContent = readFileSync(indexPath, 'utf8');
-        // Add CSS link if it doesn't exist
-        if (!indexContent.includes('main.css')) {
+        // Add CSS link if it doesn't exist or update it to hashed version
+        const cssHash = require('crypto').createHash('md5').update(require('fs').readFileSync(join(clientSrcDir, 'index.css'), 'utf8')).digest('hex').substring(0, 8);
+        const hashedCssName = `main-${cssHash}.css`;
+        
+        if (!indexContent.includes(hashedCssName)) {
           indexContent = indexContent.replace(
-            '</head>',
-            '  <link rel="stylesheet" href="./main.css">\n  </head>'
+            '<link rel="stylesheet" href="./main.css">',
+            `<link rel="stylesheet" href="./${hashedCssName}">`
           );
         }
         // Remove the original script tag and add the bundle script
@@ -92,6 +128,40 @@ try {
           '<script type="module" src="./main.js"></script>'
         );
         writeFileSync(indexPath, indexContent, 'utf8');
+        
+        // Create a test.html file
+        const testHtml = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test React App</title>
+    <link rel="stylesheet" href="./${hashedCssName}">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./test.js"></script>
+  </body>
+</html>`;
+        writeFileSync(join(rootDistDir, 'test.html'), testHtml, 'utf8');
+        console.log('Created test.html');
+        
+        // Create a simple-react-test.html file
+        const simpleReactTestHtml = `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple React Test</title>
+    <link rel="stylesheet" href="./${hashedCssName}">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./simple-react-test.js"></script>
+  </body>
+</html>`;
+        writeFileSync(join(rootDistDir, 'simple-react-test.html'), simpleReactTestHtml, 'utf8');
+        console.log('Created simple-react-test.html');
       } catch (buildError) {
         console.warn('Client build failed, using simplified index.html:', buildError.message);
         // Use a simplified index.html if build fails
