@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "server/index.ts",
+      "src": "server/vercel-handler.ts",
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
@@ -20,7 +20,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/server/index.ts"
+      "dest": "/server/vercel-handler.ts"
     }
   ],
   "env": {
