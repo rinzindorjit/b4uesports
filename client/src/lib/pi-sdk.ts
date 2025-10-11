@@ -105,6 +105,9 @@ export class PiSDK {
         // Set sandbox mode based on environment
         this.sandboxMode = sandbox;
         
+        // Add a small delay to ensure Pi object is fully loaded
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         window.Pi.init({
           version: '2.0',
           sandbox: this.sandboxMode, // Enable sandbox mode for Testnet
@@ -116,14 +119,29 @@ export class PiSDK {
         console.warn('Pi SDK object not immediately available, but continuing with initialization...');
         this.sandboxMode = sandbox;
         // Try to initialize anyway - Pi Browser might load it later
-        setTimeout(() => {
+        setTimeout(async () => {
+          // Wait a bit more for Pi object to be available
+          if (typeof window !== 'undefined' && !window.Pi) {
+            console.log('Waiting for Pi object to be available in timeout handler...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+          
           if (typeof window !== 'undefined' && window.Pi) {
-            window.Pi.init({
-              version: '2.0',
-              sandbox: this.sandboxMode,
-            });
-            this.initialized = true;
-            console.log('✅ Pi SDK initialized with version 2.0, sandbox mode:', this.sandboxMode);
+            // Add a small delay to ensure Pi object is fully loaded
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            try {
+              window.Pi.init({
+                version: '2.0',
+                sandbox: this.sandboxMode,
+              });
+              this.initialized = true;
+              console.log('✅ Pi SDK initialized with version 2.0, sandbox mode:', this.sandboxMode);
+            } catch (initError) {
+              console.error('Pi SDK initialization error in timeout handler:', initError);
+              // Still mark as initialized to allow authentication attempts
+              this.initialized = true;
+            }
           } else {
             // If still not available after timeout, show a warning but don't fail
             console.warn('Pi SDK still not available after timeout. Authentication may fail.');
@@ -178,6 +196,15 @@ export class PiSDK {
       }
 
       // Additional check to ensure Pi object is properly initialized
+      // Wait for the authenticate function to be available
+      let attempts = 0;
+      const maxAttempts = 10;
+      while (attempts < maxAttempts && (!window.Pi || typeof window.Pi.authenticate !== 'function')) {
+        attempts++;
+        console.log(`Waiting for Pi.authenticate to be available... (attempt ${attempts}/${maxAttempts})`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+
       if (!window.Pi || typeof window.Pi.authenticate !== 'function') {
         console.error('Pi SDK not properly initialized or authenticate function not available');
         throw new Error('Pi SDK not properly initialized. Please make sure you are using the official Pi Browser app and refresh the page.');
@@ -214,7 +241,53 @@ export class PiSDK {
       if (error.message && error.message.includes('Discarding message')) {
         // This is a Pi Browser-specific error that often resolves itself with a retry
         console.log('Detected "Discarding message" error, suggesting retry...');
-        throw new Error('The Pi Browser app is not properly loaded. Please close and reopen the Pi Browser app, then try authenticating again. If the problem persists, restart your device.');
+        // Try to reset the Pi SDK state and reinitialize
+        this.reset();
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Wait a bit
+        await this.init(this.sandboxMode);
+        
+        // Retry authentication once
+        try {
+          console.log('Retrying authentication after "Discarding message" error...');
+          
+          // Wait for Pi object to be available again after reset
+          let attempts = 0;
+          const maxAttempts = 10;
+          while (attempts < maxAttempts && (!window.Pi || typeof window.Pi.authenticate !== 'function')) {
+            attempts++;
+            console.log(`Waiting for Pi.authenticate to be available after reset... (attempt ${attempts}/${maxAttempts})`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+          
+          if (!window.Pi || typeof window.Pi.authenticate !== 'function') {
+            throw new Error('Pi SDK not properly reinitialized after reset.');
+          }
+          
+          const retryAuthPromise = window.Pi.authenticate(scopes, onIncompletePaymentFound);
+          const retryTimeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Authentication timeout on retry - please check your Pi Browser and try refreshing the page.')), 180000)
+          );
+          
+          const retryAuthResult = (await Promise.race([retryAuthPromise, retryTimeoutPromise])) as {
+            accessToken: string;
+            user: { uid: string; username: string; wallet_address?: string };
+          };
+          
+          // Validate the authentication result
+          if (!retryAuthResult || !retryAuthResult.accessToken || !retryAuthResult.user) {
+            console.error('Invalid authentication result received on retry:', retryAuthResult);
+            throw new Error('Authentication failed on retry - invalid response from Pi Network. Please try again.');
+          }
+          
+          // Save granted scopes
+          this.grantedScopes = scopes;
+          console.log('✅ Pi authentication successful on retry. Granted scopes:', scopes);
+          
+          return retryAuthResult;
+        } catch (retryError: any) {
+          console.error('❌ Pi authentication retry failed:', retryError);
+          throw new Error('The Pi Browser app is not properly loaded. Please close and reopen the Pi Browser app, then try authenticating again. If the problem persists, restart your device and try once more.');
+        }
       }
       
       // Provide more specific error messages

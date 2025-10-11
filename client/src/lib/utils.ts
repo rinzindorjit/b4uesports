@@ -54,10 +54,15 @@ export function waitForPiSDK(timeoutMs: number = 45000): Promise<void> {
     const startPolling = () => {
       intervalId = setInterval(() => {
         if (typeof window !== 'undefined' && window.Pi) {
-          console.log('Pi SDK loaded successfully');
-          clearTimeout(timeout);
-          clearInterval(intervalId);
-          resolve();
+          // Additional check to ensure the authenticate function is available
+          if (typeof window.Pi.authenticate === 'function') {
+            console.log('Pi SDK loaded successfully with authenticate function available');
+            clearTimeout(timeout);
+            clearInterval(intervalId);
+            resolve();
+          } else {
+            console.log('Pi SDK loaded but authenticate function not yet available, continuing to wait...');
+          }
         }
         
         // Gradually increase polling interval to reduce CPU usage
