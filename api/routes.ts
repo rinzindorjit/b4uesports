@@ -18,7 +18,7 @@ let mockStorage = {
 
 // Real Pi Network service for Vercel environment
 const piNetworkService = {
-  verifyAccessToken: async (accessToken: string) => {
+  verifyAccessToken: async (accessToken: string, apiKey: string) => {
     try {
       const res = await fetch(`${PI_API_BASE_URL}/me`, {
         headers: {
@@ -330,7 +330,17 @@ export async function registerRoutes(app: Express): Promise<void> {
                 return res.status(400).json({ message: 'Access token required' });
               }
 
-              const piUser: any = await piNetworkService.verifyAccessToken(accessToken);
+              // Check if PI_SERVER_API_KEY is configured
+              const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
+              if (!PI_SERVER_API_KEY) {
+                console.error('❌ PI_SERVER_API_KEY is not configured in environment variables');
+                return res.status(500).json({ 
+                  message: 'Server configuration error',
+                  error: 'Missing PI_SERVER_API_KEY environment variable'
+                });
+              }
+
+              const piUser: any = await piNetworkService.verifyAccessToken(accessToken, PI_SERVER_API_KEY);
               if (!piUser) {
                 return res.status(401).json({ message: 'Invalid Pi Network token' });
               }

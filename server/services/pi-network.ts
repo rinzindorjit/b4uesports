@@ -12,27 +12,29 @@ console.log(`Environment variables: PI_SANDBOX=${process.env.PI_SANDBOX}, NODE_E
 export const piNetworkService = {
   isSandbox,
   
-  verifyAccessToken: async (accessToken: string) => {
+  verifyAccessToken: async (accessToken: string, serverApiKey: string) => {
     try {
-      const url = `${PI_API_BASE_URL}/me`;
+      const url = `${PI_API_BASE_URL}/auth/verify`;
       console.log('Verifying access token...');
       console.log('Request URL:', url);
       console.log('Request headers:', {
-        Authorization: `Bearer ${accessToken.substring(0, 8)}...`,
+        Authorization: `Bearer ${serverApiKey.substring(0, 8)}...`,
         "Content-Type": "application/json",
         "Accept": "application/json",
       });
       
       const res = await fetch(url, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${serverApiKey}`,
           "Content-Type": "application/json",
           "Accept": "application/json",
         },
+        body: JSON.stringify({ accessToken })
       });
 
-      console.log(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} /me response status:`, res.status);
-      console.log(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} /me response headers:`, Object.fromEntries(res.headers.entries()));
+      console.log(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} /auth/verify response status:`, res.status);
+      console.log(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} /auth/verify response headers:`, Object.fromEntries(res.headers.entries()));
       
       const contentType = res.headers.get('content-type') || '';
       console.log('Response Content-Type:', contentType);
@@ -45,7 +47,7 @@ export const piNetworkService = {
       }
 
       if (!res.ok) {
-        console.error(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} /me failed:`, res.statusText);
+        console.error(`Pi ${isSandbox ? 'Testnet' : 'Mainnet'} /auth/verify failed:`, res.statusText);
         return null;
       }
 

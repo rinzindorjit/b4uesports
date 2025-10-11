@@ -46,19 +46,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const PI_SANDBOX = process.env.PI_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
     const PI_SERVER_URL = PI_SANDBOX ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
     
+    // Check if PI_SERVER_API_KEY is configured
+    const PI_SERVER_API_KEY = process.env.PI_SERVER_API_KEY;
+    if (!PI_SERVER_API_KEY) {
+      console.error('❌ PI_SERVER_API_KEY is not configured in environment variables');
+      return res.status(500).json({ 
+        message: 'Server configuration error',
+        error: 'Missing PI_SERVER_API_KEY environment variable',
+        guidance: {
+          fix: "Please configure PI_SERVER_API_KEY in your environment variables",
+          docs: "See DEPLOYMENT_GUIDE.md for instructions"
+        }
+      });
+    }
+    
     console.log('Pi Network mode: ' + (PI_SANDBOX ? 'SANDBOX (Testnet)' : 'PRODUCTION'));
     console.log('Pi Network endpoint: ' + PI_SERVER_URL);
-    console.log("Authorization header:", `Bearer ${token.substring(0, 10)}...`);
+    console.log('Authorization header: Bearer ' + token.substring(0, 10) + '...');
 
-    // Verify the token with the Pi Network API
-    const response = await fetch(`${PI_SERVER_URL}/me`, {
-      method: "GET",
+    // Verify the access token using the server API key
+    // This is the correct way to verify access tokens server-side according to Pi Network guidelines
+    const response = await fetch(`${PI_SERVER_URL}/auth/verify`, {
+      method: "POST",
       headers: {
-        "Authorization": `Bearer ${token}`,
+        "Authorization": `Bearer ${PI_SERVER_API_KEY}`,
         "Content-Type": "application/json",
-        "Accept": "application/json",
-        "User-Agent": "B4U-Esports-App/1.0",
-      }
+      },
+      body: JSON.stringify({ accessToken: token })
     });
 
     // Check if we got HTML content (which indicates an error)
