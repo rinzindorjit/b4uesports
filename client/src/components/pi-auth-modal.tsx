@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { BRAND_LOGOS } from '@/lib/constants';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
+import { Button } from '../components/ui/button';
+import { Card, CardContent } from '../components/ui/card';
+import { BRAND_LOGOS } from '../lib/constants';
 
 interface PiAuthModalProps {
   isOpen: boolean;
@@ -28,13 +28,14 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
     try {
       await onAuthenticate();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      setError(errorMessage);
       setStep('consent'); // Return to consent step on error
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
+    <Dialog open={isOpen} onOpenChange={(open: boolean) => {
       if (!open && !isLoading) {
         onClose();
       }
@@ -87,7 +88,9 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
             <div className="bg-amber-500/20 border border-amber-500 rounded-lg p-4">
               <p className="text-xs md:text-sm text-amber-300">
                 <i className="fas fa-info-circle mr-2"></i>
-                <strong>Important:</strong> Please use the Pi Browser app for authentication. On mobile, check for notification banners during authentication. If you don't see a prompt, try refreshing the page or restarting the Pi Browser app.
+                <strong>Important:</strong> Please use the official Pi Browser app for authentication. 
+                On mobile, check for notification banners during authentication. 
+                If you don't see a prompt, try refreshing the page or restarting the Pi Browser app.
               </p>
             </div>
 
@@ -97,6 +100,17 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
                   <i className="fas fa-exclamation-triangle mr-2"></i>
                   {error}
                 </p>
+                {error.includes('Pi Browser') && (
+                  <p className="text-xs mt-2 text-red-200">
+                    <strong>Troubleshooting Tips:</strong>
+                    <ul className="list-disc list-inside mt-1 ml-2">
+                      <li>Make sure you're using the official Pi Browser app</li>
+                      <li>Try refreshing the page</li>
+                      <li>Restart the Pi Browser app</li>
+                      <li>Check your internet connection</li>
+                    </ul>
+                  </p>
+                )}
               </div>
             )}
 
@@ -141,17 +155,19 @@ export default function PiAuthModal({ isOpen, onClose, onAuthenticate, isLoading
                   <strong>Not seeing a prompt?</strong> Try these steps:
                 </p>
                 <ul className="list-disc list-inside mt-1 ml-2 text-xs text-amber-300 space-y-1">
-                  <li>Refresh the page</li>
+                  <li>Refresh the page (Ctrl+R or Cmd+R)</li>
                   <li>Restart the Pi Browser app</li>
                   <li>Check your internet connection</li>
                   <li>Make sure you're using the official Pi Browser app</li>
+                  <li>Try closing other Pi Browser tabs</li>
                 </ul>
               </div>
               
               <div className="p-3 bg-red-500/10 rounded-lg border border-red-500/30">
                 <p className="text-xs text-red-300">
                   <i className="fas fa-exclamation-triangle mr-2"></i>
-                  <strong>Still having issues?</strong> Authentication may take up to 3 minutes on mobile networks. If problems persist, try again later or contact support.
+                  <strong>Still having issues?</strong> Authentication may take up to 3 minutes on mobile networks. 
+                  If problems persist, try again later or contact support.
                 </p>
               </div>
             </div>

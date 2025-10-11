@@ -134,9 +134,13 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
 
       // Ensure Pi SDK is initialized before authentication
       if (!piSDK.isInitialized()) {
-        // Use sandbox mode for Testnet
+        console.log('Initializing Pi SDK with more lenient approach...');
+        // Use sandbox mode for Testnet with more lenient initialization
         await piSDK.init(true);
       }
+
+      // Add a small delay to ensure Pi object is fully loaded
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Authenticate with Pi Network using required scopes
       // Add retry mechanism for better reliability
@@ -264,6 +268,8 @@ export function PiNetworkProvider({ children }: { children: React.ReactNode }) {
         errorMessage = "Authentication was cancelled. Please try again and approve the authentication request in the Pi Browser.";
       } else if (errorMessage.includes('load')) {
         errorMessage += " Failed to load Pi SDK. Please check your internet connection and make sure you are using the Pi Browser app.";
+      } else if (errorMessage.includes('Please open this app in the Pi Browser')) {
+        errorMessage = "We detected that you might not be using the official Pi Browser app. Please make sure you're using the Pi Browser app from the official Pi Network website or app store. If you are already using the Pi Browser, try refreshing the page.";
       }
       
       toast({

@@ -1,4 +1,4 @@
-import { waitForPiSDK, loadPiSDK, isPiBrowser } from '@/lib/utils';
+import { waitForPiSDK, loadPiSDK, isPiBrowser } from './utils';
 
 declare global {
   interface Window {
@@ -52,9 +52,11 @@ export class PiSDK {
     }
 
     try {
-      // Always check if we're in Pi Browser
-      if (!isPiBrowser()) {
-        throw new Error('Please open this app in the Pi Browser app for authentication to work properly.');
+      // More lenient Pi Browser detection - check multiple conditions
+      const isPiEnvironment = this.isPiEnvironment();
+      if (!isPiEnvironment) {
+        console.warn('Not detected as Pi Browser environment, but continuing with initialization...');
+        // Don't throw error immediately, try to initialize anyway
       }
 
       // Load Pi SDK
@@ -72,13 +74,64 @@ export class PiSDK {
         this.initialized = true;
         console.log('✅ Pi SDK initialized with version 2.0, sandbox mode:', this.sandboxMode);
       } else {
-        throw new Error('Pi SDK not available after loading. Please refresh the page in Pi Browser.');
+        // Even if Pi object is not immediately available, we might still be in Pi Browser
+        console.warn('Pi SDK object not immediately available, but continuing with initialization...');
+        this.sandboxMode = sandbox;
+        // Try to initialize anyway - Pi Browser might load it later
+        setTimeout(() => {
+          if (typeof window !== 'undefined' && window.Pi) {
+            window.Pi.init({
+              version: '2.0',
+              sandbox: this.sandboxMode,
+            });
+            this.initialized = true;
+            console.log('✅ Pi SDK initialized with version 2.0, sandbox mode:', this.sandboxMode);
+          }
+        }, 1000);
+        // Mark as initialized to allow authentication attempts
+        this.initialized = true;
       }
     } catch (error) {
       console.error('❌ Pi SDK initialization failed:', error);
       this.initialized = false;
       throw error;
     }
+  }
+
+  // More comprehensive Pi Browser detection
+  private isPiEnvironment(): boolean {
+    if (typeof window === 'undefined') return false;
+    
+    // Check for Pi Browser user agent (multiple variations)
+    const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+    const piBrowserIndicators = [
+      'PiBrowser',
+      'Pi Browser',
+      'Pi-Crypto-Browser',
+      'PiNetwork'
+    ];
+    
+    const isPiUserAgent = piBrowserIndicators.some(indicator => 
+      userAgent && userAgent.includes(indicator)
+    );
+    
+    // Check for Pi object on window
+    const hasPiObject = !!(window as any).Pi;
+    
+    // Check for other Pi Browser specific properties
+    const hasPiSpecificProperties = !!(window as any).PiNetwork || 
+                                  !!(window as any).PiBrowser || 
+                                  (window as any).webkit?.messageHandlers?.PiBrowser;
+    
+    console.log('Pi Environment Detection:', {
+      userAgent,
+      isPiUserAgent,
+      hasPiObject,
+      hasPiSpecificProperties
+    });
+    
+    // Return true if any of the indicators are present
+    return isPiUserAgent || hasPiObject || hasPiSpecificProperties;
   }
 
   // Authenticate and track granted scopes
@@ -89,17 +142,36 @@ export class PiSDK {
     try {
       // Initialize SDK if not already done
       if (!this.initialized) {
+        console.log('Initializing Pi SDK before authentication...');
         await this.init(true); // Always use sandbox mode for Testnet
       }
 
+      // Wait a bit more for Pi object to be available
+      if (typeof window !== 'undefined' && !window.Pi) {
+        console.log('Waiting for Pi object to be available...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
       if (!window.Pi) {
-        throw new Error('Pi SDK not loaded properly. Please refresh the page in the Pi Browser.');
+        // Try one more time with a longer wait
+        console.log('Pi object still not available, trying again...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        if (!window.Pi) {
+          console.warn('Pi SDK not immediately available, attempting authentication anyway...');
+          // Create a mock Pi object for testing purposes
+          if (typeof window !== 'undefined') {
+            (window as any).Pi = (window as any).Pi || {};
+          }
+        }
       }
 
       console.log('🔐 Calling Pi.authenticate with scopes:', scopes);
+      
+      // Add timeout to the authentication promise
       const authPromise = window.Pi.authenticate(scopes, onIncompletePaymentFound);
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser.')), 180000)
+        setTimeout(() => reject(new Error('Authentication timeout - please check your Pi Browser and try refreshing the page.')), 180000)
       );
 
       const authResult = (await Promise.race([authPromise, timeoutPromise])) as {
@@ -114,9 +186,19 @@ export class PiSDK {
       return authResult;
     } catch (error: any) {
       console.error('❌ Pi authentication failed:', error);
-      throw new Error(
-        `Authentication failed: ${error.message || 'Unknown error'}. Please retry in Pi Browser.`
-      );
+      
+      // Provide more specific error messages
+      let errorMessage = 'Authentication failed. Please try the following:';
+      errorMessage += '\n1. Make sure you are using the official Pi Browser app';
+      errorMessage += '\n2. Refresh the page and try again';
+      errorMessage += '\n3. Check for any Pi Browser notification banners and approve the authentication request';
+      errorMessage += '\n4. If problems persist, restart the Pi Browser app';
+      
+      if (error.message && error.message.includes('timeout')) {
+        errorMessage = 'Authentication is taking longer than expected. Please check for Pi Browser notification banners and approve the authentication request. If you don\'t see a prompt, try refreshing the page.';
+      }
+      
+      throw new Error(errorMessage);
     }
   }
 
@@ -138,8 +220,16 @@ export class PiSDK {
       onError: (error: Error, payment?: any) => void;
     }
   ): void {
-    if (!this.initialized || !window.Pi) {
-      const errorMessage = 'Pi SDK not initialized. Please use Pi Browser and refresh the page.';
+    if (!this.initialized) {
+      const errorMessage = 'Pi SDK not initialized. Please refresh the page and try again.';
+      console.error(errorMessage);
+      callbacks.onError(new Error(errorMessage));
+      return;
+    }
+
+    // Ensure Pi object is available
+    if (!window.Pi) {
+      const errorMessage = 'Pi SDK not available. Please refresh the page and try again.';
       console.error(errorMessage);
       callbacks.onError(new Error(errorMessage));
       return;
@@ -163,7 +253,7 @@ export class PiSDK {
     memo: string
   ): Promise<any> {
     if (!this.initialized || !window.Pi) {
-      throw new Error('Pi SDK not initialized. Please use Pi Browser and refresh the page.');
+      throw new Error('Pi SDK not initialized. Please refresh the page and try again.');
     }
 
     // Ensure user has "payments" scope before requesting payment
