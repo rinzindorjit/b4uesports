@@ -15,6 +15,7 @@ export const piNetworkService = {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
+          "Accept": "application/json",
         },
       });
 
@@ -40,10 +41,35 @@ export const piNetworkService = {
       console.log('- Headers:', {
         'Authorization': `Key ${apiKey.substring(0, 8)}...`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       });
 
+      // First, check if the payment exists and is in the correct state
+      console.log('Checking payment status before approval...');
+      const statusCheck = await fetch(`${PI_API_BASE_URL}/payments/${paymentId}`, {
+        headers: {
+          'Authorization': `Key ${apiKey}`,
+          'Accept': 'application/json',
+        }
+      });
+      
+      if (!statusCheck.ok) {
+        const statusError = await statusCheck.text();
+        console.error('Payment status check failed:', statusCheck.status, statusError);
+        return false;
+      }
+      
+      const paymentStatus: any = await statusCheck.json();
+      console.log('Payment status:', paymentStatus);
+      
+      // Check if payment is in a valid state for approval
+      if (paymentStatus.status !== 'created') {
+        console.error('Payment is not in "created" status:', paymentStatus.status);
+        return false;
+      }
+
       // Try different approaches to make the request
-      // Approach 1: POST with empty JSON body
+      // Approach 1: POST with empty JSON body and Accept header
       let response = await fetch(
         `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
         {
@@ -51,6 +77,7 @@ export const piNetworkService = {
           headers: {
             'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
           body: JSON.stringify({}),
         }
@@ -61,7 +88,7 @@ export const piNetworkService = {
       if (contentType.includes('text/html')) {
         console.log('First approach failed with HTML response, trying alternative approach...');
         
-        // Approach 2: POST with no body
+        // Approach 2: POST with no body but with Accept header
         response = await fetch(
           `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
           {
@@ -69,6 +96,7 @@ export const piNetworkService = {
             headers: {
               'Authorization': `Key ${apiKey}`,
               'Content-Type': 'application/json',
+              'Accept': 'application/json',
             },
           }
         );
@@ -119,11 +147,12 @@ export const piNetworkService = {
       console.log('- Headers:', {
         'Authorization': `Key ${apiKey.substring(0, 8)}...`,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       });
       console.log('- Body:', { txid });
 
       // Try different approaches to make the request
-      // Approach 1: POST with JSON body containing txid
+      // Approach 1: POST with JSON body containing txid and Accept header
       let response = await fetch(
         `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
         {
@@ -131,6 +160,7 @@ export const piNetworkService = {
           headers: {
             'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
           body: JSON.stringify({ txid }),
         }
@@ -141,7 +171,7 @@ export const piNetworkService = {
       if (contentType.includes('text/html')) {
         console.log('First approach failed with HTML response, trying alternative approach...');
         
-        // Approach 2: POST with form-encoded body
+        // Approach 2: POST with form-encoded body and Accept header
         response = await fetch(
           `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
           {
@@ -149,6 +179,7 @@ export const piNetworkService = {
             headers: {
               'Authorization': `Key ${apiKey}`,
               'Content-Type': 'application/x-www-form-urlencoded',
+              'Accept': 'application/json',
             },
             body: `txid=${encodeURIComponent(txid)}`,
           }
@@ -198,6 +229,7 @@ export const piNetworkService = {
       const response = await fetch(`${PI_API_BASE_URL}/payments/${paymentId}`, {
         headers: {
           'Authorization': `Key ${apiKey}`,
+          'Accept': 'application/json',
         },
       });
       
@@ -219,7 +251,7 @@ export const piNetworkService = {
   cancelPayment: async (paymentId: string, apiKey: string) => {
     try {
       // Try different approaches to make the request
-      // Approach 1: POST with empty JSON body
+      // Approach 1: POST with empty JSON body and Accept header
       let response = await fetch(
         `${PI_API_BASE_URL}/payments/${paymentId}/cancel`,
         {
@@ -227,6 +259,7 @@ export const piNetworkService = {
           headers: {
             'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
           body: JSON.stringify({}),
         }
@@ -237,7 +270,7 @@ export const piNetworkService = {
       if (contentType.includes('text/html')) {
         console.log('First approach failed with HTML response, trying alternative approach...');
         
-        // Approach 2: POST with no body
+        // Approach 2: POST with no body but with Accept header
         response = await fetch(
           `${PI_API_BASE_URL}/payments/${paymentId}/cancel`,
           {
@@ -245,6 +278,7 @@ export const piNetworkService = {
             headers: {
               'Authorization': `Key ${apiKey}`,
               'Content-Type': 'application/json',
+              'Accept': 'application/json',
             },
           }
         );
@@ -273,6 +307,7 @@ export const piNetworkService = {
           headers: {
             'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
           body: JSON.stringify({ payment: paymentData }),
         }

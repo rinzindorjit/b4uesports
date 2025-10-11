@@ -95,10 +95,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.log('- Headers:', {
             'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`, // Log first 8 chars for better security
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           });
 
+          // First, check if the payment exists and is in the correct state
+          console.log('Checking payment status before approval...');
+          const statusCheck = await fetch(`${PI_API_BASE_URL}/payments/${paymentId}`, {
+            headers: {
+              'Authorization': `Key ${PI_SERVER_API_KEY}`,
+              'Accept': 'application/json',
+            }
+          });
+          
+          if (!statusCheck.ok) {
+            const statusError = await statusCheck.text();
+            console.error('Payment status check failed:', statusCheck.status, statusError);
+            return sendJsonResponse(res, 500, { 
+              message: "Payment status check failed",
+              error: statusError,
+              status: statusCheck.status
+            });
+          }
+          
+          const paymentStatus: any = await statusCheck.json();
+          console.log('Payment status:', paymentStatus);
+          
+          // Check if payment is in a valid state for approval
+          if (paymentStatus.status !== 'created') {
+            console.error('Payment is not in "created" status:', paymentStatus.status);
+            return sendJsonResponse(res, 400, { 
+              message: "Payment is not in a valid state for approval",
+              status: paymentStatus.status
+            });
+          }
+
           // Try different approaches to make the request
-          // Approach 1: POST with empty JSON body
+          // Approach 1: POST with empty JSON body and Accept header
           let response = await fetch(
             `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
             {
@@ -106,8 +138,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               headers: {
                 'Authorization': `Key ${PI_SERVER_API_KEY}`,
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
               },
-              // Empty body as required by Pi Network API
               body: JSON.stringify({}),
             }
           );
@@ -117,7 +149,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (contentType.includes('text/html')) {
             console.log('First approach failed with HTML response, trying alternative approach...');
             
-            // Approach 2: POST with no body
+            // Approach 2: POST with no body but with Accept header
             response = await fetch(
               `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
               {
@@ -125,6 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 headers: {
                   'Authorization': `Key ${PI_SERVER_API_KEY}`,
                   'Content-Type': 'application/json',
+                  'Accept': 'application/json',
                 },
               }
             );
@@ -155,6 +188,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 requestHeaders: {
                   'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`,
                   'Content-Type': 'application/json',
+                  'Accept': 'application/json',
                 }
               }
             });
@@ -235,11 +269,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           console.log('- Headers:', {
             'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`, // Log first 8 chars for better security
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           });
           console.log('- Body:', { txid });
 
           // Try different approaches to make the request
-          // Approach 1: POST with JSON body containing txid
+          // Approach 1: POST with JSON body containing txid and Accept header
           let response = await fetch(
             `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
             {
@@ -247,6 +282,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               headers: {
                 'Authorization': `Key ${PI_SERVER_API_KEY}`,
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
               },
               body: JSON.stringify({ txid }),
             }
@@ -257,7 +293,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           if (contentType.includes('text/html')) {
             console.log('First approach failed with HTML response, trying alternative approach...');
             
-            // Approach 2: POST with form-encoded body
+            // Approach 2: POST with form-encoded body and Accept header
             response = await fetch(
               `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
               {
@@ -265,6 +301,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 headers: {
                   'Authorization': `Key ${PI_SERVER_API_KEY}`,
                   'Content-Type': 'application/x-www-form-urlencoded',
+                  'Accept': 'application/json',
                 },
                 body: `txid=${encodeURIComponent(txid)}`,
               }
@@ -297,6 +334,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 requestHeaders: {
                   'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 8)}...`,
                   'Content-Type': 'application/json',
+                  'Accept': 'application/json',
                 }
               }
             });
