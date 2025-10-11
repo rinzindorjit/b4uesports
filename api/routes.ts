@@ -3,7 +3,8 @@ import { jwt } from './_utils.js';
 import axios from 'axios';
 
 // Determine if we're in sandbox (Testnet) mode
-const isSandbox = process.env.PI_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
+// Safely check for environment variables
+const isSandbox = (process.env.PI_SANDBOX === 'true') || (process.env.NODE_ENV !== 'production');
 const PI_API_BASE_URL = isSandbox ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
 
 console.log(`Pi Network service initialized in ${isSandbox ? 'SANDBOX (Testnet)' : 'PRODUCTION (Mainnet)'} mode`);
@@ -24,6 +25,8 @@ const piNetworkService = {
           Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
+        // Add timeout to prevent hanging
+        timeout: 10000, // 10 second timeout
       });
 
       if (!res.status.toString().startsWith('2')) {
@@ -51,6 +54,8 @@ const piNetworkService = {
             'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
           },
+          // Add timeout to prevent hanging
+          timeout: 10000, // 10 second timeout
         }
       );
       
@@ -73,6 +78,8 @@ const piNetworkService = {
             'Authorization': `Key ${apiKey}`,
             'Content-Type': 'application/json',
           },
+          // Add timeout to prevent hanging
+          timeout: 10000, // 10 second timeout
         }
       );
       

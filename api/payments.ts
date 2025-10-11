@@ -17,7 +17,8 @@ async function readBody(req: VercelRequest): Promise<any> {
 }
 
 // Determine if we're in sandbox (Testnet) mode
-const isSandbox = process.env.PI_SANDBOX === 'true' || process.env.NODE_ENV !== 'production';
+// Safely check for environment variables
+const isSandbox = (process.env.PI_SANDBOX === 'true') || (process.env.NODE_ENV !== 'production');
 const PI_API_BASE_URL = isSandbox ? 'https://sandbox.minepi.com/v2' : 'https://api.minepi.com/v2';
 
 console.log(`Pi Network service initialized in ${isSandbox ? 'SANDBOX (Testnet)' : 'PRODUCTION (Mainnet)'} mode`);
@@ -62,6 +63,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
+    console.log('PI_SERVER_API_KEY configured:', !!PI_SERVER_API_KEY);
+
     switch (action) {
       case 'approve':
         try {
@@ -74,6 +77,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           
           console.log('Approving payment: ' + paymentId);
 
+          // Log the request details for debugging
+          console.log('Making request to Pi Network API:');
+          console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/approve`);
+          console.log('- Headers:', {
+            'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 5)}...`, // Log only first 5 chars for security
+            'Content-Type': 'application/json',
+          });
+
           // Approve payment with Pi Network
           const response = await axios.post(
             `${PI_API_BASE_URL}/payments/${paymentId}/approve`,
@@ -83,20 +94,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 'Authorization': `Key ${PI_SERVER_API_KEY}`,
                 'Content-Type': 'application/json',
               },
+              // Add timeout to prevent hanging
+              timeout: 15000, // 15 second timeout
+              // Ensure we're not following redirects
+              maxRedirects: 0,
+              // Validate status to catch non-2xx responses
+              validateStatus: (status) => status < 500, // Accept all statuses to handle them manually
             }
           );
           
-          console.log(`✅ Payment approved on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId);
-          return res.json({
-            message: "Payment approved successfully",
-            payment: response.data,
-            status: "approved"
-          });
+          console.log(`Pi Network API response status:`, response.status);
+          console.log(`Pi Network API response headers:`, response.headers);
+          
+          // Check if we got HTML content (which indicates an error)
+          const contentType = response.headers['content-type'];
+          if (contentType && contentType.includes('text/html')) {
+            console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
+            return res.status(500).json({ 
+              message: "Payment approval failed - received HTML error page",
+              error: "CloudFront blocked the request - check API key and permissions",
+              status: response.status
+            });
+          }
+          
+          // Check for successful response
+          if (response.status >= 200 && response.status < 300) {
+            console.log(`✅ Payment approved on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId);
+            return res.json({
+              message: "Payment approved successfully",
+              payment: response.data,
+              status: "approved"
+            });
+          } else {
+            console.error("❌ Approval error:", response.status, response.data);
+            return res.status(response.status).json({ 
+              message: "Payment approval failed",
+              error: response.data,
+              status: response.status
+            });
+          }
         } catch (error: any) {
           console.error("❌ Approval error:", error.response?.data || error.message);
+          // Return more detailed error information
           return res.status(500).json({ 
             message: "Payment approval failed",
-            error: error.response?.data || error.message 
+            error: error.response?.data || error.message,
+            status: error.response?.status
           });
         }
 
@@ -113,6 +156,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           
           console.log('Completing payment: ' + paymentId + ' with txid: ' + txid);
 
+          // Log the request details for debugging
+          console.log('Making request to Pi Network API:');
+          console.log('- URL:', `${PI_API_BASE_URL}/payments/${paymentId}/complete`);
+          console.log('- Headers:', {
+            'Authorization': `Key ${PI_SERVER_API_KEY.substring(0, 5)}...`, // Log only first 5 chars for security
+            'Content-Type': 'application/json',
+          });
+          console.log('- Body:', { txid });
+
           // Complete payment with Pi Network
           const response = await axios.post(
             `${PI_API_BASE_URL}/payments/${paymentId}/complete`,
@@ -122,20 +174,52 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 'Authorization': `Key ${PI_SERVER_API_KEY}`,
                 'Content-Type': 'application/json',
               },
+              // Add timeout to prevent hanging
+              timeout: 15000, // 15 second timeout
+              // Ensure we're not following redirects
+              maxRedirects: 0,
+              // Validate status to catch non-2xx responses
+              validateStatus: (status) => status < 500, // Accept all statuses to handle them manually
             }
           );
           
-          console.log(`✅ Payment completed on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId, "TXID:", txid);
-          return res.json({ 
-            message: "Payment completed successfully",
-            payment: response.data,
-            status: "completed"
-          });
+          console.log(`Pi Network API response status:`, response.status);
+          console.log(`Pi Network API response headers:`, response.headers);
+          
+          // Check if we got HTML content (which indicates an error)
+          const contentType = response.headers['content-type'];
+          if (contentType && contentType.includes('text/html')) {
+            console.error('❌ Received HTML response instead of JSON - likely a CloudFront error');
+            return res.status(500).json({ 
+              message: "Payment completion failed - received HTML error page",
+              error: "CloudFront blocked the request - check API key and permissions",
+              status: response.status
+            });
+          }
+          
+          // Check for successful response
+          if (response.status >= 200 && response.status < 300) {
+            console.log(`✅ Payment completed on ${isSandbox ? 'Testnet' : 'Mainnet'}:`, paymentId, "TXID:", txid);
+            return res.json({ 
+              message: "Payment completed successfully",
+              payment: response.data,
+              status: "completed"
+            });
+          } else {
+            console.error("❌ Completion error:", response.status, response.data);
+            return res.status(response.status).json({ 
+              message: "Payment completion failed",
+              error: response.data,
+              status: response.status
+            });
+          }
         } catch (error: any) {
           console.error("❌ Completion error:", error.response?.data || error.message);
+          // Return more detailed error information
           return res.status(500).json({ 
             message: "Payment completion failed",
-            error: error.response?.data || error.message 
+            error: error.response?.data || error.message,
+            status: error.response?.status
           });
         }
 
