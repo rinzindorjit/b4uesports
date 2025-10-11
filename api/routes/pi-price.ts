@@ -26,7 +26,7 @@ router.get("/pi-price", async (_req, res) => {
     }
 
     // Use safer approach to parse JSON - let the fetch API handle it first
-    let data;
+    let data: any;
     try {
       data = await response.json();
     } catch (parseError: any) {
